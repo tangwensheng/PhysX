@@ -28,7 +28,11 @@
 #define __CU_RADIX_SORT_CUH__
 
 #include "foundation/PxPreprocessor.h"
+#if defined(__HIPCC__)
+// float4/uint4 provided by PxgHIPCompat.h -> hip/hip_runtime.h
+#else
 #include "vector_types.h"
+#endif
 #include "PxgRadixSortDesc.h"
 #include "PxgRadixSortKernelIndices.h"
 #include "PxgCommonDefines.h"

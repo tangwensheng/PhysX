@@ -30,7 +30,11 @@
 #ifndef __CU_FEM_CLOTH_MIDPHASESCRATCH_CUH__
 #define __CU_FEM_CLOTH_MIDPHASESCRATCH_CUH__
 
+#if defined(__HIPCC__)
+// float4 provided by PxgHIPCompat.h -> hip/hip_runtime.h
+#else
 #include "vector_types.h"
+#endif
 
 #define	FEM_MIDPHASE_SCRATCH_SIZE 224 // 192 (WARP SIZE * 6) < 198 (sizeof(femMidphaseScratch)/sizeof(unsigned int)) < 224 (WARP SIZE * 7)
 

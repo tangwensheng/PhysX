@@ -30,7 +30,11 @@
 #ifndef __CU_SB_MIDPHASESCRATCH_CUH__
 #define __CU_SB_MIDPHASESCRATCH_CUH__
 
+#if defined(__HIPCC__)
+// float4 provided by PxgHIPCompat.h -> hip/hip_runtime.h
+#else
 #include "vector_types.h"
+#endif
 
 namespace physx
 {

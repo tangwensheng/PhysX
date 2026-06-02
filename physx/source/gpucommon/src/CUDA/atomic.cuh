@@ -29,7 +29,11 @@
 #ifndef __CU_ATOMIC_CUH__
 #define __CU_ATOMIC_CUH__
 
+#if defined(__HIPCC__)
+#include "PxgHIPCompat.h"
+#else
 #include "cuda.h"
+#endif
 #include "foundation/PxVec3.h"
 #include "foundation/PxSimpleTypes.h"
 #include "PxgIntrinsics.h"
@@ -145,15 +149,17 @@ PX_FORCE_INLINE static __device__ void AtomicOr(physx::PxU64* address, const phy
  * adds 20% performance in FLIP P2G compared to atomicAdd() or plain red.add.f32 */
 PX_FORCE_INLINE __device__ void PxRedAddGlobal(float* addr, const float val)
 {
-#if __CUDA_ARCH__ >= 350
+#if defined(__HIPCC__)
+	// DCU/HIP: L2-level global atomic red is not available via PTX asm.
+	// Degrade to regular atomicAdd (functionally correct, ~20% slower).
+	atomicAdd(addr, val);
+#elif __CUDA_ARCH__ >= 350
 	asm volatile ("red.global.add.f32 [%0], %1;" :: __STG_PTR(addr) , "f"(val));
-#else
-#if __CUDA_ARCH__ >= 200
+#elif __CUDA_ARCH__ >= 200
 	atomicAdd(addr, val);
 #else
 	PX_UNUSED(addr);
 	PX_UNUSED(val);
-#endif
 #endif
 }
 

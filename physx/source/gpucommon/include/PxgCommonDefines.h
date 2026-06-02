@@ -29,14 +29,30 @@
 #ifndef PXG_COMMON_DEFINES_H
 #define PXG_COMMON_DEFINES_H
 
-// !! No includes here, only preprocessor definitions!
-
 // A place for shared defines for the GPU libs
 
+// HIP compatibility: when compiling with hipcc, this header maps
+// CUDA intrinsics (__shfl_sync, __ballot_sync, etc.) to HIP equivalents.
+// Included here so all kernel files that include PxgCommonDefines.h
+// automatically get HIP compatibility.
+#if defined(__HIPCC__)
+#include "PxgHIPCompat.h"
+#endif
+
 #define PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH 6 // corresponding CPU define is CONTACT_REDUCTION_MAX_CONTACTS
-#define LOG2_WARP_SIZE 5
-#define WARP_SIZE (1U << LOG2_WARP_SIZE)
-#define	FULL_MASK 0xffffffff //full mask for 32 thread in a warp
+
+// DCU/HIP platform detection: __HIPCC__ is defined by the hipcc compiler
+#if defined(__HIPCC__) || defined(PX_DCU_PORT)
+	// Hygon DCU: wavefront size = 64
+	#define LOG2_WARP_SIZE 6
+	#define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 64
+	#define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+#else
+	// NVIDIA CUDA: warp size = 32
+	#define LOG2_WARP_SIZE 5
+	#define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 32
+	#define FULL_MASK 0xffffffff              // full mask for 32 threads in a warp
+#endif
 
 
 #endif

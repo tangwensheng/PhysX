@@ -29,7 +29,11 @@
 #ifndef __CU_SHUFFLE_CUH__
 #define __CU_SHUFFLE_CUH__
 
+#if defined(__HIPCC__)
+#include "PxgHIPCompat.h"
+#else
 #include "cuda.h"
+#endif
 #include "PxgCommonDefines.h"
 //#include "nputils.cuh"
 
@@ -42,7 +46,7 @@ physx::PxVec3 shuffle(const physx::PxU32 syncMask, const physx::PxVec3& v, int i
 static __device__ __forceinline__
 float4 shuffle(const physx::PxU32 syncMask, const float4& v, const int lane)
 {
-	return make_float4(__shfl_sync(syncMask, v.x, lane), __shfl_sync(syncMask, v.y, lane), __shfl_sync(syncMask, v.z, lane), __shfl_sync(syncMask, v.w, lane));
+	return make_float4(__shfl_sync(syncMask, v.x, lane, WARP_SIZE), __shfl_sync(syncMask, v.y, lane, WARP_SIZE), __shfl_sync(syncMask, v.z, lane, WARP_SIZE), __shfl_sync(syncMask, v.w, lane, WARP_SIZE));
 }
 
 static __device__ __forceinline__
@@ -50,9 +54,9 @@ physx::PxVec3 warpShuffleMin(physx::PxVec3 v)
 {
 	for (physx::PxU32 reductionRadius = 1; reductionRadius < WARP_SIZE; reductionRadius <<= 1)
 	{
-		v.x = fminf(v.x, __shfl_xor_sync(FULL_MASK, v.x, reductionRadius));
-		v.y = fminf(v.y, __shfl_xor_sync(FULL_MASK, v.y, reductionRadius));
-		v.z = fminf(v.z, __shfl_xor_sync(FULL_MASK, v.z, reductionRadius));
+		v.x = fminf(v.x, __shfl_xor_sync(FULL_MASK, v.x, reductionRadius, WARP_SIZE));
+		v.y = fminf(v.y, __shfl_xor_sync(FULL_MASK, v.y, reductionRadius, WARP_SIZE));
+		v.z = fminf(v.z, __shfl_xor_sync(FULL_MASK, v.z, reductionRadius, WARP_SIZE));
 	}
 
 	return v;
@@ -63,9 +67,9 @@ physx::PxVec3 warpShuffleMax(physx::PxVec3 v)
 {
 	for (physx::PxU32 reductionRadius = 1; reductionRadius < WARP_SIZE; reductionRadius <<= 1)
 	{
-		v.x = fmaxf(v.x, __shfl_xor_sync(FULL_MASK, v.x, reductionRadius));
-		v.y = fmaxf(v.y, __shfl_xor_sync(FULL_MASK, v.y, reductionRadius));
-		v.z = fmaxf(v.z, __shfl_xor_sync(FULL_MASK, v.z, reductionRadius));
+		v.x = fmaxf(v.x, __shfl_xor_sync(FULL_MASK, v.x, reductionRadius, WARP_SIZE));
+		v.y = fmaxf(v.y, __shfl_xor_sync(FULL_MASK, v.y, reductionRadius, WARP_SIZE));
+		v.z = fmaxf(v.z, __shfl_xor_sync(FULL_MASK, v.z, reductionRadius, WARP_SIZE));
 	}
 
 	return v;

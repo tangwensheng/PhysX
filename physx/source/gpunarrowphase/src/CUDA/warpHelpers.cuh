@@ -30,6 +30,10 @@
 #ifndef __SCANWARP_CUH__
 #define __SCANWARP_CUH__
 
+#if defined(__HIPCC__)
+#include "PxgHIPCompat.h"
+#endif
+
 /* Scan&Reduce operators */
 
 template <typename T>
@@ -101,34 +105,34 @@ template <typename T, class OP>
 __device__ static inline void reduceWarp(volatile T* sdata)
 {
 	unsigned int idx = threadIdx.x;
-	if ((idx & (WARP_SIZE-1)) < 16)
+	// Generalised for WARP_SIZE = 32 or 64
+	if ((idx & (WARP_SIZE - 1)) < (WARP_SIZE / 2))
 	{
-		sdata[idx] = OP::apply(sdata[idx], sdata[idx + 16]);
-		sdata[idx] = OP::apply(sdata[idx], sdata[idx +  8]);
-		sdata[idx] = OP::apply(sdata[idx], sdata[idx +  4]);
-		sdata[idx] = OP::apply(sdata[idx], sdata[idx +  2]);
-		sdata[idx] = OP::apply(sdata[idx], sdata[idx +  1]);
+		for (unsigned int step = WARP_SIZE / 2; step > 0; step >>= 1)
+		{
+			sdata[idx] = OP::apply(sdata[idx], sdata[idx + step]);
+		}
 	}
 }
 
 template <typename T, class OP>
 __device__ static inline void reduceWarp(volatile T* sdata, unsigned int idx)
 {
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx + 16]); 
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  8]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  4]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  2]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  1]);
+	for (unsigned int step = WARP_SIZE / 2; step > 0; step >>= 1)
+	{
+		sdata[idx] = OP::apply(sdata[idx], sdata[idx + step]);
+	}
 }
 
 template <typename T, class OP>
 __device__ static inline void reduceHalfWarp(volatile T* sdata)
 {
 	unsigned int idx = threadIdx.x;
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  8]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  4]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  2]);
-	sdata[idx] = OP::apply(sdata[idx], sdata[idx +  1]);
+	// Half a warp/wavefront reduction
+	for (unsigned int step = WARP_SIZE / 4; step > 0; step >>= 1)
+	{
+		sdata[idx] = OP::apply(sdata[idx], sdata[idx + step]);
+	}
 }
 
 template <typename T, typename TIndex, class OP>
@@ -136,49 +140,15 @@ __device__ static inline void reduceWarpKeepIndex(volatile T* sdata, volatile TI
 {
 	TIndex ia, ib, oindex;
 
-	if ((idx & (WARP_SIZE-1)) < 16)
+	for (unsigned int step = WARP_SIZE / 2; step > 0; step >>= 1)
 	{
-		ia = sindices[idx];
-		ib = sindices[idx + 16];
-
-		sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + 16], oindex, ia, ib); 
-		sindices[idx] = oindex;
-	}
-
-	if ((idx & (WARP_SIZE-1)) < 8)
-	{
-		ia = sindices[idx];
-		ib = sindices[idx + 8];
-
-		sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + 8], oindex, ia, ib); 
-		sindices[idx] = oindex;
-	}
-
-	if ((idx & (WARP_SIZE-1)) < 4)
-	{
-		ia = sindices[idx];
-		ib = sindices[idx + 4];
-
-		sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + 4], oindex, ia, ib); 
-		sindices[idx] = oindex;
-	}
-
-	if ((idx & (WARP_SIZE-1)) < 2)
-	{
-		ia = sindices[idx];
-		ib = sindices[idx + 2];
-
-		sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + 2], oindex, ia, ib); 
-		sindices[idx] = oindex;
-	}
-
-	if ((idx & (WARP_SIZE-1)) < 1)
-	{
-		ia = sindices[idx];
-		ib = sindices[idx + 1];
-
-		sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + 1], oindex, ia, ib); 
-		sindices[idx] = oindex;
+		if ((idx & (WARP_SIZE - 1)) < step)
+		{
+			ia = sindices[idx];
+			ib = sindices[idx + step];
+			sdata[idx] = OP::applyIdx(sdata[idx], sdata[idx + step], oindex, ia, ib);
+			sindices[idx] = oindex;
+		}
 	}
 }
 
@@ -197,15 +167,26 @@ __device__ static inline void scanWarp(unsigned int scanIdx, volatile T* sdata)
 /// The number of warp scan steps
 #define STEPS LOG2_WARP_SIZE
 
-// The 5-bit SHFL mask for logically splitting warps into sub-segments starts 8-bits up
-#define SHFL_MASK ((-1 << STEPS) & 31) << 8
+// The SHFL mask for logically splitting warps into sub-segments
+// Generalized for WARP_SIZE = 32 or 64
+#define SHFL_MASK (((unsigned int)(-1) << STEPS) & (WARP_SIZE - 1)) << 8
 
 template <>
 __device__ inline void scanWarp<PxU32, AddOP<PxU32> >(unsigned int scanIdx, volatile PxU32 * sdata)
 {
 	PxU32 input = sdata[scanIdx];
 
-	// Iterate scan steps
+#if defined(__HIPCC__)
+	// HIP/DCU: use __shfl_up intrinsic (portable, works on all GPUs)
+	#pragma unroll
+	for (int STEP = 0; STEP < STEPS; STEP++)
+	{
+		PxU32 up = __shfl_up(input, 1 << STEP, WARP_SIZE);
+		if ((int)(scanIdx & (WARP_SIZE - 1)) >= (1 << STEP))
+			input = AddOP<PxU32>::apply(input, up);
+	}
+#else
+	// CUDA: use PTX shfl.up.b32 with predicate for optimal codegen
 	#pragma unroll
 	for (int STEP = 0; STEP < STEPS; STEP++)
 	{
@@ -219,6 +200,7 @@ __device__ inline void scanWarp<PxU32, AddOP<PxU32> >(unsigned int scanIdx, vola
 			"}"
 			: "=r"(input) : "r"(input), "r"(1 << STEP), "r"(SHFL_MASK), "r"(input));
 	}
+#endif
 	sdata[scanIdx] = input;
 }
 
@@ -227,7 +209,15 @@ __device__ inline void scanWarp<int, AddOP<int> >(unsigned int scanIdx, volatile
 {
 	PxU32 input = sdata[scanIdx];
 
-	// Iterate scan steps
+#if defined(__HIPCC__)
+	#pragma unroll
+	for (int STEP = 0; STEP < STEPS; STEP++)
+	{
+		PxU32 up = __shfl_up(input, 1 << STEP, WARP_SIZE);
+		if ((int)(scanIdx & (WARP_SIZE - 1)) >= (1 << STEP))
+			input = AddOP<int>::apply(input, up);
+	}
+#else
 	#pragma unroll
 	for (int STEP = 0; STEP < STEPS; STEP++)
 	{
@@ -241,6 +231,7 @@ __device__ inline void scanWarp<int, AddOP<int> >(unsigned int scanIdx, volatile
 			"}"
 			: "=r"(input) : "r"(input), "r"(1 << STEP), "r"(SHFL_MASK), "r"(input));
 	}
+#endif
 	sdata[scanIdx] = input;
 }
 
