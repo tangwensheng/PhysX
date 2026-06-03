@@ -64,6 +64,7 @@ GPU_INCLUDES="
     -I$PHYSX_ROOT/source/geomutils/src/mesh
     -I$PHYSX_ROOT/source/geomutils/src/gjk
     -I$PHYSX_ROOT/source/common/src
+    -I$PHYSX_ROOT/include/geometry
 "
 
 # Compile flag for hipcc — device-side only check (no linking)

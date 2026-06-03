@@ -154,6 +154,8 @@ inline __host__ __device__ float2 make_float2(int2 a)
     return make_float2(float(a.x), float(a.y));
 }
 
+// HIP provides float2 operators natively — skip PhysX definitions
+#if !defined(__HIPCC__)
 // addition
 inline __host__ __device__ float2 operator+(float2 a, float2 b)
 {
@@ -212,6 +214,7 @@ inline __host__ __device__ void operator/=(float2 &a, float s)
     float inv = 1.0f / s;
     a *= inv;
 }
+#endif // !__HIPCC__
 
 // lerp
 inline __device__ __host__ float2 lerp(float2 a, float2 b, float t)
