@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -32,7 +32,11 @@
 #include "PxgCommonDefines.h"
 #include "MemoryAllocator.cuh"
 
+#if defined(__HIPCC__)
+// HIP types from PxgHIPCompat.h
+#else
 #include "cuda.h"
+#endif
 #include "cuda_runtime.h"
 #include "convexFormat.h"
 #include "cudaNpCommon.h"

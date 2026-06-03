@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -27,7 +27,9 @@
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
 #include "common/PxPhysXCommonConfig.h"
+#if !defined(__HIPCC__)
 #include <cuda.h>
+#endif
 #include <sm_35_intrinsics.h>
 #include "PxgSolverBody.h"
 #include "PxgSolverConstraintBlock1D.h"

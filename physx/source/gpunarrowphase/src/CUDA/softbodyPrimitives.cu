@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -55,7 +55,9 @@
 #include "convexNpCommon.h"
 #include "cudaNpCommon.h"
 
+#if !defined(__HIPCC__)
 #include <vector_types.h>
+#endif
 
 #include "dataReadWriteHelper.cuh"
 #include "heightfieldUtil.cuh"

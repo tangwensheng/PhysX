@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -33,7 +33,11 @@
 #if defined(__HIPCC__)
 // float4 provided by PxgHIPCompat.h -> hip/hip_runtime.h
 #else
+#if defined(__HIPCC__)
+// float4/uint4 from PxgHIPCompat.h
+#else
 #include "vector_types.h"
+#endif
 #endif
 
 namespace physx

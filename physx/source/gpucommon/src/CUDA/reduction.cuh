@@ -295,7 +295,7 @@ __device__ static inline T warpScanExclusive(T input)
 #pragma unroll
 	for (PxU32 reductionRadius = 1; reductionRadius < WARP_SIZE; reductionRadius <<= 1)
 	{
-		T val = __shfl_up_sync(FULL_MASK, input, reductionRadius);
+		T val = __shfl_up_sync(FULL_MASK, input, reductionRadius, WARP_SIZE);
 
 		if (idxInGroup >= reductionRadius)
 		{
@@ -502,7 +502,7 @@ static __inline__ __device__ T warpScanAdd(const PxU32 syncMask, const PxU32 /*i
 		#pragma unroll
 		for(PxU32 i = 1; i < nbElems; i<<=1)
 		{
-			const T temp = __shfl_sync(mask_local, val, threadIndexInWarp-i);
+			const T temp = __shfl_sync(mask_local, val, threadIndexInWarp-i, WARP_SIZE);
 
 			if(threadIndexInWarp >= i)
 				val += temp;
@@ -553,7 +553,7 @@ static __inline__ __device__ T warpScanAddWriteToSharedMem(PxU32 syncMask, PxU32
 		#pragma unroll
 		for(PxU32 i = 1; i < nbElems; i<<=1)
 		{
-			temp = __shfl_sync(mask_local, val, threadIndexInWarp-i);
+			temp = __shfl_sync(mask_local, val, threadIndexInWarp-i, WARP_SIZE);
 			
 			if(threadIndexInWarp >= i)
 				val += temp;

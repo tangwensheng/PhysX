@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -45,7 +45,9 @@
 #include "GuBV32.h"
 #include "schlockShared.h"
 
+#if !defined(__HIPCC__)
 #include <vector_types.h>
+#endif
 
 #include "PxgContactManager.h"
 #include "PxgConvexConvexShape.h"
@@ -62,7 +64,11 @@
 
 #include "PxgCommonDefines.h"
 #include "copy.cuh"
+#if defined(__HIPCC__)
+// HIP types from PxgHIPCompat.h
+#else
 #include "cuda.h"
+#endif
 #include "dataReadWriteHelper.cuh"
 #include "epa.cuh"
 #include "gridCal.cuh"

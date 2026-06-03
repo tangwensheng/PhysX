@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -26,7 +26,11 @@
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#if defined(__HIPCC__)
+// HIP types from PxgHIPCompat.h
+#else
 #include "cuda.h"
+#endif
 #include "convexNpCommon.h"
 #include "triangle.cuh"
 #include "dataReadWriteHelper.cuh"

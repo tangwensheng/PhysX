@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -29,7 +29,11 @@
 #include "foundation/PxSimpleTypes.h"
 #include "foundation/PxVec3.h"
 #include "foundation/PxVec4.h"
+#if defined(__HIPCC__)
+// HIP types from PxgHIPCompat.h
+#else
 #include "cuda.h"
+#endif
 #include "PxgAlgorithmsData.h"
 #include "stdio.h"
 

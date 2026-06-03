@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -28,7 +28,9 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#if !defined(__HIPCC__)
 #include <cuda.h>
+#endif
 #include <cuda_runtime.h>
 #include "GuIntersectionTriangleBoxRef.h"
 
@@ -793,7 +795,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 	}
 
 	// syncthreads() but with explicit barrier number to make sure we really have the whole block waiting here.
-	asm volatile ("bar.sync 1;");
+	__syncthreads(); // was: asm volatile ("bar.sync 1;") — named barrier not supported in HIP
 
 	//if (accept2)
 	//{
@@ -848,7 +850,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 
 	// AD: we need a barrier to make sure that all threads have executed the if above.
 	// Otherwise we might change the flag and not all the threads will do the same thing.
-	asm volatile ("bar.sync 2;");
+	__syncthreads(); // was: asm volatile ("bar.sync 2;") — named barrier not supported in HIP
 
 	if (threadIdx.x == 0)
 		anyKeepS = false;
@@ -891,7 +893,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 		}
 
 		// syncthreads() but with explicit barrier number to make sure we really have the whole block waiting here.
-		asm volatile ("bar.sync 3;");
+		__syncthreads(); // was: asm volatile ("bar.sync 3;")
 
 		//Now, find the smallest separation across all threads...
 		minSep = shMinSepS[threadIndexInWarp];
@@ -912,7 +914,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 			}
 
 			// __syncthreads(); but with explicit barrier number to make sure we really have the whole block entering the if and waiting here.
-			asm volatile ("bar.sync 4;");
+			__syncthreads(); // was: asm volatile ("bar.sync 4;")
 
 			//Now place any candidate contacts into the reduction buffer...
 
@@ -965,7 +967,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 		// if you wonder why this is necessary even though we already have a blocking wait inside the if,
 		// you need to remember that the if condition could be false, and if we don't block here
 		// a warp could run ahead and make it true before everyone is past the branch.
-		asm volatile ("bar.sync 5;");
+		__syncthreads(); // was: asm volatile ("bar.sync 5;")
 	}
 }
 

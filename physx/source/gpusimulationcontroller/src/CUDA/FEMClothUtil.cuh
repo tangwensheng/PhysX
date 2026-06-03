@@ -1,4 +1,4 @@
-// Redistribution and use in source and binary forms, with or without
+﻿// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -30,7 +30,11 @@
 #define __CU_FEMCLOTHUTIL_CUH__
 
 #include "PxgFEMCloth.h"
+#if defined(__HIPCC__)
+// float4/uint4 from PxgHIPCompat.h
+#else
 #include "vector_types.h"
+#endif
 #include "foundation/PxVec3.h"
 #include "foundation/PxVec4.h"
 #include "foundation/PxBounds3.h"

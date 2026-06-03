@@ -22,11 +22,24 @@
 
 // ---- Warp shuffle intrinsics ----
 // Old HIP: __shfl(var, srcLane, width) — no mask argument, uses full wavefront
-// For PhysX: we ignore the mask parameter since PhysX almost always uses FULL_MASK
-#define __shfl_sync(mask, var, lane, width)       __shfl((var), (lane), (width))
-#define __shfl_xor_sync(mask, var, offset, width) __shfl_xor((var), (offset), (width))
-#define __shfl_up_sync(mask, var, delta, width)   __shfl_up((var), (delta), (width))
-#define __shfl_down_sync(mask, var, delta, width) __shfl_down((var), (delta), (width))
+// These variadic macros support both 3-arg (CUDA default width=32) and 4-arg calls.
+// When width is omitted, WARP_SIZE (64 on DCU) is used as default.
+#define __shfl_sync_4(mask, var, lane, width)       __shfl((var), (lane), (width))
+#define __shfl_sync_3(mask, var, lane)              __shfl((var), (lane), WARP_SIZE)
+#define __shfl_sync_DISP(_1,_2,_3,_4,NAME,...) NAME
+#define __shfl_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_sync_4, __shfl_sync_3, _DUMMY)(__VA_ARGS__)
+
+#define __shfl_xor_sync_4(mask, var, offset, width)  __shfl_xor((var), (offset), (width))
+#define __shfl_xor_sync_3(mask, var, offset)         __shfl_xor((var), (offset), WARP_SIZE)
+#define __shfl_xor_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_xor_sync_4, __shfl_xor_sync_3, _DUMMY)(__VA_ARGS__)
+
+#define __shfl_up_sync_4(mask, var, delta, width)    __shfl_up((var), (delta), (width))
+#define __shfl_up_sync_3(mask, var, delta)           __shfl_up((var), (delta), WARP_SIZE)
+#define __shfl_up_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_up_sync_4, __shfl_up_sync_3, _DUMMY)(__VA_ARGS__)
+
+#define __shfl_down_sync_4(mask, var, delta, width)  __shfl_down((var), (delta), (width))
+#define __shfl_down_sync_3(mask, var, delta)         __shfl_down((var), (delta), WARP_SIZE)
+#define __shfl_down_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_down_sync_4, __shfl_down_sync_3, _DUMMY)(__VA_ARGS__)
 
 // ---- Warp vote intrinsics ----
 #define __ballot_sync(mask, pred)    __ballot(pred)       // returns unsigned long long (64-bit)
