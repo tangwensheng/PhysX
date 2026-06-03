@@ -65,10 +65,13 @@ typedef unsigned char uchar;
 PX_FORCE_INLINE __device__ __host__ float fmaxf(float a, float b) { return a > b ? a : b; }
 PX_FORCE_INLINE __device__ __host__ float fminf(float a, float b) { return a < b ? a : b; }
 #endif
+#if !defined(__HIPCC__)
+// HIP/Clang provides max/min in <hip/hip_runtime.h> and <algorithm>
 PX_FORCE_INLINE __device__ __host__ int max(int a, int b) { return a > b ? a : b; }
 PX_FORCE_INLINE __device__ __host__ unsigned int max(unsigned int a, unsigned int b) { return a > b ? a : b; }
 PX_FORCE_INLINE __device__ __host__ int min(int a, int b) { return a < b ? a : b; }
 PX_FORCE_INLINE __device__ __host__ unsigned int min(unsigned int a, unsigned int b) { return a < b ? a : b; }
+#endif
 #endif
 #endif
 
@@ -443,6 +446,8 @@ static __inline__ __host__ __device__ float4 fmaxf(float4 a, float4 b)
 	return make_float4(fmaxf(a.x,b.x), fmaxf(a.y,b.y), fmaxf(a.z,b.z), fmaxf(a.w,b.w));
 }
 
+// HIP provides these float4 operators natively — skip PhysX definitions
+#if !defined(__HIPCC__)
 // addition
 inline __host__ __device__ float4 operator+(float4 a, float4 b)
 {
@@ -472,6 +477,7 @@ inline __host__ __device__ float4 operator*(float s, float4 a)
 {
     return make_float4(a.x * s, a.y * s, a.z * s, a.w * s);
 }
+#endif // !__HIPCC__
 inline __host__ __device__ void operator*=(float4 &a, float s)
 {
     a.x *= s; a.y *= s; a.z *= s; a.w *= s;

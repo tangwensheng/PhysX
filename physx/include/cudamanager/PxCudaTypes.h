@@ -35,6 +35,12 @@
 #if PX_SUPPORT_GPU_PHYSX
 #ifndef CUDA_VERSION
 
+// HIP: redirect to stub cuda.h for type definitions
+#if defined(__HIPCC__)
+// The HIP stub cuda.h is in the include path and provides all CUDA types
+#include "cuda.h"
+#else
+
 #include "foundation/PxSimpleTypes.h"
 
 #if PX_CLANG
@@ -60,6 +66,8 @@ typedef struct CUfunc_st* CUfunction;
 typedef struct CUstream_st* CUstream;
 typedef struct CUevent_st* CUevent;
 typedef struct CUgraphicsResource_st* CUgraphicsResource;
+
+#endif // !__HIPCC__
 
 #endif
 

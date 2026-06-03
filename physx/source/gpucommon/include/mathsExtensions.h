@@ -66,10 +66,12 @@ PX_CUDA_CALLABLE PX_FORCE_INLINE float4 cross3(const float4& v0, const float4& v
 					0.f);
 }
 
+#if !defined(__HIPCC__)
 PX_CUDA_CALLABLE PX_FORCE_INLINE float4 operator - (const float4& v)
 {
 	return make_float4(-v.x, -v.y, -v.z, -v.w);
 }
+#endif
 }
 
 #endif
