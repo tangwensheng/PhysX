@@ -32,7 +32,9 @@
 #include "PxgNarrowphaseCore.h"
 #include "DyResidualAccumulator.h"
 
+#if !defined(__HIPCC__)
 struct float4;
+#endif
 
 namespace physx
 {

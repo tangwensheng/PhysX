@@ -50,6 +50,11 @@ namespace physx
 	//Returns the index of the lowest set bit. Returns 0xFFffFFff is not bit is set
 	__device__ PX_FORCE_INLINE PxU32 lowestSetIndex(PxU32 val) { return __ffs(val) - 1; }
 	__device__ PX_FORCE_INLINE PxU32 clearLowestSetBit(PxU32 val) { return val & (val - 1); }
+
+	// 64-bit overload for HIP (__ballot returns 64-bit mask)
+#if defined(__HIPCC__)
+	__device__ PX_FORCE_INLINE int lowestSetIndex(unsigned long long val) { return __ffsll(val) - 1; }
+#endif
 }
 
 #endif

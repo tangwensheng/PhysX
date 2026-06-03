@@ -80,6 +80,27 @@
 #define PX_RED_GLOBAL_ADD_F32(addr, val) atomicAdd((addr), (val))
 
 // ---- Miscellaneous ----
+// CUDA alignment attribute → HIP/Clang
+#define __builtin_align__(N)  __attribute__((aligned(N)))
+
+// __ffsll: CUDA 64-bit find-first-set. In HIP, __ffsll exists but may have
+// ambiguous overloads for unsigned types. Cast to long long for safety.
+#define __ffsll(x)  __ffsll((long long)(x))
+
+// ---- Solver/Dynamics constants (for files that lack the full CPU header chain) ----
+// These are normally provided by DyConstraint.h / PxcNpWorkUnit.h / PxvConfig.h
+// but are not available when compiling kernels standalone without the full build system.
+namespace physx { namespace Dy {
+    const int MAX_CONSTRAINT_ROWS = 32;
+} }
+#define DY_SC_FLAG_SPRING               0x0001
+#define DY_SC_FLAG_ACCELERATION_SPRING  0x0002
+#define DY_SC_FLAG_OUTPUT_FORCE         0x0004
+#define DY_SC_FLAG_KEEP_BIAS            0x0008
+#define DY_SC_FLAG_INEQUALITY           0x0010
+#define DY_SC_FLAG_ORTHO_TARGET         0x0020
+#define DY_SC_FLAG_ROT_EQ               0x0040
+
 // CUDA's WARP_SIZE definition is in PxgCommonDefines.h, already handled
 
 #endif // defined(__HIPCC__)

@@ -58,12 +58,14 @@ GPU_INCLUDES="
     -I$PHYSX_ROOT/source/scenequery/include
     -I$PHYSX_ROOT/source/lowlevel/api/include
     -I$PHYSX_ROOT/source/lowlevel/software/include
+    -I$PHYSX_ROOT/source/lowlevel/common/include
     -I$PHYSX_ROOT/source/lowleveldynamics/include
     -I$PHYSX_ROOT/source/lowleveldynamics/shared
     -I$PHYSX_ROOT/source/lowlevelaabb/include
     -I$PHYSX_ROOT/source/geomutils/src/mesh
     -I$PHYSX_ROOT/source/geomutils/src/gjk
     -I$PHYSX_ROOT/source/common/src
+    -I$PHYSX_ROOT/source/geomutils/src
     -I$PHYSX_ROOT/include/geometry
 "
 

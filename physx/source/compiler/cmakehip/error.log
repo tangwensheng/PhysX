@@ -1,710 +1,138 @@
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:201:8: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:622:20: error: use of undeclared identifier 'DY_SC_FLAG_INEQUALITY'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:201:8: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrep.cu:40:10: fatal error: 'DyConstraintPrep.h' file not found
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrePrep.cu:52:10: fatal error: 'DyConstraintPrep.h' file not found
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:201:8: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrepTGS.cu:37:10: fatal error: 'DyConstraintPrep.h' file not found
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpucommon/src/DCU/stubs/PxcNpWorkUnit.h:6:12: error: redefinition of 'PxsShapeCore'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
                 PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:610:20: error: use of undeclared identifier 'DY_SC_FLAG_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:613:20: error: use of undeclared identifier 'DY_SC_FLAG_ACCELERATION_SPRING'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:616:20: error: use of undeclared identifier 'DY_SC_FLAG_OUTPUT_FORCE'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:619:20: error: use of undeclared identifier 'DY_SC_FLAG_KEEP_BIAS'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:622:20: error: use of undeclared identifier 'DY_SC_FLAG_INEQUALITY'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowleveldynamics/shared/DyCpuGpu1dConstraint.h:800:36: error: use of undeclared identifier 'DY_SC_FLAG_INEQUALITY'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrePrep.cu:1069:60: error: use of undeclared identifier 'PxConstraintFlag'; did you mean 'Px1DConstraintFlag'?
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrePrep.cu:1069:78: error: no member named 'eDISABLE_CONSTRAINT' in 'physx::Px1DConstraintFlag'; did you mean 'eANGULAR_CONSTRAINT'?
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrePrep.cu:1070:59: error: use of undeclared identifier 'PxConstraintFlag'; did you mean 'Px1DConstraintFlag'?
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusolver/src/CUDA/constraintBlockPrePrep.cu:1070:77: error: no member named 'eENABLE_EXTENDED_LIMITS' in 'physx::Px1DConstraintFlag'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+                PxReal maxErr = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxError);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:319:6: error: no type named 'GridQueryPointSampler' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:399:15: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:405:6: error: no type named 'GridQueryPointSampler' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:431:27: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:459:7: error: no member named 'idToXYZ' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:461:27: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:476:14: error: expected ';' after expression
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:476:6: error: no member named 'DenseSDF' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:476:15: error: use of undeclared identifier 'coarseEval'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:489:7: error: no member named 'idToXYZ' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:495:27: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:501:53: error: use of undeclared identifier 'coarseEval'
+                maxAbsError = PxMax(maxAbsError, PxAbs(sdfValue - coarseEval.sampleSDFDirect(PxVec3(blockIdx.x + xLocal * s, blockIdx.y + yLocal * s, blockIdx.z + zLocal * s))));
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:518:21: error: no member named 'idx3D' in namespace 'physx::Gu'
+        maxAbsError = blockReduction<MaxOpFloat, PxReal>(FULL_MASK, maxAbsError, -FLT_MAX, blockDim.x, sharedMemoryZ);
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:564:24: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:582:6: error: no member named 'idToXYZ' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:585:26: error: no member named 'encodeTriple' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:604:7: error: no member named 'idToXYZ' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:606:27: error: no member named 'idx3D' in namespace 'physx::Gu'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpusimulationcontroller/src/CUDA/SDFConstruction.cu:616:27: error: no member named 'idx3D' in namespace 'physx::Gu'
 fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusimulationcontroller/include/PxgBVH.h:33:10: fatal error: 'GuSDF.h' file not found
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected unqualified-id
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgConstraintPrep.h:85:50: error: expected ')'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/convexCoreCollision.cu:56:10: fatal error: 'GuConvexSupport.cpp' file not found
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpucommon/src/CUDA/reduction.cuh:214:20: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpucommon/src/CUDA/reduction.cuh:214:20: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:118:11: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:134:12: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:147:16: error: no matching function for call to 'tex3D'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpucommon/src/CUDA/reduction.cuh:214:20: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1928:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1929:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1930:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaParticleSystem.cu:362:49: error: use of undeclared identifier 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaParticleSystem.cu:362:49: error: no member named 'MAX_CORE_SIZE' in 'physx::PxConvexMeshGeometry'; did you mean 'physx::Gu::ConvexCore::MAX_CORE_SIZE'?
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1931:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1933:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1934:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1935:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1936:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1938:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../gpunarrowphase/src/CUDA/cudaGJKEPA.cu:1939:15: error: cannot initialize an array element of type 'PxU32 ((FinishContactsWarpScratch::*)[32])' with an rvalue of type 'PxU32 (FinishContactsWarpScratch::*)[64]'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:118:11: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:134:12: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:147:16: error: no matching function for call to 'tex3D'
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:118:11: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:134:12: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:147:16: error: no matching function for call to 'tex3D'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpucommon/src/CUDA/reduction.cuh:214:20: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:118:11: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:134:12: error: no matching function for call to 'tex3D'
 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/sdfCollision.cuh:147:16: error: no matching function for call to 'tex3D'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:148:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:162:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/src/CUDA/nputils.cuh:190:9: error: call to 'lowestSetIndex' is ambiguous
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:128:20: error: explicit specialization of undeclared template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:129:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:130:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:131:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: explicit specialization of non-template struct 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:132:20: error: redefinition of 'PxcGeometryTraits'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:175:26: error: unknown type name 'PxConvexCoreGeometry'; did you mean 'PxConvexMeshGeometry'?
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:181:22: error: use of undeclared identifier 'PxCustomGeometry'
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/lowlevel/api/include/PxvGeometry.h:256:1: error: static assertion failed due to requirement '(sizeof(physx::PxsShapeCore) & 15) == 0': 
-/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpusolver/include/PxgSolverCoreDesc.h:35:8: error: definition of type 'float4' conflicts with type alias of the same name
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
+/public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/../../../source/gpunarrowphase/include/cudaNpCommon.h:106:4: note: in instantiation of function template specialization 'PX_UNUSED<physx::PxgPatchAndContactCounters::OverflowError>' requested here
