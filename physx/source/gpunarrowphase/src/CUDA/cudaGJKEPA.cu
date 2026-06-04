@@ -1919,7 +1919,7 @@ __constant__ __device__ PxReal patchConstants[] =	{1.0f,//mInvMassScale0
 
 PX_COMPILE_TIME_ASSERT(sizeof(patchConstants) == 16 * 4);
 
-__constant__ __device__ PxU32 ((FinishContactsWarpScratch::*patchOffsets[16])[32]) = {
+__constant__ __device__ PxU32 ((FinishContactsWarpScratch::*patchOffsets[16])[WARP_SIZE]) = {
 													 0,
 													 0,
 													 0,
@@ -1957,7 +1957,7 @@ static __device__ inline void writePatchesToStream4threads(
 	#pragma unroll 4 
 	for (PxU32 baseOffs = 0; baseOffs < WARP_SIZE; baseOffs += numElemsPerIteration)
 	{
-		PxU32(FinishContactsWarpScratch::*ptr0)[32] = patchOffsets[tidInGroup * 4 + 0];
+		PxU32(FinishContactsWarpScratch::*ptr0)[WARP_SIZE] = patchOffsets[tidInGroup * 4 + 0];
 		PxU32 val0;
 		if (ptr0)
 		{
@@ -1968,7 +1968,7 @@ static __device__ inline void writePatchesToStream4threads(
 			val0 = __float_as_int(patchConstants[tidInGroup * 4 + 0]);
 		}
 
-		PxU32(FinishContactsWarpScratch::*ptr1)[32] = patchOffsets[tidInGroup * 4 + 1];
+		PxU32(FinishContactsWarpScratch::*ptr1)[WARP_SIZE] = patchOffsets[tidInGroup * 4 + 1];
 		PxU32 val1;
 		if (ptr1)
 		{
@@ -1979,7 +1979,7 @@ static __device__ inline void writePatchesToStream4threads(
 			val1 = __float_as_int(patchConstants[tidInGroup * 4 + 1]);
 		}
 
-		PxU32(FinishContactsWarpScratch::*ptr2)[32] = patchOffsets[tidInGroup * 4 + 2];
+		PxU32(FinishContactsWarpScratch::*ptr2)[WARP_SIZE] = patchOffsets[tidInGroup * 4 + 2];
 		PxU32 val2;
 		if (ptr2)
 		{
@@ -1990,7 +1990,7 @@ static __device__ inline void writePatchesToStream4threads(
 			val2 = __float_as_int(patchConstants[tidInGroup * 4 + 2]);
 		}
 
-		PxU32(FinishContactsWarpScratch::*ptr3)[32] = patchOffsets[tidInGroup * 4 + 3];
+		PxU32(FinishContactsWarpScratch::*ptr3)[WARP_SIZE] = patchOffsets[tidInGroup * 4 + 3];
 		PxU32 val3;
 		if (ptr3)
 		{

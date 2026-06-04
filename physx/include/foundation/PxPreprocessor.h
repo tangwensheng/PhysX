@@ -315,6 +315,8 @@ Force inline macro
 */
 #if PX_VC
 	#define PX_FORCE_INLINE __forceinline
+#elif defined(__HIPCC__)
+	#define PX_FORCE_INLINE inline __attribute__((always_inline))
 #elif PX_CUDA_COMPILER
 	#define PX_FORCE_INLINE __forceinline__
 #elif PX_GCC_FAMILY

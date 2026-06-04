@@ -1,0 +1,9 @@
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXCommonGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXBroadphaseGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXArticulationGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXSolverGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXSimulationControllerGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXNarrowphaseGpu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/test_physx_dcu.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/edit_cache.dir
+/public/home/tangwsh/PhysX/build_dcu/CMakeFiles/rebuild_cache.dir

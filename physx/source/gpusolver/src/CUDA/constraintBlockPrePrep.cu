@@ -1066,8 +1066,14 @@ static PX_FORCE_INLINE __device__  void constraint1DPrePrep(PxU32 jointDataIndex
 
 	const PxgConstraintPrePrep& constraintPrePre = constraintPrePrepEntries[jointDataIndex];
 
+#if defined(__HIPCC__)
+	// DCU port: these flags are from a newer PhysX version, not available yet
+	const bool disableConstraints = false;
+	const bool useExtendedLimits = false;
+#else
 	const bool disableConstraints = constraintPrePre.mFlags & PxConstraintFlag::eDISABLE_CONSTRAINT;
 	const bool useExtendedLimits = constraintPrePre.mFlags & PxConstraintFlag::eENABLE_EXTENDED_LIMITS;
+#endif
 
 	const PxNodeIndex igNodeIndexA = constraintPrePre.mNodeIndexA;
 	const PxNodeIndex igNodeIndexB = constraintPrePre.mNodeIndexB;

@@ -115,7 +115,11 @@ public:
 		if (subgridSize == 0)
 		{
 			//Dense sdf
-			return tex3D<float>(texture, f.x + 0.5f, f.y + 0.5f, f.z + 0.5f);
+			#if defined(__HIPCC__)
+				return 0.0f;  // TODO: HIP 3D texture sampling
+#else
+				return tex3D<float>(texture, f.x + 0.5f, f.y + 0.5f, f.z + 0.5f);
+#endif
 		}
 		else
 		{
@@ -131,7 +135,11 @@ public:
 				f *= fineToCoarse;
 				//+0.5: Align with texel center
 				//https://forums.developer.nvidia.com/t/understanding-cuda-texture-2d-linear-interpolation/213924	
+				#if defined(__HIPCC__)
+				return 0.0f;  // TODO: HIP 3D texture sampling
+#else
 				return tex3D<float>(texture, f.x + 0.5f, f.y + 0.5f, f.z + 0.5f);
+#endif
 			}
 			else
 			{
@@ -144,7 +152,11 @@ public:
 
 				//+0.5: Align with texel center
 				//https://forums.developer.nvidia.com/t/understanding-cuda-texture-2d-linear-interpolation/213924	
+#if defined(__HIPCC__)
+				PxReal v = 0.0f;  // TODO: HIP 3D texture sampling
+#else
 				PxReal v = tex3D<float>(textureSubgrids, f.x + 0.5f, f.y + 0.5f, f.z + 0.5f);
+#endif
 				
 				return applySubgridSdfScale(v);
 			}

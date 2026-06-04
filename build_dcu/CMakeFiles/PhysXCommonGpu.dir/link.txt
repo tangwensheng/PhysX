@@ -1,0 +1,2 @@
+/usr/bin/ar qc libPhysXCommonGpu.a CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
+/usr/bin/ranlib libPhysXCommonGpu.a

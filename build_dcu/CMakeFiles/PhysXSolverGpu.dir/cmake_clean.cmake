@@ -1,0 +1,21 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o"
+  "CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o"
+  "libPhysXSolverGpu.a"
+  "libPhysXSolverGpu.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang HIP)
+  include(CMakeFiles/PhysXSolverGpu.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

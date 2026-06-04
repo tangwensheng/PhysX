@@ -1,0 +1,2 @@
+/usr/bin/ar qc libPhysXBroadphaseGpu.a CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.o CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o
+/usr/bin/ranlib libPhysXBroadphaseGpu.a

@@ -16,6 +16,17 @@
 // HIP runtime provides device intrinsics (__shfl, __ballot, atomicAdd, etc.)
 #include <hip/hip_runtime.h>
 
+// PhysX foundation types needed by kernel code (PxVec3, PxU32, PxReal, etc.)
+// In the CUDA build these come transitively through nvcc include chains.
+// For HIP, we ensure they're available at the top level.
+#include "foundation/PxPreprocessor.h"
+#include "foundation/PxSimpleTypes.h"
+#include "foundation/PxVec3.h"
+#include "foundation/PxVec4.h"
+#include "foundation/PxMat33.h"
+#include "foundation/PxMat44.h"
+#include "foundation/PxTransform.h"
+
 // ---- Architecture constants ----
 // WARP_SIZE and FULL_MASK are already defined in PxgCommonDefines.h
 // which detects __HIPCC__ and sets WARP_SIZE=64, FULL_MASK=0xffffffffffffffffULL
@@ -100,6 +111,8 @@ namespace physx { namespace Dy {
 #define DY_SC_FLAG_INEQUALITY           0x0010
 #define DY_SC_FLAG_ORTHO_TARGET         0x0020
 #define DY_SC_FLAG_ROT_EQ               0x0040
+
+// Note: PxConstraintFlag comes from PxConstraint.h, included via the full build system
 
 // CUDA's WARP_SIZE definition is in PxgCommonDefines.h, already handled
 

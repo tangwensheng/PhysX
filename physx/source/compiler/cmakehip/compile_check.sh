@@ -33,6 +33,7 @@ PHYSX_ROOT="$PHYSX_SRC/.."
 STUBS_DIR="$PHYSX_SRC/gpucommon/src/DCU/stubs"
 
 GPU_INCLUDES="
+    -I$PHYSX_ROOT/source/geomutils/src
     -I$STUBS_DIR
     -I$PHYSX_ROOT/include
     -I$PHYSX_ROOT/source/common/include
@@ -65,7 +66,6 @@ GPU_INCLUDES="
     -I$PHYSX_ROOT/source/geomutils/src/mesh
     -I$PHYSX_ROOT/source/geomutils/src/gjk
     -I$PHYSX_ROOT/source/common/src
-    -I$PHYSX_ROOT/source/geomutils/src
     -I$PHYSX_ROOT/include/geometry
 "
 
