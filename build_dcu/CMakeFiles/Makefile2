@@ -70,6 +70,7 @@ all: CMakeFiles/PhysXSolverGpu.dir/all
 all: CMakeFiles/PhysXSimulationControllerGpu.dir/all
 all: CMakeFiles/PhysXNarrowphaseGpu.dir/all
 all: CMakeFiles/test_physx_dcu.dir/all
+all: CMakeFiles/test_functional.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -84,6 +85,7 @@ clean: CMakeFiles/PhysXSolverGpu.dir/clean
 clean: CMakeFiles/PhysXSimulationControllerGpu.dir/clean
 clean: CMakeFiles/PhysXNarrowphaseGpu.dir/clean
 clean: CMakeFiles/test_physx_dcu.dir/clean
+clean: CMakeFiles/test_functional.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -249,7 +251,7 @@ CMakeFiles/PhysXNarrowphaseGpu.dir/clean:
 CMakeFiles/test_physx_dcu.dir/all: CMakeFiles/PhysXCommonGpu.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=68,69 "Built target test_physx_dcu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=70,71 "Built target test_physx_dcu"
 .PHONY : CMakeFiles/test_physx_dcu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -267,6 +269,33 @@ test_physx_dcu: CMakeFiles/test_physx_dcu.dir/rule
 CMakeFiles/test_physx_dcu.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/clean
 .PHONY : CMakeFiles/test_physx_dcu.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_functional.dir
+
+# All Build rule for target.
+CMakeFiles/test_functional.dir/all: CMakeFiles/PhysXCommonGpu.dir/all
+CMakeFiles/test_functional.dir/all: CMakeFiles/PhysXBroadphaseGpu.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=68,69 "Built target test_functional"
+.PHONY : CMakeFiles/test_functional.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_functional.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_dcu/CMakeFiles 9
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_functional.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_dcu/CMakeFiles 0
+.PHONY : CMakeFiles/test_functional.dir/rule
+
+# Convenience name for target.
+test_functional: CMakeFiles/test_functional.dir/rule
+.PHONY : test_functional
+
+# clean rule for target.
+CMakeFiles/test_functional.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/clean
+.PHONY : CMakeFiles/test_functional.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

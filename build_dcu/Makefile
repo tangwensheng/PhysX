@@ -207,6 +207,19 @@ test_physx_dcu/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/build
 .PHONY : test_physx_dcu/fast
 
+#=============================================================================
+# Target rules for targets named test_functional
+
+# Build rule for target.
+test_functional: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_functional
+.PHONY : test_functional
+
+# fast build rule for target.
+test_functional/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/build
+.PHONY : test_functional/fast
+
 public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.o: public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.o
 
@@ -422,6 +435,30 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.s: public/home
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.i: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.i
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.s: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.s
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.o
@@ -1709,6 +1746,7 @@ help:
 	@echo "... PhysXNarrowphaseGpu"
 	@echo "... PhysXSimulationControllerGpu"
 	@echo "... PhysXSolverGpu"
+	@echo "... test_functional"
 	@echo "... test_physx_dcu"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.i"
@@ -1737,6 +1775,9 @@ help:
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.s"

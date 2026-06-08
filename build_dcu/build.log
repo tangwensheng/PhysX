@@ -1,0 +1,615 @@
+[  5%] Built target PhysXCommonGpu
+[  9%] Built target PhysXBroadphaseGpu
+[ 16%] Built target PhysXArticulationGpu
+[ 35%] Built target PhysXSolverGpu
+[ 57%] Built target PhysXSimulationControllerGpu
+[ 94%] Built target PhysXNarrowphaseGpu
+[ 97%] Built target test_physx_dcu
+[ 98%] Building HIP object CMakeFiles/test_functional.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:22:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxPreprocessor.h:524:10: warning: 'PX_SUPPORT_GPU_PHYSX' macro redefined [-Wmacro-redefined]
+        #define PX_SUPPORT_GPU_PHYSX ((PX_X64 && (PX_WINDOWS_FAMILY || PX_LINUX)) || (PX_A64 && PX_LINUX))
+                ^
+<command line>:3:9: note: previous definition is here
+#define PX_SUPPORT_GPU_PHYSX 1
+        ^
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:24:
+In file included from /public/home/tangwsh/PhysX/physx/include/foundation/PxVec3.h:33:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMath.h:213:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMath.h:220:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:26:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:431:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:448:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:465:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:581:45: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 perWarpCount = warpCountAndBroadcast(FULL_MASK, threadContributesElement);
+                             ~~~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:588:42: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        return warpReduction<AddOpPxU32, PxU32>(FULL_MASK, sharedMem[threadIndexInWarp]);
+               ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:616:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 total = warpScan<AddOpPxU32, PxU32>(FULL_MASK, warpCount); //The inclusive cumulative sum per warp. The last warp has the total number of elements created by the full thread block
+                      ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:640:59: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 perWarpInclusiveScan = warpScan<AddOpPxU32, PxU32>(FULL_MASK, numElementsFromCallingThread);
+                                     ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:649:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 total = warpScan<AddOpPxU32, PxU32>(FULL_MASK, warpCount); //The inclusive cumulative sum per warp. The last warp has the total number of elements created by the full thread block
+                      ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:109:57: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                PxU32 output = warpScanAddWriteToSharedMem<WARP_SIZE>(FULL_MASK, radixSumIndex, threadIndexInWarp, sData, value, value);
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~            ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:176:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:223:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpScanAdd<WARP_SIZE>(FULL_MASK, idx, threadIndexInWarp, (PxU32*)NULL, accum, accumValue);
+                                  ~~~~~~~~~~~            ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:339:46: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScanAdd<WARP_SIZE, PxU32>(FULL_MASK, idx, threadIndexInWarp, sBuckets, accum, 0);
+                                    ~~~~~~~~~~~                   ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:476:54: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                  ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:528:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScan<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                    ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:585:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:605:54: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                  ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:654:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScan<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                    ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:707:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:768:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:41:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * sizeof(PxU64));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:42:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(PxU64));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:43:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_rank, N * sizeof(PxU32));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:44:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_num, sizeof(PxU32));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:51:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_in, h_in, N * sizeof(PxU64), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:52:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_rank, h_rank, N * sizeof(PxU32), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:53:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_num, &h_num, sizeof(PxU32), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:56:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:59:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(PxU64), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                                   ^~~~~~~ ~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:53: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                                                    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:80:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:81:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:86:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemset(d_in, 0, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:87:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:93:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:93:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:109:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_sum, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:111:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_sum, &zero, sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:114:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemset(d_sum, 0, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:115:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:120:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_val, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:121:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_val, &zero, sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:126:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_sum); hipFree(d_val);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:126:21: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_sum); hipFree(d_val);
+                    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:140:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:141:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:146:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_in, h_in, N * sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:147:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:152:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:152:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:163:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:174:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:177:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:180:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(float), hipMemcpyDeviceToHost);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:193:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_out);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:209:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_a, bytes);
+    ^~~~~~~~~ ~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:210:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_b, bytes);
+    ^~~~~~~~~ ~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:213:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventCreate(&start);
+    ^~~~~~~~~~~~~~ ~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:214:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventCreate(&stop);
+    ^~~~~~~~~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:217:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_b, d_a, bytes, hipMemcpyDeviceToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:219:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventRecord(start);
+    ^~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:221:9: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+        hipMemcpy(d_b, d_a, bytes, hipMemcpyDeviceToDevice);
+        ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:223:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventRecord(stop);
+    ^~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:224:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventSynchronize(stop);
+    ^~~~~~~~~~~~~~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:227:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventElapsedTime(&ms, start, stop);
+    ^~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:233:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventDestroy(start);
+    ^~~~~~~~~~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:234:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventDestroy(stop);
+    ^~~~~~~~~~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:235:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_a);
+    ^~~~~~~ ~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:236:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_b);
+    ^~~~~~~ ~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:259:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(unsigned int));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:262:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:263:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(unsigned int), hipMemcpyDeviceToHost);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:271:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_out);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:284:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipGetDeviceProperties(&props, 0);
+    ^~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~
+79 warnings generated when compiling for gfx936.
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:22:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxPreprocessor.h:524:10: warning: 'PX_SUPPORT_GPU_PHYSX' macro redefined [-Wmacro-redefined]
+        #define PX_SUPPORT_GPU_PHYSX ((PX_X64 && (PX_WINDOWS_FAMILY || PX_LINUX)) || (PX_A64 && PX_LINUX))
+                ^
+<command line>:3:9: note: previous definition is here
+#define PX_SUPPORT_GPU_PHYSX 1
+        ^
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:24:
+In file included from /public/home/tangwsh/PhysX/physx/include/foundation/PxVec3.h:33:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMath.h:213:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMath.h:220:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+In file included from <built-in>:2:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h:26:
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:431:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:448:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+/public/home/tangwsh/PhysX/physx/include/foundation/PxMat33.h:465:2: warning: void function is missing a return statement [-Wreturn-type]
+        }
+        ^
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:581:45: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 perWarpCount = warpCountAndBroadcast(FULL_MASK, threadContributesElement);
+                             ~~~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:588:42: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        return warpReduction<AddOpPxU32, PxU32>(FULL_MASK, sharedMem[threadIndexInWarp]);
+               ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:616:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 total = warpScan<AddOpPxU32, PxU32>(FULL_MASK, warpCount); //The inclusive cumulative sum per warp. The last warp has the total number of elements created by the full thread block
+                      ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:640:59: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 perWarpInclusiveScan = warpScan<AddOpPxU32, PxU32>(FULL_MASK, numElementsFromCallingThread);
+                                     ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:45:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/reduction.cuh:649:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+        PxU32 total = warpScan<AddOpPxU32, PxU32>(FULL_MASK, warpCount); //The inclusive cumulative sum per warp. The last warp has the total number of elements created by the full thread block
+                      ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:109:57: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                PxU32 output = warpScanAddWriteToSharedMem<WARP_SIZE>(FULL_MASK, radixSumIndex, threadIndexInWarp, sData, value, value);
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~            ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:176:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:223:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpScanAdd<WARP_SIZE>(FULL_MASK, idx, threadIndexInWarp, (PxU32*)NULL, accum, accumValue);
+                                  ~~~~~~~~~~~            ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:339:46: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScanAdd<WARP_SIZE, PxU32>(FULL_MASK, idx, threadIndexInWarp, sBuckets, accum, 0);
+                                    ~~~~~~~~~~~                   ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:476:54: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                  ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:528:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScan<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                    ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:585:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:605:54: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                const PxU32 val = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                  ~~~~~~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:654:44: warning: implicit conversion from 'unsigned long long' to 'PxU32' (aka 'unsigned int') changes value from 18446744073709551615 to 4294967295 [-Wconstant-conversion]
+                        PxU32 val = warpScan<AddOpPxU32, PxU32>(FULL_MASK, accum);
+                                    ~~~~~~~~                    ^~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h:49:20: note: expanded from macro 'FULL_MASK'
+        #define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+                          ^~~~~~~~~~~~~~~~~~~~~
+In file included from /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:10:
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:707:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/RadixSort.cuh:768:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:41:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * sizeof(PxU64));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:42:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(PxU64));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:43:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_rank, N * sizeof(PxU32));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:44:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_num, sizeof(PxU32));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:51:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_in, h_in, N * sizeof(PxU64), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:52:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_rank, h_rank, N * sizeof(PxU32), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:53:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_num, &h_num, sizeof(PxU32), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:56:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:59:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(PxU64), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:36: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                                   ^~~~~~~ ~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:67:53: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out); hipFree(d_rank); hipFree(d_num);
+                                                    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:80:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:81:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:86:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemset(d_in, 0, N * 3 * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:87:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:93:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:93:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:109:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_sum, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:111:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_sum, &zero, sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:114:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemset(d_sum, 0, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:115:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:120:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_val, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:121:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_val, &zero, sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:126:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_sum); hipFree(d_val);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:126:21: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_sum); hipFree(d_val);
+                    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:140:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_in, N * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:141:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:146:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_in, h_in, N * sizeof(float), hipMemcpyHostToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:147:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:152:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+    ^~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:152:20: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_in); hipFree(d_out);
+                   ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:163:1: warning: void function is missing a return statement [-Wreturn-type]
+}
+^
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:174:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(float));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:177:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:180:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(float), hipMemcpyDeviceToHost);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:193:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_out);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:209:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_a, bytes);
+    ^~~~~~~~~ ~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:210:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_b, bytes);
+    ^~~~~~~~~ ~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:213:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventCreate(&start);
+    ^~~~~~~~~~~~~~ ~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:214:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventCreate(&stop);
+    ^~~~~~~~~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:217:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(d_b, d_a, bytes, hipMemcpyDeviceToDevice);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:219:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventRecord(start);
+    ^~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:221:9: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+        hipMemcpy(d_b, d_a, bytes, hipMemcpyDeviceToDevice);
+        ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:223:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventRecord(stop);
+    ^~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:224:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventSynchronize(stop);
+    ^~~~~~~~~~~~~~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:227:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventElapsedTime(&ms, start, stop);
+    ^~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:233:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventDestroy(start);
+    ^~~~~~~~~~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:234:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipEventDestroy(stop);
+    ^~~~~~~~~~~~~~~ ~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:235:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_a);
+    ^~~~~~~ ~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:236:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_b);
+    ^~~~~~~ ~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:259:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMalloc(&d_out, N * sizeof(unsigned int));
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:262:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipDeviceSynchronize();
+    ^~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:263:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipMemcpy(h_out, d_out, N * sizeof(unsigned int), hipMemcpyDeviceToHost);
+    ^~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:271:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipFree(d_out);
+    ^~~~~~~ ~~~~~
+/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip:284:5: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
+    hipGetDeviceProperties(&props, 0);
+    ^~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~
+79 warnings generated when compiling for host.
+[100%] Linking HIP executable test_functional
+clang++: warning: argument unused during compilation: '-fgpu-flush-denormals-to-zero' [-Wunused-command-line-argument]
+[100%] Built target test_functional

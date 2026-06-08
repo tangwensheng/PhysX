@@ -100,4 +100,11 @@ add_executable(test_physx_dcu
 target_include_directories(test_physx_dcu PRIVATE ${PHYSX_INCLUDE_DIRS})
 target_link_libraries(test_physx_dcu PRIVATE PhysXCommonGpu)
 
+# ---- Functional test (real kernel testing) ----
+add_executable(test_functional
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/test_functional.hip
+)
+target_include_directories(test_functional PRIVATE ${PHYSX_INCLUDE_DIRS})
+target_link_libraries(test_functional PRIVATE PhysXCommonGpu PhysXBroadphaseGpu)
+
 message(STATUS "=== PhysX DCU Build Configuration Complete ===")

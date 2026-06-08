@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCommon.a CMakeFiles/Common.dir/public2/home/tangwsh/PhysX/physx/source/common/src/CmCollection.cpp.o CMakeFiles/Common.dir/public2/home/tangwsh/PhysX/physx/source/common/src/CmPtrTable.cpp.o CMakeFiles/Common.dir/public2/home/tangwsh/PhysX/physx/source/common/src/CmRadixSort.cpp.o CMakeFiles/Common.dir/public2/home/tangwsh/PhysX/physx/source/common/src/CmSerialize.cpp.o CMakeFiles/Common.dir/public2/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.cpp.o
+/usr/bin/ranlib libCommon.a

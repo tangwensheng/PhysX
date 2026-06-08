@@ -29,6 +29,63 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Hygon DCU / HIP Port
+
+PhysX GPU modules have been ported to **Hygon DCU** (gfx936/gfx938) with HIP.
+
+### Quick Start
+
+```bash
+# Build GPU libraries
+./build_dcu.sh gfx936
+
+# Build CPU libraries (Foundation, PhysXSDK, etc.)
+./build_cpu.sh
+
+# Build and run examples
+cd examples/dcu && ./build.sh
+```
+
+### Build Requirements (DCU)
+
+| Component | Version |
+|-----------|---------|
+| DTK (DCU Toolkit) | 2604 | 
+| CMake | >= 3.21 |
+| g++ | >= 8.0 |
+
+### Port Summary
+
+| Layer | Modules | Status |
+|-------|---------|--------|
+| GPU Kernel | PhysXCommonGpu, BroadphaseGpu, ArticulationGpu, SolverGpu, SimulationControllerGpu, NarrowphaseGpu | 100% (69 .cu files) |
+| CPU Library | Foundation, Common, LowLevel, LowLevelAABB, LowLevelDynamics, SceneQuery, SimulationController, PhysXSDK | 100% |
+
+### Key Adaptations
+
+- WARP_SIZE = 64 (wavefront)
+- FULL_MASK = 0xffffffffffffffff (64-bit)
+- CUDA intrinsics → HIP macros (`shuffle.cuh`, `atomic.cuh`, `warpHelpers.cuh`)
+- Named barriers → `__syncthreads()`
+- PTX inline assembly → HIP equivalents
+- 3D texture sampling → stubbed (SDF collision path)
+
+### Example Results (BW200, UBB BW1000, 80 CUs)
+
+| Example | Performance | Accuracy vs CPU |
+|---------|------------|-----------------|
+| N-Body (16K) | sub-ms per step | max err < 1e-3 |
+| Particles (1M) | 3000+ FPS | max err < 0.01 |
+| Raycast | 100M+ rays/s | max err < 1e-3 |
+
+### Adapted Files
+
+- **New**: `physx/source/gpucommon/include/PxgHIPCompat.h` — HIP compatibility layer
+- **New**: `physx/source/gpucommon/src/DCU/` — runtime, stubs, tests
+- **New**: `physx/source/compiler/cmakehip/` — HIP CMake build
+- **New**: `physx/source/compiler/cmakecpu/` — CPU library CMake build
+- **Modified**: ~55 .cu/.cuh files — `cuda.h` → conditional, intrinsic macros, PTX asm
+
 </details>
 
 Please also see license files in the root folder and in the respective subfolders.

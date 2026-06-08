@@ -1,0 +1,12 @@
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/Foundation.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/Common.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/test_cpu.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/LowLevel.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/LowLevelAABB.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/LowLevelDynamics.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/SceneQuery.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/SimulationController.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/PhysXSDK.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/test_integration.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/edit_cache.dir
+/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/rebuild_cache.dir
