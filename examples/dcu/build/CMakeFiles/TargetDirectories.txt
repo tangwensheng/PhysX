@@ -1,5 +1,9 @@
 /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example1_nbody.dir
 /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example2_particles.dir
-/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example3_raycast.dir
+/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example3_reduction.dir
+/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example4_shuffle.dir
+/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example5_sort.dir
+/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example6_contact.dir
+/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example7_distance.dir
 /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/edit_cache.dir
 /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/rebuild_cache.dir

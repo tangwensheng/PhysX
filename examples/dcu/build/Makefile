@@ -143,17 +143,69 @@ example2_particles/fast:
 .PHONY : example2_particles/fast
 
 #=============================================================================
-# Target rules for targets named example3_raycast
+# Target rules for targets named example3_reduction
 
 # Build rule for target.
-example3_raycast: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example3_raycast
-.PHONY : example3_raycast
+example3_reduction: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example3_reduction
+.PHONY : example3_reduction
 
 # fast build rule for target.
-example3_raycast/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_raycast.dir/build.make CMakeFiles/example3_raycast.dir/build
-.PHONY : example3_raycast/fast
+example3_reduction/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/build
+.PHONY : example3_reduction/fast
+
+#=============================================================================
+# Target rules for targets named example4_shuffle
+
+# Build rule for target.
+example4_shuffle: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example4_shuffle
+.PHONY : example4_shuffle
+
+# fast build rule for target.
+example4_shuffle/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/build
+.PHONY : example4_shuffle/fast
+
+#=============================================================================
+# Target rules for targets named example5_sort
+
+# Build rule for target.
+example5_sort: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example5_sort
+.PHONY : example5_sort
+
+# fast build rule for target.
+example5_sort/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/build
+.PHONY : example5_sort/fast
+
+#=============================================================================
+# Target rules for targets named example6_contact
+
+# Build rule for target.
+example6_contact: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example6_contact
+.PHONY : example6_contact
+
+# fast build rule for target.
+example6_contact/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/build
+.PHONY : example6_contact/fast
+
+#=============================================================================
+# Target rules for targets named example7_distance
+
+# Build rule for target.
+example7_distance: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example7_distance
+.PHONY : example7_distance
+
+# fast build rule for target.
+example7_distance/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/build
+.PHONY : example7_distance/fast
 
 example1_nbody.o: example1_nbody.hip.o
 .PHONY : example1_nbody.o
@@ -208,7 +260,7 @@ example3_raycast.o: example3_raycast.hip.o
 
 # target to build an object file
 example3_raycast.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_raycast.dir/build.make CMakeFiles/example3_raycast.dir/example3_raycast.hip.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.o
 .PHONY : example3_raycast.hip.o
 
 example3_raycast.i: example3_raycast.hip.i
@@ -216,7 +268,7 @@ example3_raycast.i: example3_raycast.hip.i
 
 # target to preprocess a source file
 example3_raycast.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_raycast.dir/build.make CMakeFiles/example3_raycast.dir/example3_raycast.hip.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.i
 .PHONY : example3_raycast.hip.i
 
 example3_raycast.s: example3_raycast.hip.s
@@ -224,8 +276,104 @@ example3_raycast.s: example3_raycast.hip.s
 
 # target to generate assembly for a file
 example3_raycast.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_raycast.dir/build.make CMakeFiles/example3_raycast.dir/example3_raycast.hip.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.s
 .PHONY : example3_raycast.hip.s
+
+example4_shuffle_atomic.o: example4_shuffle_atomic.hip.o
+.PHONY : example4_shuffle_atomic.o
+
+# target to build an object file
+example4_shuffle_atomic.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.o
+.PHONY : example4_shuffle_atomic.hip.o
+
+example4_shuffle_atomic.i: example4_shuffle_atomic.hip.i
+.PHONY : example4_shuffle_atomic.i
+
+# target to preprocess a source file
+example4_shuffle_atomic.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.i
+.PHONY : example4_shuffle_atomic.hip.i
+
+example4_shuffle_atomic.s: example4_shuffle_atomic.hip.s
+.PHONY : example4_shuffle_atomic.s
+
+# target to generate assembly for a file
+example4_shuffle_atomic.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.s
+.PHONY : example4_shuffle_atomic.hip.s
+
+example5_sort.o: example5_sort.hip.o
+.PHONY : example5_sort.o
+
+# target to build an object file
+example5_sort.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.o
+.PHONY : example5_sort.hip.o
+
+example5_sort.i: example5_sort.hip.i
+.PHONY : example5_sort.i
+
+# target to preprocess a source file
+example5_sort.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.i
+.PHONY : example5_sort.hip.i
+
+example5_sort.s: example5_sort.hip.s
+.PHONY : example5_sort.s
+
+# target to generate assembly for a file
+example5_sort.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.s
+.PHONY : example5_sort.hip.s
+
+example6_contact.o: example6_contact.hip.o
+.PHONY : example6_contact.o
+
+# target to build an object file
+example6_contact.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.o
+.PHONY : example6_contact.hip.o
+
+example6_contact.i: example6_contact.hip.i
+.PHONY : example6_contact.i
+
+# target to preprocess a source file
+example6_contact.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.i
+.PHONY : example6_contact.hip.i
+
+example6_contact.s: example6_contact.hip.s
+.PHONY : example6_contact.s
+
+# target to generate assembly for a file
+example6_contact.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.s
+.PHONY : example6_contact.hip.s
+
+example7_distance.o: example7_distance.hip.o
+.PHONY : example7_distance.o
+
+# target to build an object file
+example7_distance.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.o
+.PHONY : example7_distance.hip.o
+
+example7_distance.i: example7_distance.hip.i
+.PHONY : example7_distance.i
+
+# target to preprocess a source file
+example7_distance.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.i
+.PHONY : example7_distance.hip.i
+
+example7_distance.s: example7_distance.hip.s
+.PHONY : example7_distance.s
+
+# target to generate assembly for a file
+example7_distance.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.s
+.PHONY : example7_distance.hip.s
 
 # Help Target
 help:
@@ -237,7 +385,11 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... example1_nbody"
 	@echo "... example2_particles"
-	@echo "... example3_raycast"
+	@echo "... example3_reduction"
+	@echo "... example4_shuffle"
+	@echo "... example5_sort"
+	@echo "... example6_contact"
+	@echo "... example7_distance"
 	@echo "... example1_nbody.o"
 	@echo "... example1_nbody.i"
 	@echo "... example1_nbody.s"
@@ -247,6 +399,18 @@ help:
 	@echo "... example3_raycast.o"
 	@echo "... example3_raycast.i"
 	@echo "... example3_raycast.s"
+	@echo "... example4_shuffle_atomic.o"
+	@echo "... example4_shuffle_atomic.i"
+	@echo "... example4_shuffle_atomic.s"
+	@echo "... example5_sort.o"
+	@echo "... example5_sort.i"
+	@echo "... example5_sort.s"
+	@echo "... example6_contact.o"
+	@echo "... example6_contact.i"
+	@echo "... example6_contact.s"
+	@echo "... example7_distance.o"
+	@echo "... example7_distance.i"
+	@echo "... example7_distance.s"
 .PHONY : help
 
 

@@ -23,11 +23,11 @@ cmake "$SCRIPT_DIR" \
     -DCMAKE_HIP_COMPILER="$HIP_CLANG" \
     -DPHYSX_ROOT_DIR="$PHYSX_ROOT"
 
-cmake --build . -j1
+cmake --build . -j1 2> ./build.log
 
 echo ""
 echo "=== Running Examples ==="
-for exe in example1_nbody example2_particles example3_raycast; do
+for exe in example1_nbody example2_particles example3_reduction example4_shuffle example5_sort example6_contact example7_distance; do
     if [ -f "$exe" ]; then
         echo ""
         ./"$exe"

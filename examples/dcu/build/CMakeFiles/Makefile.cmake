@@ -139,5 +139,9 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/example1_nbody.dir/DependInfo.cmake"
   "CMakeFiles/example2_particles.dir/DependInfo.cmake"
-  "CMakeFiles/example3_raycast.dir/DependInfo.cmake"
+  "CMakeFiles/example3_reduction.dir/DependInfo.cmake"
+  "CMakeFiles/example4_shuffle.dir/DependInfo.cmake"
+  "CMakeFiles/example5_sort.dir/DependInfo.cmake"
+  "CMakeFiles/example6_contact.dir/DependInfo.cmake"
+  "CMakeFiles/example7_distance.dir/DependInfo.cmake"
   )

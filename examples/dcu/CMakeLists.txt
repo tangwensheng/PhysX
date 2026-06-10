@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(PhysXDcuExamples LANGUAGES CXX HIP)
 
 if(NOT DEFINED PHYSX_ROOT_DIR)
-    get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../.." ABSOLUTE)
+    get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../../physx" ABSOLUTE)
 endif()
 
 # HIP compiler is passed via -DCMAKE_HIP_COMPILER from build.sh
@@ -53,5 +53,17 @@ target_include_directories(example2_particles PRIVATE ${EXAMPLES_INC})
 
 # === Example 3: PhysX Raycast with GPU BVH ===
 # Uses the PhysX gpucommon library for GPU-accelerated raycasting
-add_executable(example3_raycast example3_raycast.hip)
-target_include_directories(example3_raycast PRIVATE ${EXAMPLES_INC})
+add_executable(example3_reduction example3_raycast.hip)
+target_include_directories(example3_reduction PRIVATE ${EXAMPLES_INC})
+
+add_executable(example4_shuffle   example4_shuffle_atomic.hip)
+target_include_directories(example4_shuffle PRIVATE ${EXAMPLES_INC})
+
+add_executable(example5_sort     example5_sort.hip)
+target_include_directories(example5_sort PRIVATE ${EXAMPLES_INC})
+
+add_executable(example6_contact  example6_contact.hip)
+target_include_directories(example6_contact PRIVATE ${EXAMPLES_INC})
+
+add_executable(example7_distance example7_distance.hip)
+target_include_directories(example7_distance PRIVATE ${EXAMPLES_INC})

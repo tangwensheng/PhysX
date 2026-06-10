@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_HIP
-  "/public2/home/tangwsh/PhysX/examples/dcu/example3_raycast.hip" "/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example3_raycast.dir/example3_raycast.hip.o"
+  "/public2/home/tangwsh/PhysX/examples/dcu/example6_contact.hip" "/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/example6_contact.dir/example6_contact.hip.o"
   )
 set(CMAKE_HIP_COMPILER_ID "Clang")
 
