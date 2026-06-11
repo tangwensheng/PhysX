@@ -1,0 +1,2 @@
+/usr/bin/ar qc libPhysXTask.a CMakeFiles/PhysXTask.dir/public/home/tangwsh/PhysX/physx/source/task/src/TaskManager.cpp.o
+/usr/bin/ranlib libPhysXTask.a

@@ -62,9 +62,9 @@ set(CMAKE_HIP_HOST_IMPLICIT_LINK_LIBRARIES "")
 set(CMAKE_HIP_HOST_IMPLICIT_LINK_DIRECTORIES "")
 set(CMAKE_HIP_HOST_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
 
-set(CMAKE_HIP_IMPLICIT_INCLUDE_DIRECTORIES "/opt/dtk/hip/include;/opt/dtk/llvm/lib/clang/17.0.0/include;/opt/dtk/cuda/cuda/include;/opt/dtk/cuda/cuda/nvshmem/include;/opt/dtk/cuda/cuda/extras/CUPTI/include;/opt/dtk/dcc/gcvm/include;/opt/dtk/include;/opt/hyhal/include;/opt/dtk/llvm/include;/opt/dtk/dushmem/include;/opt/dtk/opencl/include;/opt/dtk/dcc/lib/clang/17.0.0/include/cuda_wrappers;/usr/include/c++/11;/usr/include/x86_64-linux-gnu/c++/11;/usr/include/c++/11/backward;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include")
+set(CMAKE_HIP_IMPLICIT_INCLUDE_DIRECTORIES "/opt/dtk/hip/include;/opt/dtk/llvm/lib/clang/17.0.0/include;/opt/dtk/dcc/gcvm/include;/opt/dtk/include;/opt/hyhal/include;/opt/dtk/llvm/include;/opt/dtk/dushmem/include;/opt/dtk/opencl/include;/opt/dtk/dcc/lib/clang/17.0.0/include/cuda_wrappers;/usr/include/c++/11;/usr/include/x86_64-linux-gnu/c++/11;/usr/include/c++/11/backward;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include")
 set(CMAKE_HIP_IMPLICIT_LINK_LIBRARIES "amdhip64;stdc++;m;gcc_s;gcc;c;gcc_s;gcc")
-set(CMAKE_HIP_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/11;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/lib;/usr/lib;/opt/dtk/cuda/cuda/lib64;/opt/dtk/cuda/cuda/nvshmem/lib;/opt/dtk/cuda/cuda/extras/CUPTI/lib64;/opt/hyhal/lib;/opt/dtk/opencl/lib;/opt/dtk/dushmem/lib;/opt/dtk/lib")
+set(CMAKE_HIP_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/11;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/lib;/usr/lib;/opt/hyhal/lib;/opt/dtk/opencl/lib;/opt/dtk/dushmem/lib;/opt/dtk/lib")
 set(CMAKE_HIP_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
 
 set(CMAKE_HIP_RUNTIME_LIBRARY_DEFAULT "SHARED")

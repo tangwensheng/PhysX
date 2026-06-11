@@ -4,7 +4,7 @@
 # compile HIP with /opt/dtk/dcc/bin/clang++
 HIP_DEFINES = -DNDEBUG -DPX_PHYSX_STATIC_LIB -DPX_PUBLIC_RELEASE -D__HIP_ROCclr__=1
 
-HIP_INCLUDES = -I/public2/home/tangwsh/PhysX/physx/include -I/public2/home/tangwsh/PhysX/physx/source/foundation/include -I/public2/home/tangwsh/PhysX/physx/source/gpucommon/include -I/public2/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA -I/public2/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs
+HIP_INCLUDES = -I/public/home/tangwsh/PhysX/physx/include -I/public/home/tangwsh/PhysX/physx/source/foundation/include -I/public/home/tangwsh/PhysX/physx/source/gpucommon/include -I/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA -I/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs
 
 HIP_FLAGS =  -include PxgHIPCompat.h -DPX_DCU_PORT -ffast-math -fgpu-flush-denormals-to-zero -std=gnu++17 --offload-arch=gfx936 -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
 

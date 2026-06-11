@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_HIP
-  "/public2/home/tangwsh/PhysX/physx/source/compiler/cmakecpu/test_integration.cpp" "/public2/home/tangwsh/PhysX/build_cpu/CMakeFiles/test_integration.dir/test_integration.cpp.o"
+  "/public/home/tangwsh/PhysX/physx/source/compiler/cmakecpu/test_integration.cpp" "/public/home/tangwsh/PhysX/build_cpu/CMakeFiles/test_integration.dir/test_integration.cpp.o"
   )
 set(CMAKE_HIP_COMPILER_ID "Clang")
 
@@ -22,11 +22,11 @@ set(CMAKE_TARGET_DEFINITIONS_HIP
 
 # The include file search paths:
 set(CMAKE_HIP_TARGET_INCLUDE_PATH
-  "/public2/home/tangwsh/PhysX/physx/include"
-  "/public2/home/tangwsh/PhysX/physx/source/foundation/include"
-  "/public2/home/tangwsh/PhysX/physx/source/gpucommon/include"
-  "/public2/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA"
-  "/public2/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs"
+  "/public/home/tangwsh/PhysX/physx/include"
+  "/public/home/tangwsh/PhysX/physx/source/foundation/include"
+  "/public/home/tangwsh/PhysX/physx/source/gpucommon/include"
+  "/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA"
+  "/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs"
   )
 
 # The set of dependency files which are needed:

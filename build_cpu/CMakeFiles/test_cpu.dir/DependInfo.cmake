@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/public2/home/tangwsh/PhysX/physx/source/compiler/cmakecpu/test_cpu.cpp" "CMakeFiles/test_cpu.dir/test_cpu.cpp.o" "gcc" "CMakeFiles/test_cpu.dir/test_cpu.cpp.o.d"
+  "/public/home/tangwsh/PhysX/physx/source/compiler/cmakecpu/test_cpu.cpp" "CMakeFiles/test_cpu.dir/test_cpu.cpp.o" "gcc" "CMakeFiles/test_cpu.dir/test_cpu.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

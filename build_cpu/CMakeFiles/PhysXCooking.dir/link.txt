@@ -1,0 +1,2 @@
+/usr/bin/ar qc libPhysXCooking.a CMakeFiles/PhysXCooking.dir/public/home/tangwsh/PhysX/physx/source/physxcooking/src/Cooking.cpp.o
+/usr/bin/ranlib libPhysXCooking.a

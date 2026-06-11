@@ -207,8 +207,62 @@ target_include_directories(PhysXSDK PUBLIC
     ${PHYSX_ROOT_DIR}/source/physxgpu/include
     ${PHYSX_ROOT_DIR}/source/cudamanager/include
 )
-target_link_libraries(PhysXSDK PUBLIC Foundation Common LowLevel LowLevelAABB LowLevelDynamics SceneQuery SimulationController)
+target_link_libraries(PhysXSDK PUBLIC Foundation Common LowLevel LowLevelAABB LowLevelDynamics SceneQuery SimulationController PhysXTask)
 target_compile_options(PhysXSDK PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- PhysXTask (multithreading) ----
+file(GLOB_RECURSE TASK_SRC ${PHYSX_ROOT_DIR}/source/task/src/*.cpp)
+add_library(PhysXTask STATIC ${TASK_SRC})
+target_include_directories(PhysXTask PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/source/task/include
+)
+target_link_libraries(PhysXTask PUBLIC Foundation Common)
+target_compile_options(PhysXTask PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- PhysXCooking (geometry cooking) ----
+file(GLOB_RECURSE COOKING_SRC ${PHYSX_ROOT_DIR}/source/physxcooking/src/*.cpp)
+list(FILTER COOKING_SRC EXCLUDE REGEX ".*/windows/.*")
+add_library(PhysXCooking STATIC ${COOKING_SRC})
+target_include_directories(PhysXCooking PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/source/physxcooking/include
+)
+target_link_libraries(PhysXCooking PUBLIC Foundation LowLevel)
+target_compile_options(PhysXCooking PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- PhysXExtensions ----
+file(GLOB_RECURSE EXT_SRC ${PHYSX_ROOT_DIR}/source/physxextensions/src/*.cpp)
+list(FILTER EXT_SRC EXCLUDE REGEX ".*/windows/.*")
+list(FILTER EXT_SRC EXCLUDE REGEX ".*omnipvd.*")
+add_library(PhysXExtensions STATIC ${EXT_SRC})
+target_include_directories(PhysXExtensions PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/source/physxextensions/include
+    ${PHYSX_ROOT_DIR}/source/physxextensions/src
+)
+target_link_libraries(PhysXExtensions PUBLIC Foundation PhysXSDK PhysXCooking)
+target_compile_options(PhysXExtensions PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- PhysXVehicle ----
+file(GLOB_RECURSE VEHICLE_SRC ${PHYSX_ROOT_DIR}/source/physxvehicle/src/*.cpp)
+add_library(PhysXVehicle STATIC ${VEHICLE_SRC})
+target_include_directories(PhysXVehicle PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/source/physxvehicle/include
+)
+target_link_libraries(PhysXVehicle PUBLIC Foundation PhysXSDK PhysXExtensions)
+target_compile_options(PhysXVehicle PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- PhysXCharacterKinematic ----
+file(GLOB_RECURSE CCT_SRC ${PHYSX_ROOT_DIR}/source/physxcharacterkinematic/src/*.cpp)
+add_library(PhysXCharacterKinematic STATIC ${CCT_SRC})
+target_include_directories(PhysXCharacterKinematic PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/source/physxcharacterkinematic/include
+)
+target_link_libraries(PhysXCharacterKinematic PUBLIC Foundation PhysXSDK)
+target_compile_options(PhysXCharacterKinematic PRIVATE -fPIC -O2 -Wno-unused-parameter)
 
 # ---- Integration test: CPU Foundation + GPU kernels ----
 set(INTEGRATION_SRC ${PHYSX_ROOT_DIR}/source/compiler/cmakecpu/test_integration.cpp)
