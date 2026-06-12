@@ -7,6 +7,7 @@
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/SceneQuery.dir
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/SimulationController.dir
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/PhysXSDK.dir
+/public/home/tangwsh/PhysX/build_cpu/CMakeFiles/GeomUtils.dir
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/PhysXTask.dir
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/PhysXCooking.dir
 /public/home/tangwsh/PhysX/build_cpu/CMakeFiles/PhysXExtensions.dir

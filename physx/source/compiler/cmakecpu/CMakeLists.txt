@@ -149,7 +149,7 @@ target_include_directories(LowLevelAABB PUBLIC
     ${PHYSX_ROOT_DIR}/source/geomutils/src
     ${PHYSX_ROOT_DIR}/source/geomutils/src/mesh
 )
-target_link_libraries(LowLevelAABB PUBLIC Foundation Common LowLevel)
+target_link_libraries(LowLevelAABB PUBLIC Foundation Common LowLevel GeomUtils)
 target_compile_options(LowLevelAABB PRIVATE -fPIC -O2 -Wno-unused-parameter)
 
 # ---- LowLevelDynamics Library (solver + constraints) ----
@@ -209,6 +209,15 @@ target_include_directories(PhysXSDK PUBLIC
 )
 target_link_libraries(PhysXSDK PUBLIC Foundation Common LowLevel LowLevelAABB LowLevelDynamics SceneQuery SimulationController PhysXTask)
 target_compile_options(PhysXSDK PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- GeomUtils (BVH, GJK/EPA, convex hull, mesh, contact generation) ----
+file(GLOB_RECURSE GEOMUTILS_CPP ${PHYSX_ROOT_DIR}/source/geomutils/src/*.cpp)
+add_library(GeomUtils STATIC ${GEOMUTILS_CPP})
+target_include_directories(GeomUtils PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+)
+target_link_libraries(GeomUtils PUBLIC Foundation Common)
+target_compile_options(GeomUtils PRIVATE -fPIC -O2 -Wno-unused-parameter)
 
 # ---- PhysXTask (multithreading) ----
 file(GLOB_RECURSE TASK_SRC ${PHYSX_ROOT_DIR}/source/task/src/*.cpp)

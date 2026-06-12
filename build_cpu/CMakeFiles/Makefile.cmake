@@ -146,6 +146,7 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/SceneQuery.dir/DependInfo.cmake"
   "CMakeFiles/SimulationController.dir/DependInfo.cmake"
   "CMakeFiles/PhysXSDK.dir/DependInfo.cmake"
+  "CMakeFiles/GeomUtils.dir/DependInfo.cmake"
   "CMakeFiles/PhysXTask.dir/DependInfo.cmake"
   "CMakeFiles/PhysXCooking.dir/DependInfo.cmake"
   "CMakeFiles/PhysXExtensions.dir/DependInfo.cmake"

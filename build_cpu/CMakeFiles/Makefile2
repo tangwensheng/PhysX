@@ -72,6 +72,7 @@ all: CMakeFiles/LowLevelDynamics.dir/all
 all: CMakeFiles/SceneQuery.dir/all
 all: CMakeFiles/SimulationController.dir/all
 all: CMakeFiles/PhysXSDK.dir/all
+all: CMakeFiles/GeomUtils.dir/all
 all: CMakeFiles/PhysXTask.dir/all
 all: CMakeFiles/PhysXCooking.dir/all
 all: CMakeFiles/PhysXExtensions.dir/all
@@ -94,6 +95,7 @@ clean: CMakeFiles/LowLevelDynamics.dir/clean
 clean: CMakeFiles/SceneQuery.dir/clean
 clean: CMakeFiles/SimulationController.dir/clean
 clean: CMakeFiles/PhysXSDK.dir/clean
+clean: CMakeFiles/GeomUtils.dir/clean
 clean: CMakeFiles/PhysXTask.dir/clean
 clean: CMakeFiles/PhysXCooking.dir/clean
 clean: CMakeFiles/PhysXExtensions.dir/clean
@@ -109,12 +111,12 @@ clean: CMakeFiles/test_integration.dir/clean
 CMakeFiles/Foundation.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Foundation.dir/build.make CMakeFiles/Foundation.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Foundation.dir/build.make CMakeFiles/Foundation.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=3,4,5,6,7 "Built target Foundation"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=2,3,4 "Built target Foundation"
 .PHONY : CMakeFiles/Foundation.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Foundation.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Foundation.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/Foundation.dir/rule
@@ -135,12 +137,12 @@ CMakeFiles/Foundation.dir/clean:
 CMakeFiles/Common.dir/all: CMakeFiles/Foundation.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Common.dir/build.make CMakeFiles/Common.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Common.dir/build.make CMakeFiles/Common.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=1,2 "Built target Common"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=1 "Built target Common"
 .PHONY : CMakeFiles/Common.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Common.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Common.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/Common.dir/rule
@@ -162,12 +164,12 @@ CMakeFiles/test_cpu.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/test_cpu.dir/all: CMakeFiles/Common.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_cpu.dir/build.make CMakeFiles/test_cpu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_cpu.dir/build.make CMakeFiles/test_cpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=99 "Built target test_cpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num= "Built target test_cpu"
 .PHONY : CMakeFiles/test_cpu.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_cpu.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_cpu.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/test_cpu.dir/rule
@@ -189,12 +191,12 @@ CMakeFiles/LowLevel.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/LowLevel.dir/all: CMakeFiles/Common.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevel.dir/build.make CMakeFiles/LowLevel.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevel.dir/build.make CMakeFiles/LowLevel.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=8,9,10,11,12,13 "Built target LowLevel"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=44,45,46,47 "Built target LowLevel"
 .PHONY : CMakeFiles/LowLevel.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevel.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 13
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevel.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevel.dir/rule
@@ -215,14 +217,15 @@ CMakeFiles/LowLevel.dir/clean:
 CMakeFiles/LowLevelAABB.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/LowLevelAABB.dir/all: CMakeFiles/Common.dir/all
 CMakeFiles/LowLevelAABB.dir/all: CMakeFiles/LowLevel.dir/all
+CMakeFiles/LowLevelAABB.dir/all: CMakeFiles/GeomUtils.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevelAABB.dir/build.make CMakeFiles/LowLevelAABB.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevelAABB.dir/build.make CMakeFiles/LowLevelAABB.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=14,15,16,17 "Built target LowLevelAABB"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=48,49 "Built target LowLevelAABB"
 .PHONY : CMakeFiles/LowLevelAABB.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevelAABB.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 17
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 49
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevelAABB.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevelAABB.dir/rule
@@ -244,14 +247,15 @@ CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/Common.dir/all
 CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/LowLevel.dir/all
 CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/LowLevelAABB.dir/all
+CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/GeomUtils.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevelDynamics.dir/build.make CMakeFiles/LowLevelDynamics.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevelDynamics.dir/build.make CMakeFiles/LowLevelDynamics.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=18,19,20,21,22,23,24,25,26,27 "Built target LowLevelDynamics"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=50,51,52,53,54,55 "Built target LowLevelDynamics"
 .PHONY : CMakeFiles/LowLevelDynamics.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevelDynamics.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 27
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 55
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevelDynamics.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevelDynamics.dir/rule
@@ -273,14 +277,15 @@ CMakeFiles/SceneQuery.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/SceneQuery.dir/all: CMakeFiles/Common.dir/all
 CMakeFiles/SceneQuery.dir/all: CMakeFiles/LowLevel.dir/all
 CMakeFiles/SceneQuery.dir/all: CMakeFiles/LowLevelAABB.dir/all
+CMakeFiles/SceneQuery.dir/all: CMakeFiles/GeomUtils.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SceneQuery.dir/build.make CMakeFiles/SceneQuery.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SceneQuery.dir/build.make CMakeFiles/SceneQuery.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=79,80 "Built target SceneQuery"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=87,88 "Built target SceneQuery"
 .PHONY : CMakeFiles/SceneQuery.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/SceneQuery.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 19
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 51
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/SceneQuery.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/SceneQuery.dir/rule
@@ -304,14 +309,15 @@ CMakeFiles/SimulationController.dir/all: CMakeFiles/LowLevel.dir/all
 CMakeFiles/SimulationController.dir/all: CMakeFiles/LowLevelAABB.dir/all
 CMakeFiles/SimulationController.dir/all: CMakeFiles/LowLevelDynamics.dir/all
 CMakeFiles/SimulationController.dir/all: CMakeFiles/SceneQuery.dir/all
+CMakeFiles/SimulationController.dir/all: CMakeFiles/GeomUtils.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SimulationController.dir/build.make CMakeFiles/SimulationController.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SimulationController.dir/build.make CMakeFiles/SimulationController.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98 "Built target SimulationController"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=89,90,91,92,93,94,95,96,97,98,99 "Built target SimulationController"
 .PHONY : CMakeFiles/SimulationController.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/SimulationController.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 47
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 68
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/SimulationController.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/SimulationController.dir/rule
@@ -336,15 +342,16 @@ CMakeFiles/PhysXSDK.dir/all: CMakeFiles/LowLevelAABB.dir/all
 CMakeFiles/PhysXSDK.dir/all: CMakeFiles/LowLevelDynamics.dir/all
 CMakeFiles/PhysXSDK.dir/all: CMakeFiles/SceneQuery.dir/all
 CMakeFiles/PhysXSDK.dir/all: CMakeFiles/SimulationController.dir/all
+CMakeFiles/PhysXSDK.dir/all: CMakeFiles/GeomUtils.dir/all
 CMakeFiles/PhysXSDK.dir/all: CMakeFiles/PhysXTask.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=57,58,59,60,61,62,63,64,65,66,67,68,69,70 "Built target PhysXSDK"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=74,75,76,77,78,79,80,81,82 "Built target PhysXSDK"
 .PHONY : CMakeFiles/PhysXSDK.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXSDK.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 62
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 77
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXSDK.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXSDK.dir/rule
@@ -359,6 +366,33 @@ CMakeFiles/PhysXSDK.dir/clean:
 .PHONY : CMakeFiles/PhysXSDK.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/GeomUtils.dir
+
+# All Build rule for target.
+CMakeFiles/GeomUtils.dir/all: CMakeFiles/Foundation.dir/all
+CMakeFiles/GeomUtils.dir/all: CMakeFiles/Common.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GeomUtils.dir/build.make CMakeFiles/GeomUtils.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GeomUtils.dir/build.make CMakeFiles/GeomUtils.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 "Built target GeomUtils"
+.PHONY : CMakeFiles/GeomUtils.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/GeomUtils.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 43
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/GeomUtils.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
+.PHONY : CMakeFiles/GeomUtils.dir/rule
+
+# Convenience name for target.
+GeomUtils: CMakeFiles/GeomUtils.dir/rule
+.PHONY : GeomUtils
+
+# clean rule for target.
+CMakeFiles/GeomUtils.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/GeomUtils.dir/build.make CMakeFiles/GeomUtils.dir/clean
+.PHONY : CMakeFiles/GeomUtils.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/PhysXTask.dir
 
 # All Build rule for target.
@@ -366,12 +400,12 @@ CMakeFiles/PhysXTask.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/PhysXTask.dir/all: CMakeFiles/Common.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXTask.dir/build.make CMakeFiles/PhysXTask.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXTask.dir/build.make CMakeFiles/PhysXTask.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=71 "Built target PhysXTask"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num= "Built target PhysXTask"
 .PHONY : CMakeFiles/PhysXTask.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXTask.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXTask.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXTask.dir/rule
@@ -394,12 +428,12 @@ CMakeFiles/PhysXCooking.dir/all: CMakeFiles/Common.dir/all
 CMakeFiles/PhysXCooking.dir/all: CMakeFiles/LowLevel.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCooking.dir/build.make CMakeFiles/PhysXCooking.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCooking.dir/build.make CMakeFiles/PhysXCooking.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num= "Built target PhysXCooking"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=58 "Built target PhysXCooking"
 .PHONY : CMakeFiles/PhysXCooking.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXCooking.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 13
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXCooking.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXCooking.dir/rule
@@ -425,16 +459,17 @@ CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/LowLevelDynamics.dir/all
 CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/SceneQuery.dir/all
 CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/SimulationController.dir/all
 CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/PhysXSDK.dir/all
+CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/GeomUtils.dir/all
 CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/PhysXTask.dir/all
 CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/PhysXCooking.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXExtensions.dir/build.make CMakeFiles/PhysXExtensions.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXExtensions.dir/build.make CMakeFiles/PhysXExtensions.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56 "Built target PhysXExtensions"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=59,60,61,62,63,64,65,66,67,68,69,70,71,72,73 "Built target PhysXExtensions"
 .PHONY : CMakeFiles/PhysXExtensions.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXExtensions.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 87
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 93
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXExtensions.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXExtensions.dir/rule
@@ -460,17 +495,18 @@ CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/LowLevelDynamics.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/SceneQuery.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/SimulationController.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/PhysXSDK.dir/all
+CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/GeomUtils.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/PhysXTask.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/PhysXCooking.dir/all
 CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/PhysXExtensions.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXVehicle.dir/build.make CMakeFiles/PhysXVehicle.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXVehicle.dir/build.make CMakeFiles/PhysXVehicle.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=72,73,74,75,76,77,78 "Built target PhysXVehicle"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=83,84,85,86 "Built target PhysXVehicle"
 .PHONY : CMakeFiles/PhysXVehicle.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXVehicle.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 94
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 97
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXVehicle.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXVehicle.dir/rule
@@ -496,15 +532,16 @@ CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/LowLevelDynamics.dir/all
 CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/SceneQuery.dir/all
 CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/SimulationController.dir/all
 CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/PhysXSDK.dir/all
+CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/GeomUtils.dir/all
 CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/PhysXTask.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCharacterKinematic.dir/build.make CMakeFiles/PhysXCharacterKinematic.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCharacterKinematic.dir/build.make CMakeFiles/PhysXCharacterKinematic.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=28,29,30,31 "Built target PhysXCharacterKinematic"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=56,57 "Built target PhysXCharacterKinematic"
 .PHONY : CMakeFiles/PhysXCharacterKinematic.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXCharacterKinematic.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 66
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 79
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXCharacterKinematic.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXCharacterKinematic.dir/rule
@@ -531,7 +568,7 @@ CMakeFiles/test_integration.dir/all: CMakeFiles/Common.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_integration.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 5
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_integration.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/test_integration.dir/rule
