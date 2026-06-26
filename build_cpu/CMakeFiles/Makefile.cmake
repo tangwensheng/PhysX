@@ -15,9 +15,9 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/opt/dtk/lib/cmake/hip-lang/hip-lang-config.cmake"
   "/opt/dtk/lib/cmake/hip-lang/hip-lang-targets-release.cmake"
   "/opt/dtk/lib/cmake/hip-lang/hip-lang-targets.cmake"
-  "CMakeFiles/3.29.2/CMakeCXXCompiler.cmake"
-  "CMakeFiles/3.29.2/CMakeHIPCompiler.cmake"
-  "CMakeFiles/3.29.2/CMakeSystem.cmake"
+  "CMakeFiles/3.29.0/CMakeCXXCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeHIPCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeSystem.cmake"
   "/public/home/tangwsh/PhysX/physx/source/compiler/cmakecpu/CMakeLists.txt"
   "/usr/local/lib/python3.10/dist-packages/cmake/data/share/cmake-3.29/Modules/CMakeCXXCompiler.cmake.in"
   "/usr/local/lib/python3.10/dist-packages/cmake/data/share/cmake-3.29/Modules/CMakeCXXCompilerABI.cpp"
@@ -127,11 +127,11 @@ set(CMAKE_MAKEFILE_OUTPUTS
 
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
-  "CMakeFiles/3.29.2/CMakeSystem.cmake"
-  "CMakeFiles/3.29.2/CMakeCXXCompiler.cmake"
-  "CMakeFiles/3.29.2/CMakeHIPCompiler.cmake"
-  "CMakeFiles/3.29.2/CMakeCXXCompiler.cmake"
-  "CMakeFiles/3.29.2/CMakeHIPCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeSystem.cmake"
+  "CMakeFiles/3.29.0/CMakeCXXCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeHIPCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeCXXCompiler.cmake"
+  "CMakeFiles/3.29.0/CMakeHIPCompiler.cmake"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
@@ -152,5 +152,7 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/PhysXExtensions.dir/DependInfo.cmake"
   "CMakeFiles/PhysXVehicle.dir/DependInfo.cmake"
   "CMakeFiles/PhysXCharacterKinematic.dir/DependInfo.cmake"
+  "CMakeFiles/HipContext.dir/DependInfo.cmake"
+  "CMakeFiles/bench_physx_scene.dir/DependInfo.cmake"
   "CMakeFiles/test_integration.dir/DependInfo.cmake"
   )

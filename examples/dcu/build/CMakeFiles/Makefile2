@@ -54,22 +54,22 @@ RM = /usr/local/lib/python3.10/dist-packages/cmake/data/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /public2/home/tangwsh/PhysX/examples/dcu
+CMAKE_SOURCE_DIR = /public/home/tangwsh/PhysX/examples/dcu
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /public2/home/tangwsh/PhysX/examples/dcu/build
+CMAKE_BINARY_DIR = /public/home/tangwsh/PhysX/examples/dcu/build
 
 #=============================================================================
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/example1_nbody.dir/all
-all: CMakeFiles/example2_particles.dir/all
-all: CMakeFiles/example3_reduction.dir/all
-all: CMakeFiles/example4_shuffle.dir/all
-all: CMakeFiles/example5_sort.dir/all
-all: CMakeFiles/example6_contact.dir/all
-all: CMakeFiles/example7_distance.dir/all
+all: CMakeFiles/render_scene.dir/all
+all: CMakeFiles/benchmark_full.dir/all
+all: CMakeFiles/bench_broadphase.dir/all
+all: CMakeFiles/bench_simctrl.dir/all
+all: CMakeFiles/bench_narrowphase.dir/all
+all: CMakeFiles/bench_solver.dir/all
+all: CMakeFiles/bench_gpu_pipeline.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -77,196 +77,196 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/example1_nbody.dir/clean
-clean: CMakeFiles/example2_particles.dir/clean
-clean: CMakeFiles/example3_reduction.dir/clean
-clean: CMakeFiles/example4_shuffle.dir/clean
-clean: CMakeFiles/example5_sort.dir/clean
-clean: CMakeFiles/example6_contact.dir/clean
-clean: CMakeFiles/example7_distance.dir/clean
+clean: CMakeFiles/render_scene.dir/clean
+clean: CMakeFiles/benchmark_full.dir/clean
+clean: CMakeFiles/bench_broadphase.dir/clean
+clean: CMakeFiles/bench_simctrl.dir/clean
+clean: CMakeFiles/bench_narrowphase.dir/clean
+clean: CMakeFiles/bench_solver.dir/clean
+clean: CMakeFiles/bench_gpu_pipeline.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example1_nbody.dir
+# Target rules for target CMakeFiles/render_scene.dir
 
 # All Build rule for target.
-CMakeFiles/example1_nbody.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=1,2 "Built target example1_nbody"
-.PHONY : CMakeFiles/example1_nbody.dir/all
+CMakeFiles/render_scene.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=13,14 "Built target render_scene"
+.PHONY : CMakeFiles/render_scene.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example1_nbody.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example1_nbody.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example1_nbody.dir/rule
+CMakeFiles/render_scene.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/render_scene.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/render_scene.dir/rule
 
 # Convenience name for target.
-example1_nbody: CMakeFiles/example1_nbody.dir/rule
-.PHONY : example1_nbody
+render_scene: CMakeFiles/render_scene.dir/rule
+.PHONY : render_scene
 
 # clean rule for target.
-CMakeFiles/example1_nbody.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/clean
-.PHONY : CMakeFiles/example1_nbody.dir/clean
+CMakeFiles/render_scene.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/clean
+.PHONY : CMakeFiles/render_scene.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example2_particles.dir
+# Target rules for target CMakeFiles/benchmark_full.dir
 
 # All Build rule for target.
-CMakeFiles/example2_particles.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=3,4 "Built target example2_particles"
-.PHONY : CMakeFiles/example2_particles.dir/all
+CMakeFiles/benchmark_full.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=11,12 "Built target benchmark_full"
+.PHONY : CMakeFiles/benchmark_full.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example2_particles.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example2_particles.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example2_particles.dir/rule
+CMakeFiles/benchmark_full.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/benchmark_full.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/benchmark_full.dir/rule
 
 # Convenience name for target.
-example2_particles: CMakeFiles/example2_particles.dir/rule
-.PHONY : example2_particles
+benchmark_full: CMakeFiles/benchmark_full.dir/rule
+.PHONY : benchmark_full
 
 # clean rule for target.
-CMakeFiles/example2_particles.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/clean
-.PHONY : CMakeFiles/example2_particles.dir/clean
+CMakeFiles/benchmark_full.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/clean
+.PHONY : CMakeFiles/benchmark_full.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example3_reduction.dir
+# Target rules for target CMakeFiles/bench_broadphase.dir
 
 # All Build rule for target.
-CMakeFiles/example3_reduction.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=5,6 "Built target example3_reduction"
-.PHONY : CMakeFiles/example3_reduction.dir/all
+CMakeFiles/bench_broadphase.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=1,2 "Built target bench_broadphase"
+.PHONY : CMakeFiles/bench_broadphase.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example3_reduction.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example3_reduction.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example3_reduction.dir/rule
+CMakeFiles/bench_broadphase.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_broadphase.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/bench_broadphase.dir/rule
 
 # Convenience name for target.
-example3_reduction: CMakeFiles/example3_reduction.dir/rule
-.PHONY : example3_reduction
+bench_broadphase: CMakeFiles/bench_broadphase.dir/rule
+.PHONY : bench_broadphase
 
 # clean rule for target.
-CMakeFiles/example3_reduction.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/clean
-.PHONY : CMakeFiles/example3_reduction.dir/clean
+CMakeFiles/bench_broadphase.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/clean
+.PHONY : CMakeFiles/bench_broadphase.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example4_shuffle.dir
+# Target rules for target CMakeFiles/bench_simctrl.dir
 
 # All Build rule for target.
-CMakeFiles/example4_shuffle.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=7,8 "Built target example4_shuffle"
-.PHONY : CMakeFiles/example4_shuffle.dir/all
+CMakeFiles/bench_simctrl.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=7,8 "Built target bench_simctrl"
+.PHONY : CMakeFiles/bench_simctrl.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example4_shuffle.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example4_shuffle.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example4_shuffle.dir/rule
+CMakeFiles/bench_simctrl.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_simctrl.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/bench_simctrl.dir/rule
 
 # Convenience name for target.
-example4_shuffle: CMakeFiles/example4_shuffle.dir/rule
-.PHONY : example4_shuffle
+bench_simctrl: CMakeFiles/bench_simctrl.dir/rule
+.PHONY : bench_simctrl
 
 # clean rule for target.
-CMakeFiles/example4_shuffle.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/clean
-.PHONY : CMakeFiles/example4_shuffle.dir/clean
+CMakeFiles/bench_simctrl.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/clean
+.PHONY : CMakeFiles/bench_simctrl.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example5_sort.dir
+# Target rules for target CMakeFiles/bench_narrowphase.dir
 
 # All Build rule for target.
-CMakeFiles/example5_sort.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=9,10 "Built target example5_sort"
-.PHONY : CMakeFiles/example5_sort.dir/all
+CMakeFiles/bench_narrowphase.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=5,6 "Built target bench_narrowphase"
+.PHONY : CMakeFiles/bench_narrowphase.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example5_sort.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example5_sort.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example5_sort.dir/rule
+CMakeFiles/bench_narrowphase.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_narrowphase.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/bench_narrowphase.dir/rule
 
 # Convenience name for target.
-example5_sort: CMakeFiles/example5_sort.dir/rule
-.PHONY : example5_sort
+bench_narrowphase: CMakeFiles/bench_narrowphase.dir/rule
+.PHONY : bench_narrowphase
 
 # clean rule for target.
-CMakeFiles/example5_sort.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/clean
-.PHONY : CMakeFiles/example5_sort.dir/clean
+CMakeFiles/bench_narrowphase.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/clean
+.PHONY : CMakeFiles/bench_narrowphase.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example6_contact.dir
+# Target rules for target CMakeFiles/bench_solver.dir
 
 # All Build rule for target.
-CMakeFiles/example6_contact.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=11,12 "Built target example6_contact"
-.PHONY : CMakeFiles/example6_contact.dir/all
+CMakeFiles/bench_solver.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=9,10 "Built target bench_solver"
+.PHONY : CMakeFiles/bench_solver.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example6_contact.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example6_contact.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example6_contact.dir/rule
+CMakeFiles/bench_solver.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_solver.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/bench_solver.dir/rule
 
 # Convenience name for target.
-example6_contact: CMakeFiles/example6_contact.dir/rule
-.PHONY : example6_contact
+bench_solver: CMakeFiles/bench_solver.dir/rule
+.PHONY : bench_solver
 
 # clean rule for target.
-CMakeFiles/example6_contact.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/clean
-.PHONY : CMakeFiles/example6_contact.dir/clean
+CMakeFiles/bench_solver.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/clean
+.PHONY : CMakeFiles/bench_solver.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/example7_distance.dir
+# Target rules for target CMakeFiles/bench_gpu_pipeline.dir
 
 # All Build rule for target.
-CMakeFiles/example7_distance.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=13,14 "Built target example7_distance"
-.PHONY : CMakeFiles/example7_distance.dir/all
+CMakeFiles/bench_gpu_pipeline.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles --progress-num=3,4 "Built target bench_gpu_pipeline"
+.PHONY : CMakeFiles/bench_gpu_pipeline.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/example7_distance.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/example7_distance.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
-.PHONY : CMakeFiles/example7_distance.dir/rule
+CMakeFiles/bench_gpu_pipeline.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_gpu_pipeline.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+.PHONY : CMakeFiles/bench_gpu_pipeline.dir/rule
 
 # Convenience name for target.
-example7_distance: CMakeFiles/example7_distance.dir/rule
-.PHONY : example7_distance
+bench_gpu_pipeline: CMakeFiles/bench_gpu_pipeline.dir/rule
+.PHONY : bench_gpu_pipeline
 
 # clean rule for target.
-CMakeFiles/example7_distance.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/clean
-.PHONY : CMakeFiles/example7_distance.dir/clean
+CMakeFiles/bench_gpu_pipeline.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/clean
+.PHONY : CMakeFiles/bench_gpu_pipeline.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

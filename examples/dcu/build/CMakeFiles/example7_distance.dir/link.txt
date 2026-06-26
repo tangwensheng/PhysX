@@ -1,1 +1,0 @@
-/opt/dtk/dcc/bin/clang++ -include PxgHIPCompat.h -DPX_DCU_PORT -ffast-math -fgpu-flush-denormals-to-zero --offload-arch=gfx936 --hip-link CMakeFiles/example7_distance.dir/example7_distance.hip.o -o example7_distance  /opt/dtk/hip/lib/libgalaxyhip.so.5.2.26113.2065-6699a1f0 /opt/dtk/dcc/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a

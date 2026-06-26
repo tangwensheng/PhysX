@@ -31,8 +31,7 @@ CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/s
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCommonDefines.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgCopyManager.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h \
- /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu \
- /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/cuda.h
+ /public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu
 CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o: \
  /public/home/tangwsh/PhysX/physx/include/PxNodeIndex.h \
  /public/home/tangwsh/PhysX/physx/include/foundation/PxAssert.h \

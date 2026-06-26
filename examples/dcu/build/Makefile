@@ -57,10 +57,10 @@ RM = /usr/local/lib/python3.10/dist-packages/cmake/data/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /public2/home/tangwsh/PhysX/examples/dcu
+CMAKE_SOURCE_DIR = /public/home/tangwsh/PhysX/examples/dcu
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /public2/home/tangwsh/PhysX/examples/dcu/build
+CMAKE_BINARY_DIR = /public/home/tangwsh/PhysX/examples/dcu/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles /public2/home/tangwsh/PhysX/examples/dcu/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles /public/home/tangwsh/PhysX/examples/dcu/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /public2/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,263 +117,263 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named example1_nbody
+# Target rules for targets named render_scene
 
 # Build rule for target.
-example1_nbody: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example1_nbody
-.PHONY : example1_nbody
+render_scene: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 render_scene
+.PHONY : render_scene
 
 # fast build rule for target.
-example1_nbody/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/build
-.PHONY : example1_nbody/fast
+render_scene/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/build
+.PHONY : render_scene/fast
 
 #=============================================================================
-# Target rules for targets named example2_particles
+# Target rules for targets named benchmark_full
 
 # Build rule for target.
-example2_particles: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example2_particles
-.PHONY : example2_particles
+benchmark_full: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 benchmark_full
+.PHONY : benchmark_full
 
 # fast build rule for target.
-example2_particles/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/build
-.PHONY : example2_particles/fast
+benchmark_full/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/build
+.PHONY : benchmark_full/fast
 
 #=============================================================================
-# Target rules for targets named example3_reduction
+# Target rules for targets named bench_broadphase
 
 # Build rule for target.
-example3_reduction: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example3_reduction
-.PHONY : example3_reduction
+bench_broadphase: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_broadphase
+.PHONY : bench_broadphase
 
 # fast build rule for target.
-example3_reduction/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/build
-.PHONY : example3_reduction/fast
+bench_broadphase/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/build
+.PHONY : bench_broadphase/fast
 
 #=============================================================================
-# Target rules for targets named example4_shuffle
+# Target rules for targets named bench_simctrl
 
 # Build rule for target.
-example4_shuffle: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example4_shuffle
-.PHONY : example4_shuffle
+bench_simctrl: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_simctrl
+.PHONY : bench_simctrl
 
 # fast build rule for target.
-example4_shuffle/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/build
-.PHONY : example4_shuffle/fast
+bench_simctrl/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/build
+.PHONY : bench_simctrl/fast
 
 #=============================================================================
-# Target rules for targets named example5_sort
+# Target rules for targets named bench_narrowphase
 
 # Build rule for target.
-example5_sort: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example5_sort
-.PHONY : example5_sort
+bench_narrowphase: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_narrowphase
+.PHONY : bench_narrowphase
 
 # fast build rule for target.
-example5_sort/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/build
-.PHONY : example5_sort/fast
+bench_narrowphase/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/build
+.PHONY : bench_narrowphase/fast
 
 #=============================================================================
-# Target rules for targets named example6_contact
+# Target rules for targets named bench_solver
 
 # Build rule for target.
-example6_contact: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example6_contact
-.PHONY : example6_contact
+bench_solver: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_solver
+.PHONY : bench_solver
 
 # fast build rule for target.
-example6_contact/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/build
-.PHONY : example6_contact/fast
+bench_solver/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/build
+.PHONY : bench_solver/fast
 
 #=============================================================================
-# Target rules for targets named example7_distance
+# Target rules for targets named bench_gpu_pipeline
 
 # Build rule for target.
-example7_distance: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example7_distance
-.PHONY : example7_distance
+bench_gpu_pipeline: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_gpu_pipeline
+.PHONY : bench_gpu_pipeline
 
 # fast build rule for target.
-example7_distance/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/build
-.PHONY : example7_distance/fast
+bench_gpu_pipeline/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/build
+.PHONY : bench_gpu_pipeline/fast
 
-example1_nbody.o: example1_nbody.hip.o
-.PHONY : example1_nbody.o
-
-# target to build an object file
-example1_nbody.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/example1_nbody.hip.o
-.PHONY : example1_nbody.hip.o
-
-example1_nbody.i: example1_nbody.hip.i
-.PHONY : example1_nbody.i
-
-# target to preprocess a source file
-example1_nbody.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/example1_nbody.hip.i
-.PHONY : example1_nbody.hip.i
-
-example1_nbody.s: example1_nbody.hip.s
-.PHONY : example1_nbody.s
-
-# target to generate assembly for a file
-example1_nbody.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example1_nbody.dir/build.make CMakeFiles/example1_nbody.dir/example1_nbody.hip.s
-.PHONY : example1_nbody.hip.s
-
-example2_particles.o: example2_particles.hip.o
-.PHONY : example2_particles.o
+bench_broadphase.o: bench_broadphase.hip.o
+.PHONY : bench_broadphase.o
 
 # target to build an object file
-example2_particles.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/example2_particles.hip.o
-.PHONY : example2_particles.hip.o
+bench_broadphase.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/bench_broadphase.hip.o
+.PHONY : bench_broadphase.hip.o
 
-example2_particles.i: example2_particles.hip.i
-.PHONY : example2_particles.i
+bench_broadphase.i: bench_broadphase.hip.i
+.PHONY : bench_broadphase.i
 
 # target to preprocess a source file
-example2_particles.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/example2_particles.hip.i
-.PHONY : example2_particles.hip.i
+bench_broadphase.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/bench_broadphase.hip.i
+.PHONY : bench_broadphase.hip.i
 
-example2_particles.s: example2_particles.hip.s
-.PHONY : example2_particles.s
+bench_broadphase.s: bench_broadphase.hip.s
+.PHONY : bench_broadphase.s
 
 # target to generate assembly for a file
-example2_particles.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example2_particles.dir/build.make CMakeFiles/example2_particles.dir/example2_particles.hip.s
-.PHONY : example2_particles.hip.s
+bench_broadphase.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_broadphase.dir/build.make CMakeFiles/bench_broadphase.dir/bench_broadphase.hip.s
+.PHONY : bench_broadphase.hip.s
 
-example3_raycast.o: example3_raycast.hip.o
-.PHONY : example3_raycast.o
+bench_gpu_pipeline.o: bench_gpu_pipeline.hip.o
+.PHONY : bench_gpu_pipeline.o
 
 # target to build an object file
-example3_raycast.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.o
-.PHONY : example3_raycast.hip.o
+bench_gpu_pipeline.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/bench_gpu_pipeline.hip.o
+.PHONY : bench_gpu_pipeline.hip.o
 
-example3_raycast.i: example3_raycast.hip.i
-.PHONY : example3_raycast.i
+bench_gpu_pipeline.i: bench_gpu_pipeline.hip.i
+.PHONY : bench_gpu_pipeline.i
 
 # target to preprocess a source file
-example3_raycast.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.i
-.PHONY : example3_raycast.hip.i
+bench_gpu_pipeline.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/bench_gpu_pipeline.hip.i
+.PHONY : bench_gpu_pipeline.hip.i
 
-example3_raycast.s: example3_raycast.hip.s
-.PHONY : example3_raycast.s
+bench_gpu_pipeline.s: bench_gpu_pipeline.hip.s
+.PHONY : bench_gpu_pipeline.s
 
 # target to generate assembly for a file
-example3_raycast.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example3_reduction.dir/build.make CMakeFiles/example3_reduction.dir/example3_raycast.hip.s
-.PHONY : example3_raycast.hip.s
+bench_gpu_pipeline.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_gpu_pipeline.dir/build.make CMakeFiles/bench_gpu_pipeline.dir/bench_gpu_pipeline.hip.s
+.PHONY : bench_gpu_pipeline.hip.s
 
-example4_shuffle_atomic.o: example4_shuffle_atomic.hip.o
-.PHONY : example4_shuffle_atomic.o
+bench_narrowphase.o: bench_narrowphase.hip.o
+.PHONY : bench_narrowphase.o
 
 # target to build an object file
-example4_shuffle_atomic.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.o
-.PHONY : example4_shuffle_atomic.hip.o
+bench_narrowphase.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/bench_narrowphase.hip.o
+.PHONY : bench_narrowphase.hip.o
 
-example4_shuffle_atomic.i: example4_shuffle_atomic.hip.i
-.PHONY : example4_shuffle_atomic.i
+bench_narrowphase.i: bench_narrowphase.hip.i
+.PHONY : bench_narrowphase.i
 
 # target to preprocess a source file
-example4_shuffle_atomic.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.i
-.PHONY : example4_shuffle_atomic.hip.i
+bench_narrowphase.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/bench_narrowphase.hip.i
+.PHONY : bench_narrowphase.hip.i
 
-example4_shuffle_atomic.s: example4_shuffle_atomic.hip.s
-.PHONY : example4_shuffle_atomic.s
+bench_narrowphase.s: bench_narrowphase.hip.s
+.PHONY : bench_narrowphase.s
 
 # target to generate assembly for a file
-example4_shuffle_atomic.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example4_shuffle.dir/build.make CMakeFiles/example4_shuffle.dir/example4_shuffle_atomic.hip.s
-.PHONY : example4_shuffle_atomic.hip.s
+bench_narrowphase.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_narrowphase.dir/build.make CMakeFiles/bench_narrowphase.dir/bench_narrowphase.hip.s
+.PHONY : bench_narrowphase.hip.s
 
-example5_sort.o: example5_sort.hip.o
-.PHONY : example5_sort.o
+bench_simctrl.o: bench_simctrl.hip.o
+.PHONY : bench_simctrl.o
 
 # target to build an object file
-example5_sort.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.o
-.PHONY : example5_sort.hip.o
+bench_simctrl.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/bench_simctrl.hip.o
+.PHONY : bench_simctrl.hip.o
 
-example5_sort.i: example5_sort.hip.i
-.PHONY : example5_sort.i
+bench_simctrl.i: bench_simctrl.hip.i
+.PHONY : bench_simctrl.i
 
 # target to preprocess a source file
-example5_sort.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.i
-.PHONY : example5_sort.hip.i
+bench_simctrl.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/bench_simctrl.hip.i
+.PHONY : bench_simctrl.hip.i
 
-example5_sort.s: example5_sort.hip.s
-.PHONY : example5_sort.s
+bench_simctrl.s: bench_simctrl.hip.s
+.PHONY : bench_simctrl.s
 
 # target to generate assembly for a file
-example5_sort.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example5_sort.dir/build.make CMakeFiles/example5_sort.dir/example5_sort.hip.s
-.PHONY : example5_sort.hip.s
+bench_simctrl.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_simctrl.dir/build.make CMakeFiles/bench_simctrl.dir/bench_simctrl.hip.s
+.PHONY : bench_simctrl.hip.s
 
-example6_contact.o: example6_contact.hip.o
-.PHONY : example6_contact.o
+bench_solver.o: bench_solver.hip.o
+.PHONY : bench_solver.o
 
 # target to build an object file
-example6_contact.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.o
-.PHONY : example6_contact.hip.o
+bench_solver.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/bench_solver.hip.o
+.PHONY : bench_solver.hip.o
 
-example6_contact.i: example6_contact.hip.i
-.PHONY : example6_contact.i
+bench_solver.i: bench_solver.hip.i
+.PHONY : bench_solver.i
 
 # target to preprocess a source file
-example6_contact.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.i
-.PHONY : example6_contact.hip.i
+bench_solver.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/bench_solver.hip.i
+.PHONY : bench_solver.hip.i
 
-example6_contact.s: example6_contact.hip.s
-.PHONY : example6_contact.s
+bench_solver.s: bench_solver.hip.s
+.PHONY : bench_solver.s
 
 # target to generate assembly for a file
-example6_contact.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example6_contact.dir/build.make CMakeFiles/example6_contact.dir/example6_contact.hip.s
-.PHONY : example6_contact.hip.s
+bench_solver.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_solver.dir/build.make CMakeFiles/bench_solver.dir/bench_solver.hip.s
+.PHONY : bench_solver.hip.s
 
-example7_distance.o: example7_distance.hip.o
-.PHONY : example7_distance.o
+benchmark_full.o: benchmark_full.hip.o
+.PHONY : benchmark_full.o
 
 # target to build an object file
-example7_distance.hip.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.o
-.PHONY : example7_distance.hip.o
+benchmark_full.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/benchmark_full.hip.o
+.PHONY : benchmark_full.hip.o
 
-example7_distance.i: example7_distance.hip.i
-.PHONY : example7_distance.i
+benchmark_full.i: benchmark_full.hip.i
+.PHONY : benchmark_full.i
 
 # target to preprocess a source file
-example7_distance.hip.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.i
-.PHONY : example7_distance.hip.i
+benchmark_full.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/benchmark_full.hip.i
+.PHONY : benchmark_full.hip.i
 
-example7_distance.s: example7_distance.hip.s
-.PHONY : example7_distance.s
+benchmark_full.s: benchmark_full.hip.s
+.PHONY : benchmark_full.s
 
 # target to generate assembly for a file
-example7_distance.hip.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example7_distance.dir/build.make CMakeFiles/example7_distance.dir/example7_distance.hip.s
-.PHONY : example7_distance.hip.s
+benchmark_full.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/benchmark_full.dir/build.make CMakeFiles/benchmark_full.dir/benchmark_full.hip.s
+.PHONY : benchmark_full.hip.s
+
+render_scene.o: render_scene.hip.o
+.PHONY : render_scene.o
+
+# target to build an object file
+render_scene.hip.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/render_scene.hip.o
+.PHONY : render_scene.hip.o
+
+render_scene.i: render_scene.hip.i
+.PHONY : render_scene.i
+
+# target to preprocess a source file
+render_scene.hip.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/render_scene.hip.i
+.PHONY : render_scene.hip.i
+
+render_scene.s: render_scene.hip.s
+.PHONY : render_scene.s
+
+# target to generate assembly for a file
+render_scene.hip.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_scene.dir/build.make CMakeFiles/render_scene.dir/render_scene.hip.s
+.PHONY : render_scene.hip.s
 
 # Help Target
 help:
@@ -383,34 +383,34 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... example1_nbody"
-	@echo "... example2_particles"
-	@echo "... example3_reduction"
-	@echo "... example4_shuffle"
-	@echo "... example5_sort"
-	@echo "... example6_contact"
-	@echo "... example7_distance"
-	@echo "... example1_nbody.o"
-	@echo "... example1_nbody.i"
-	@echo "... example1_nbody.s"
-	@echo "... example2_particles.o"
-	@echo "... example2_particles.i"
-	@echo "... example2_particles.s"
-	@echo "... example3_raycast.o"
-	@echo "... example3_raycast.i"
-	@echo "... example3_raycast.s"
-	@echo "... example4_shuffle_atomic.o"
-	@echo "... example4_shuffle_atomic.i"
-	@echo "... example4_shuffle_atomic.s"
-	@echo "... example5_sort.o"
-	@echo "... example5_sort.i"
-	@echo "... example5_sort.s"
-	@echo "... example6_contact.o"
-	@echo "... example6_contact.i"
-	@echo "... example6_contact.s"
-	@echo "... example7_distance.o"
-	@echo "... example7_distance.i"
-	@echo "... example7_distance.s"
+	@echo "... bench_broadphase"
+	@echo "... bench_gpu_pipeline"
+	@echo "... bench_narrowphase"
+	@echo "... bench_simctrl"
+	@echo "... bench_solver"
+	@echo "... benchmark_full"
+	@echo "... render_scene"
+	@echo "... bench_broadphase.o"
+	@echo "... bench_broadphase.i"
+	@echo "... bench_broadphase.s"
+	@echo "... bench_gpu_pipeline.o"
+	@echo "... bench_gpu_pipeline.i"
+	@echo "... bench_gpu_pipeline.s"
+	@echo "... bench_narrowphase.o"
+	@echo "... bench_narrowphase.i"
+	@echo "... bench_narrowphase.s"
+	@echo "... bench_simctrl.o"
+	@echo "... bench_simctrl.i"
+	@echo "... bench_simctrl.s"
+	@echo "... bench_solver.o"
+	@echo "... bench_solver.i"
+	@echo "... bench_solver.s"
+	@echo "... benchmark_full.o"
+	@echo "... benchmark_full.i"
+	@echo "... benchmark_full.s"
+	@echo "... render_scene.o"
+	@echo "... render_scene.i"
+	@echo "... render_scene.s"
 .PHONY : help
 
 

@@ -71,6 +71,7 @@ all: CMakeFiles/PhysXSimulationControllerGpu.dir/all
 all: CMakeFiles/PhysXNarrowphaseGpu.dir/all
 all: CMakeFiles/test_physx_dcu.dir/all
 all: CMakeFiles/test_functional.dir/all
+all: CMakeFiles/PhysXGpuDCU.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -86,6 +87,7 @@ clean: CMakeFiles/PhysXSimulationControllerGpu.dir/clean
 clean: CMakeFiles/PhysXNarrowphaseGpu.dir/clean
 clean: CMakeFiles/test_physx_dcu.dir/clean
 clean: CMakeFiles/test_functional.dir/clean
+clean: CMakeFiles/PhysXGpuDCU.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -173,7 +175,7 @@ CMakeFiles/PhysXArticulationGpu.dir/clean:
 CMakeFiles/PhysXSolverGpu.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=55,56,57,58,59,60,61,62,63,64,65,66,67 "Built target PhysXSolverGpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=68,69,70,71,72,73,74,75,76,77,78,79,80 "Built target PhysXSolverGpu"
 .PHONY : CMakeFiles/PhysXSolverGpu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -199,7 +201,7 @@ CMakeFiles/PhysXSolverGpu.dir/clean:
 CMakeFiles/PhysXSimulationControllerGpu.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54 "Built target PhysXSimulationControllerGpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67 "Built target PhysXSimulationControllerGpu"
 .PHONY : CMakeFiles/PhysXSimulationControllerGpu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -225,7 +227,7 @@ CMakeFiles/PhysXSimulationControllerGpu.dir/clean:
 CMakeFiles/PhysXNarrowphaseGpu.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38 "Built target PhysXNarrowphaseGpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51 "Built target PhysXNarrowphaseGpu"
 .PHONY : CMakeFiles/PhysXNarrowphaseGpu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -251,7 +253,7 @@ CMakeFiles/PhysXNarrowphaseGpu.dir/clean:
 CMakeFiles/test_physx_dcu.dir/all: CMakeFiles/PhysXCommonGpu.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_physx_dcu.dir/build.make CMakeFiles/test_physx_dcu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=70,71 "Built target test_physx_dcu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=83,84 "Built target test_physx_dcu"
 .PHONY : CMakeFiles/test_physx_dcu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -278,7 +280,7 @@ CMakeFiles/test_functional.dir/all: CMakeFiles/PhysXCommonGpu.dir/all
 CMakeFiles/test_functional.dir/all: CMakeFiles/PhysXBroadphaseGpu.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=68,69 "Built target test_functional"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=81,82 "Built target test_functional"
 .PHONY : CMakeFiles/test_functional.dir/all
 
 # Build rule for subdir invocation for target.
@@ -296,6 +298,32 @@ test_functional: CMakeFiles/test_functional.dir/rule
 CMakeFiles/test_functional.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/clean
 .PHONY : CMakeFiles/test_functional.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/PhysXGpuDCU.dir
+
+# All Build rule for target.
+CMakeFiles/PhysXGpuDCU.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=13,14,15,16,17,18,19,20,21,22,23,24,25 "Built target PhysXGpuDCU"
+.PHONY : CMakeFiles/PhysXGpuDCU.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/PhysXGpuDCU.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_dcu/CMakeFiles 13
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXGpuDCU.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_dcu/CMakeFiles 0
+.PHONY : CMakeFiles/PhysXGpuDCU.dir/rule
+
+# Convenience name for target.
+PhysXGpuDCU: CMakeFiles/PhysXGpuDCU.dir/rule
+.PHONY : PhysXGpuDCU
+
+# clean rule for target.
+CMakeFiles/PhysXGpuDCU.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/clean
+.PHONY : CMakeFiles/PhysXGpuDCU.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

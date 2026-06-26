@@ -1445,7 +1445,6 @@ CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/s
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxSpatialMatrix.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/cutil_math.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/mathsExtensions.h \
- /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/cuda.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/vector_functions.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/vector_types.h \
  /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/include/PxgBodySim.h \
@@ -1550,7 +1549,6 @@ CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/s
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxSpatialMatrix.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/cutil_math.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/include/mathsExtensions.h \
- /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/cuda.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/vector_functions.h \
  /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/vector_types.h \
  /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/include/PxgBodySim.h \

@@ -107,4 +107,35 @@ add_executable(test_functional
 target_include_directories(test_functional PRIVATE ${PHYSX_INCLUDE_DIRS})
 target_link_libraries(test_functional PRIVATE PhysXCommonGpu PhysXBroadphaseGpu)
 
+# ---- Shared library for dlopen loading ----
+add_library(PhysXGpuDCU SHARED
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/gpu_module_table.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/radixSortImpl.cu
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/MemCopyBalanced.cu
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/utility.cu
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/broadphase.cu
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/aggregate.cu
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaSphere.cu
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/algorithms.cu
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu
+)
+target_include_directories(PhysXGpuDCU PRIVATE ${PHYSX_INCLUDE_DIRS})
+set_source_files_properties(
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/radixSortImpl.cu
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/MemCopyBalanced.cu
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/utility.cu
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/broadphase.cu
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/aggregate.cu
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaSphere.cu
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/algorithms.cu
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu
+    PROPERTIES LANGUAGE HIP
+)
+
 message(STATUS "=== PhysX DCU Build Configuration Complete ===")

@@ -98,9 +98,6 @@ CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS:FILEPATH=CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS-N
 //Generate index for LLVM archive
 CMAKE_HIP_COMPILER_RANLIB:FILEPATH=CMAKE_HIP_COMPILER_RANLIB-NOTFOUND
 
-//No help, variable specified on the command line.
-CMAKE_HIP_COMPILER_ROCM_ROOT:UNINITIALIZED=/opt/dtk
-
 //Flags used by the HIP compiler during all build types.
 CMAKE_HIP_FLAGS:STRING=
 
@@ -271,7 +268,7 @@ CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
 //Minor version of cmake used to create the current loaded cache
 CMAKE_CACHE_MINOR_VERSION:INTERNAL=29
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=2
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=0
 //ADVANCED property for variable: CMAKE_COLOR_MAKEFILE
 CMAKE_COLOR_MAKEFILE-ADVANCED:INTERNAL=1
 //Path to CMake executable.

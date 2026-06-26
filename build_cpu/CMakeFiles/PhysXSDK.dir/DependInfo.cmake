@@ -45,8 +45,6 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/public/home/tangwsh/PhysX/physx/source/physx/src/NpShapeManager.cpp" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpShapeManager.cpp.o" "gcc" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpShapeManager.cpp.o.d"
   "/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp.o" "gcc" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp.o.d"
   "/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o" "gcc" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o.d"
-  "/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o" "gcc" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o.d"
-  "/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o" "gcc" "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

@@ -220,6 +220,19 @@ test_functional/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_functional.dir/build.make CMakeFiles/test_functional.dir/build
 .PHONY : test_functional/fast
 
+#=============================================================================
+# Target rules for targets named PhysXGpuDCU
+
+# Build rule for target.
+PhysXGpuDCU: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PhysXGpuDCU
+.PHONY : PhysXGpuDCU
+
+# fast build rule for target.
+PhysXGpuDCU/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/build
+.PHONY : PhysXGpuDCU/fast
+
 public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.o: public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.o
 
@@ -322,6 +335,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.o: publi
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.i: public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.i
@@ -330,6 +344,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.i: publi
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.s: public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.s
@@ -338,6 +353,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.s: publi
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/aggregate.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.o: public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o
@@ -346,6 +362,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.o: publ
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.i: public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.i
@@ -354,6 +371,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.i: publ
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.s: public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.s
@@ -362,6 +380,7 @@ public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.s: publ
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXBroadphaseGpu.dir/build.make CMakeFiles/PhysXBroadphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpubroadphase/src/CUDA/broadphase.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o
@@ -370,6 +389,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.o: pub
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.i: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.i
@@ -378,6 +398,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.i: pub
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.s: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.s
@@ -386,6 +407,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.s: pub
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/MemCopyBalanced.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o
@@ -394,6 +416,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.o: publi
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.i: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.i
@@ -402,6 +425,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.i: publi
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.s: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.s
@@ -410,6 +434,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.s: publi
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
@@ -418,6 +443,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.o: public/home
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.i: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.i
@@ -426,6 +452,7 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.i: public/home
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.s: public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
@@ -434,7 +461,32 @@ public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.s: public/home
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXCommonGpu.dir/build.make CMakeFiles/PhysXCommonGpu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.o
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.i: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.i
+
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.s: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.cpp.s
 
 public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o: public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o
@@ -730,6 +782,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.o: pub
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i
@@ -738,6 +791,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.i: pub
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.s
@@ -746,6 +800,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.s: pub
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o
@@ -778,6 +833,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.o: pub
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i
@@ -786,6 +842,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.i: pub
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.s
@@ -794,6 +851,7 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.s: pub
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXNarrowphaseGpu.dir/build.make CMakeFiles/PhysXNarrowphaseGpu.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o
@@ -1162,6 +1220,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConst
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.i: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i
@@ -1170,6 +1229,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConst
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.s: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.s
@@ -1178,6 +1238,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConst
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.o: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o
@@ -1186,6 +1247,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorith
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.i: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i
@@ -1194,6 +1256,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorith
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.s: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.s
@@ -1202,6 +1265,7 @@ public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorith
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSimulationControllerGpu.dir/build.make CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.o: public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o
@@ -1498,6 +1562,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.i: public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i
@@ -1506,6 +1571,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.s: public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.s
@@ -1514,6 +1580,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.s
 
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.o: public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o
@@ -1714,6 +1781,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.o:
 # target to build an object file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o
 
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.i: public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i
@@ -1722,6 +1790,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.i:
 # target to preprocess a source file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i
 
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.s: public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.s
@@ -1730,6 +1799,7 @@ public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.s:
 # target to generate assembly for a file
 public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSolverGpu.dir/build.make CMakeFiles/PhysXSolverGpu.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.s
 
 # Help Target
@@ -1743,6 +1813,7 @@ help:
 	@echo "... PhysXArticulationGpu"
 	@echo "... PhysXBroadphaseGpu"
 	@echo "... PhysXCommonGpu"
+	@echo "... PhysXGpuDCU"
 	@echo "... PhysXNarrowphaseGpu"
 	@echo "... PhysXSimulationControllerGpu"
 	@echo "... PhysXSolverGpu"
@@ -1775,6 +1846,9 @@ help:
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/gpu_module_table.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.s"

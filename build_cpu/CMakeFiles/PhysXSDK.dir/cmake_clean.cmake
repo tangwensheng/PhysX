@@ -73,10 +73,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp.o.d"
   "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o"
   "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o.d"
-  "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o"
-  "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o.d"
-  "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o"
-  "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o.d"
   "libPhysXSDK.a"
   "libPhysXSDK.pdb"
 )

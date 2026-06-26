@@ -860,7 +860,6 @@ CMakeFiles/PhysXSimulationControllerGpu.dir/public/home/tangwsh/PhysX/physx/sour
  /public/home/tangwsh/PhysX/physx/include/foundation/PxVec4.h
  /public/home/tangwsh/PhysX/physx/include/foundation/unix/PxUnixMathIntrinsics.h
  /public/home/tangwsh/PhysX/physx/include/foundation/windows/PxWindowsMathIntrinsics.h
- /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/cuda.h
  /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/vector_types.h
  /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/include/PxgAnisotropyData.h
  /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/include/PxgSparseGridDataStandalone.h

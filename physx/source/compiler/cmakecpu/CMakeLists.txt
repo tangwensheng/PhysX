@@ -37,6 +37,7 @@ add_compile_definitions(
     NDEBUG
     PX_PHYSX_STATIC_LIB
     PX_PUBLIC_RELEASE
+    PX_SUPPORT_GPU_PHYSX
 )
 
 # ---- Include paths ----
@@ -199,6 +200,7 @@ file(GLOB_RECURSE PHYSXSDK_SRC ${PHYSX_ROOT_DIR}/source/physx/src/*.cpp)
 # Exclude OS-specific and external dependency files
 list(FILTER PHYSXSDK_SRC EXCLUDE REGEX ".*/windows/.*")
 list(FILTER PHYSXSDK_SRC EXCLUDE REGEX ".*omnipvd.*")
+list(FILTER PHYSXSDK_SRC EXCLUDE REGEX ".*/gpu/.*")
 add_library(PhysXSDK STATIC ${PHYSXSDK_SRC})
 target_include_directories(PhysXSDK PUBLIC
     ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
@@ -272,6 +274,37 @@ target_include_directories(PhysXCharacterKinematic PUBLIC
 )
 target_link_libraries(PhysXCharacterKinematic PUBLIC Foundation PhysXSDK)
 target_compile_options(PhysXCharacterKinematic PRIVATE -fPIC -O2 -Wno-unused-parameter)
+
+# ---- HipContextManager (GPU dispatch bridge) ----
+add_library(HipContext STATIC ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipContextManager.cpp)
+target_include_directories(HipContext PUBLIC
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
+    ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+    ${PHYSX_ROOT_DIR}/include/cudamanager
+    ${PHYSX_ROOT_DIR}/source/gpucommon/include
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs
+    /opt/dtk/include
+)
+target_compile_definitions(HipContext PRIVATE PX_DCU_PORT __HIP_PLATFORM_AMD__ PX_SUPPORT_GPU_PHYSX)
+target_compile_options(HipContext PRIVATE -fPIC -O2)
+target_link_directories(HipContext PUBLIC /opt/dtk/hip/lib)
+target_link_libraries(HipContext PUBLIC amdhip64)
+
+# ---- PhysX Scene Benchmark (CPU, GPU info via HipContext) ----
+add_executable(bench_physx_scene ${PHYSX_ROOT_DIR}/../examples/dcu/bench_physx_scene.cpp)
+target_include_directories(bench_physx_scene PRIVATE
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
+    ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+)
+target_link_libraries(bench_physx_scene PRIVATE
+    -Wl,--start-group
+    Foundation Common PhysXSDK PhysXExtensions PhysXTask HipContext
+    LowLevel LowLevelAABB LowLevelDynamics SceneQuery SimulationController
+    GeomUtils
+    -Wl,--end-group
+    pthread dl
+)
+target_compile_options(bench_physx_scene PRIVATE -fPIC -O2)
 
 # ---- Integration test: CPU Foundation + GPU kernels ----
 set(INTEGRATION_SRC ${PHYSX_ROOT_DIR}/source/compiler/cmakecpu/test_integration.cpp)

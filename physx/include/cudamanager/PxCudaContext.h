@@ -54,7 +54,7 @@ namespace physx
 		operator CUenum() const { return CUenum(value); }
 	};
 
-#ifdef CUDA_VERSION
+#if defined(CUDA_VERSION) && !defined(__HIP_PLATFORM_AMD__)
 	typedef PxCUenum<CUjit_option> PxCUjit_option;
 	typedef PxCUenum<CUresult> PxCUresult;
 #else

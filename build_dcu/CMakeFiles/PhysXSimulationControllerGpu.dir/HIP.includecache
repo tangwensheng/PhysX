@@ -399,8 +399,8 @@ common/PxPhysXCommonConfig.h
 /public/home/tangwsh/PhysX/physx/include/cudamanager/PxCudaTypes.h
 foundation/PxPreprocessor.h
 /public/home/tangwsh/PhysX/physx/include/cudamanager/foundation/PxPreprocessor.h
-cuda.h
-/public/home/tangwsh/PhysX/physx/include/cudamanager/cuda.h
+hip/hip_runtime.h
+-
 foundation/PxSimpleTypes.h
 /public/home/tangwsh/PhysX/physx/include/cudamanager/foundation/PxSimpleTypes.h
 

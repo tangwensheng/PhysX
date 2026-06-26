@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-using namespace physx;
+
 // Inline GPU bitonic sort within a block (verifies shared memory + sync + shuffle)
 extern "C" __global__ void gpu_bitonic_sort(PxU32* keys, int n)
 {

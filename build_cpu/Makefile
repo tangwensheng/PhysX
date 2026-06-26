@@ -312,6 +312,32 @@ PhysXCharacterKinematic/fast:
 .PHONY : PhysXCharacterKinematic/fast
 
 #=============================================================================
+# Target rules for targets named HipContext
+
+# Build rule for target.
+HipContext: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HipContext
+.PHONY : HipContext
+
+# fast build rule for target.
+HipContext/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/build
+.PHONY : HipContext/fast
+
+#=============================================================================
+# Target rules for targets named bench_physx_scene
+
+# Build rule for target.
+bench_physx_scene: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_physx_scene
+.PHONY : bench_physx_scene
+
+# fast build rule for target.
+bench_physx_scene/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_physx_scene.dir/build.make CMakeFiles/bench_physx_scene.dir/build
+.PHONY : bench_physx_scene/fast
+
+#=============================================================================
 # Target rules for targets named test_integration
 
 # Build rule for target.
@@ -323,6 +349,30 @@ test_integration: cmake_check_build_system
 test_integration/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_integration.dir/build.make CMakeFiles/test_integration.dir/build
 .PHONY : test_integration/fast
+
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o: public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.o
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_physx_scene.dir/build.make CMakeFiles/bench_physx_scene.dir/public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.o
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.o
+
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.i: public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.i
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_physx_scene.dir/build.make CMakeFiles/bench_physx_scene.dir/public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.i
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.i
+
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.s: public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.s
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_physx_scene.dir/build.make CMakeFiles/bench_physx_scene.dir/public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.s
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.s
 
 public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.o: public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.cpp.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.o
@@ -443,6 +493,30 @@ public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.s: public/home
 public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Common.dir/build.make CMakeFiles/Common.dir/public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.cpp.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.cpp.s
+
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.o: public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.o
+
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.i: public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.i
+
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.s: public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.s
 
 public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.o: public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.cpp.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.o
@@ -7188,54 +7262,6 @@ public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.s
 
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.o: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.o
-
-# target to build an object file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o
-
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.i: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.i
-
-# target to preprocess a source file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i
-
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.s: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.s
-
-# target to generate assembly for a file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s
-
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.o: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.o
-
-# target to build an object file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o
-
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.i: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.i
-
-# target to preprocess a source file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i
-
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.s: public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.s
-
-# target to generate assembly for a file
-public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXSDK.dir/build.make CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s
-.PHONY : public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s
-
 public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.o: public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.cpp.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.o
 
@@ -10967,6 +10993,7 @@ help:
 	@echo "... Common"
 	@echo "... Foundation"
 	@echo "... GeomUtils"
+	@echo "... HipContext"
 	@echo "... LowLevel"
 	@echo "... LowLevelAABB"
 	@echo "... LowLevelDynamics"
@@ -10978,8 +11005,12 @@ help:
 	@echo "... PhysXVehicle"
 	@echo "... SceneQuery"
 	@echo "... SimulationController"
+	@echo "... bench_physx_scene"
 	@echo "... test_cpu"
 	@echo "... test_integration"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.i"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmCollection.s"
@@ -10995,6 +11026,9 @@ help:
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/common/src/CmVisualization.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/foundation/FdAllocator.s"
@@ -11838,12 +11872,6 @@ help:
 	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.s"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.o"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.i"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.s"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.o"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.i"
-	@echo "... public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/physxcharacterkinematic/src/CctBoxController.s"

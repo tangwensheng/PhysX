@@ -35,10 +35,20 @@
 #if PX_SUPPORT_GPU_PHYSX
 #ifndef CUDA_VERSION
 
-// HIP: redirect to stub cuda.h for type definitions
-#if defined(__HIPCC__)
-// The HIP stub cuda.h is in the include path and provides all CUDA types
-#include "cuda.h"
+// HIP/DCU: use HIP runtime types
+#if defined(__HIPCC__) || defined(__HIP_PLATFORM_AMD__)
+#include <hip/hip_runtime.h>
+typedef int CUdevice;
+#if PX_P64_FAMILY
+typedef unsigned long long CUdeviceptr;
+#else
+typedef unsigned int CUdeviceptr;
+#endif
+typedef hipCtx_t     CUcontext;
+typedef hipModule_t  CUmodule;
+typedef hipFunction_t CUfunction;
+typedef hipStream_t  CUstream;
+typedef hipEvent_t   CUevent;
 #else
 
 #include "foundation/PxSimpleTypes.h"
@@ -59,7 +69,6 @@ typedef unsigned int CUdeviceptr;
 #endif
 
 typedef int CUdevice;
-
 typedef struct CUctx_st* CUcontext;
 typedef struct CUmod_st* CUmodule;
 typedef struct CUfunc_st* CUfunction;
@@ -67,13 +76,12 @@ typedef struct CUstream_st* CUstream;
 typedef struct CUevent_st* CUevent;
 typedef struct CUgraphicsResource_st* CUgraphicsResource;
 
-#endif // !__HIPCC__
+#endif // HIP
 
 #endif
 
 #else
-typedef struct CUstream_st* CUstream; // We declare some callbacks taking CUstream as an argument even when building with PX_SUPPORT_GPU_PHYSX = 0.
+typedef struct CUstream_st* CUstream;
 typedef struct CUevent_st* CUevent;
 #endif // PX_SUPPORT_GPU_PHYSX
 #endif
-

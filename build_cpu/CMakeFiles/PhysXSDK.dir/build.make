@@ -587,34 +587,6 @@ CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhys
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp -o CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.s
 
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o: CMakeFiles/PhysXSDK.dir/flags.make
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o: /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o: CMakeFiles/PhysXSDK.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o -MF CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o.d -o CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o -c /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp
-
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp > CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.i
-
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp -o CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.s
-
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o: CMakeFiles/PhysXSDK.dir/flags.make
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o: /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o: CMakeFiles/PhysXSDK.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o -MF CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o.d -o CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o -c /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp
-
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp > CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.i
-
-CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp -o CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.s
-
 # Object files for target PhysXSDK
 PhysXSDK_OBJECTS = \
 "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpActor.cpp.o" \
@@ -653,9 +625,7 @@ PhysXSDK_OBJECTS = \
 "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpShape.cpp.o" \
 "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpShapeManager.cpp.o" \
 "CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp.o" \
-"CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o" \
-"CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o" \
-"CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o"
+"CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o"
 
 # External object files for target PhysXSDK
 PhysXSDK_EXTERNAL_OBJECTS =
@@ -697,11 +667,9 @@ libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/ph
 libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/NpShapeManager.cpp.o
 libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdMetaDataPvdBinding.cpp.o
 libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/PvdPhysicsClient.cpp.o
-libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxGpu.cpp.o
-libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/public/home/tangwsh/PhysX/physx/source/physx/src/gpu/PxPhysXGpuModuleLoader.cpp.o
 libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/build.make
 libPhysXSDK.a: CMakeFiles/PhysXSDK.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Linking CXX static library libPhysXSDK.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Linking CXX static library libPhysXSDK.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/PhysXSDK.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/PhysXSDK.dir/link.txt --verbose=$(VERBOSE)
 

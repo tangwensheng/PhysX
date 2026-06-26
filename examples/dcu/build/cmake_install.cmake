@@ -1,4 +1,4 @@
-# Install script for directory: /public2/home/tangwsh/PhysX/examples/dcu
+# Install script for directory: /public/home/tangwsh/PhysX/examples/dcu
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/public2/home/tangwsh/PhysX/examples/dcu/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/public/home/tangwsh/PhysX/examples/dcu/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
