@@ -1,6 +1,10 @@
 CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp.o: \
  /public/home/tangwsh/PhysX/physx/source/cudamanager/src/HipContextManager.cpp \
- /usr/include/stdc-predef.h /opt/dtk/include/hip/hip_runtime.h \
+ /usr/include/stdc-predef.h \
+ /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/stubs/cuda.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+ /public/home/tangwsh/PhysX/physx/source/gpucommon/include/PxgHIPCompat.h \
+ /opt/dtk/include/hip/hip_runtime.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -16,7 +20,6 @@ CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h /usr/include/stdio.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
@@ -171,6 +174,9 @@ CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src
  /opt/dtk/include/hip/amd_detail/amd_hip_runtime_pt_api.h \
  /opt/dtk/include/hip/library_types.h \
  /opt/dtk/include/hip/hip_vector_types.h /usr/include/c++/11/cstring \
+ /usr/include/c++/11/cstdio /usr/include/dlfcn.h \
+ /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
+ /usr/include/x86_64-linux-gnu/bits/dl_find_object.h \
  /public/home/tangwsh/PhysX/physx/include/foundation/PxPreprocessor.h \
  /public/home/tangwsh/PhysX/physx/include/foundation/PxErrorCallback.h \
  /public/home/tangwsh/PhysX/physx/include/foundation/PxErrors.h \
@@ -196,5 +202,5 @@ CMakeFiles/HipContext.dir/public/home/tangwsh/PhysX/physx/source/cudamanager/src
  /public/home/tangwsh/PhysX/physx/include/foundation/PxFlags.h \
  /public/home/tangwsh/PhysX/physx/include/cudamanager/PxCudaTypes.h \
  /public/home/tangwsh/PhysX/physx/include/cudamanager/PxCudaContext.h \
- /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
- /usr/include/x86_64-linux-gnu/bits/dl_find_object.h
+ /usr/include/dirent.h /usr/include/x86_64-linux-gnu/bits/dirent.h \
+ /usr/include/x86_64-linux-gnu/bits/dirent_ext.h

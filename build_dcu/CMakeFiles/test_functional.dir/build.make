@@ -91,8 +91,7 @@ test_functional_EXTERNAL_OBJECTS =
 
 test_functional: CMakeFiles/test_functional.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_functional.hip.o
 test_functional: CMakeFiles/test_functional.dir/build.make
-test_functional: libPhysXCommonGpu.a
-test_functional: libPhysXBroadphaseGpu.a
+test_functional: libPhysXGpuDCU.so
 test_functional: /opt/dtk/hip/lib/libgalaxyhip.so.5.2.26113.2065-6699a1f0
 test_functional: /opt/dtk/dcc/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
 test_functional: CMakeFiles/test_functional.dir/link.txt

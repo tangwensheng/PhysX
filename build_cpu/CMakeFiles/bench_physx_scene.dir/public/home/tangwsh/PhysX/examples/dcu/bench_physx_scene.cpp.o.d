@@ -525,6 +525,7 @@ CMakeFiles/bench_physx_scene.dir/public/home/tangwsh/PhysX/examples/dcu/bench_ph
  /public/home/tangwsh/PhysX/physx/include/pvd/PxPvd.h \
  /public/home/tangwsh/PhysX/physx/include/pvd/PxPvdTransport.h \
  /public/home/tangwsh/PhysX/physx/include/pvd/PxPvd.h \
+ /public/home/tangwsh/PhysX/physx/include/gpu/PxGpu.h \
  /usr/include/c++/11/cstdio /usr/include/c++/11/vector \
  /usr/include/c++/11/bits/allocator.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++allocator.h \
@@ -540,4 +541,4 @@ CMakeFiles/bench_physx_scene.dir/public/home/tangwsh/PhysX/examples/dcu/bench_ph
  /usr/include/c++/11/bits/functional_hash.h \
  /usr/include/c++/11/bits/hash_bytes.h \
  /usr/include/c++/11/bits/range_access.h \
- /usr/include/c++/11/bits/vector.tcc
+ /usr/include/c++/11/bits/vector.tcc /usr/include/c++/11/ctime

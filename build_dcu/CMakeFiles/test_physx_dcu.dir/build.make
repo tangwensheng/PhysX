@@ -91,7 +91,7 @@ test_physx_dcu_EXTERNAL_OBJECTS =
 
 test_physx_dcu: CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o
 test_physx_dcu: CMakeFiles/test_physx_dcu.dir/build.make
-test_physx_dcu: libPhysXCommonGpu.a
+test_physx_dcu: libPhysXGpuDCU.so
 test_physx_dcu: /opt/dtk/hip/lib/libgalaxyhip.so.5.2.26113.2065-6699a1f0
 test_physx_dcu: /opt/dtk/dcc/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
 test_physx_dcu: CMakeFiles/test_physx_dcu.dir/link.txt

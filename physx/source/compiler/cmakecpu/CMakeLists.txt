@@ -33,11 +33,21 @@ endif()
 message(STATUS "PhysX root: ${PHYSX_ROOT_DIR}")
 
 # ---- Compile definitions ----
+# NOTE: DO NOT define __HIP_PLATFORM_AMD__ here — it causes PxCudaTypes.h
+# to #include <hip/hip_runtime.h> which pulls in HIP_vector_type and
+# redefines float4/float2 as "using" aliases, breaking PhysX GPU headers
+# that forward-declare "struct float4".
+#
+# PX_PHYSX_GPU_STATIC is REQUIRED — it tells PxvGetPhysXGpu() to call
+# PxCreatePhysXGpu() directly (statically linked) instead of trying to
+# dlopen/dlsym it from a shared library.  Without it, g_PxCreatePhysXGpu_Func
+# stays nullptr and ScScene dereferences a nullptr when creating GPU objects.
 add_compile_definitions(
     NDEBUG
     PX_PHYSX_STATIC_LIB
     PX_PUBLIC_RELEASE
     PX_SUPPORT_GPU_PHYSX
+    PX_PHYSX_GPU_STATIC
 )
 
 # ---- Include paths ----
@@ -275,18 +285,91 @@ target_include_directories(PhysXCharacterKinematic PUBLIC
 target_link_libraries(PhysXCharacterKinematic PUBLIC Foundation PhysXSDK)
 target_compile_options(PhysXCharacterKinematic PRIVATE -fPIC -O2 -Wno-unused-parameter)
 
-# ---- HipContextManager (GPU dispatch bridge) ----
-add_library(HipContext STATIC ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipContextManager.cpp)
+# ---- HipContext: DCU GPU bridge (context mgr + all GPU host-side objects) ----
+# This library contains:
+#  1. DCU-specific adapter files (HipCtx, HipCtxMgr, KernelWrangler, etc.)
+#  2. ALL original PhysX GPU host-side .cpp files (PxgCudaBroadPhaseSap,
+#     PxgDynamicsContext, PxgNphaseImplementationContext, etc.), compiled
+#     for DCU with CUDA→HIP type mapping via the stub <cuda.h>.
+#
+# The GPU kernel .cu files themselves are compiled separately by cmakehip/
+# into libPhysXGpuDCU.so and loaded at runtime via hipModuleLoad.
+
+set(GPU_HOST_SRC
+    # ---- DCU adapter files ----
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipContextManager.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipGpuDispatcher.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipPhysXGpu.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipKernelWrangler.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/CudaWrappersDCU.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/DcuKernelInitStubs.cpp
+    # ---- GPU common (memory, buffers, kernel wrangler) ----
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCommon.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCopyManager.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCudaBuffer.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCudaMemoryAllocator.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgHeapMemoryAllocator.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgKernelWrangler.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgMemCopyDispatcher.cpp
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgMemoryManager.cpp
+    # ---- GPU broadphase ----
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/PxgBroadPhase.cpp
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/PxgCudaBroadPhaseSap.cpp
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/PxgAABBManager.cpp
+    # ---- GPU solver (PGS + TGS) ----
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgContext.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgSolver.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgSolverCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgCudaSolverCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgDynamicsContext.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgConstraintPartition.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgTGSCudaSolverCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusolver/src/PxgTGSDynamicsContext.cpp
+    # ---- GPU narrowphase ----
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNarrowphase.cpp
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNphaseImplementationContext.cpp
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgShapeManager.cpp
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgGeometryManager.cpp
+    # ---- GPU articulation (needed by solver) ----
+    ${PHYSX_ROOT_DIR}/source/gpuarticulation/src/PxgArticulationCore.cpp
+    # ---- GPU simulation controller ----
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgSimulationController.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgSimulationCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgBodySimManager.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgShapeSimManager.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgJointManager.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgRadixSortCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgAlgorithms.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgSoftBodyCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgSoftBody.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgFEMClothCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgFEMCloth.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgParticleSystemCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgPBDParticleSystemCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgFEMCore.cpp
+    ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/PxgNonRigidCoreCommon.cpp
+)
+
+add_library(HipContext STATIC ${GPU_HOST_SRC})
 target_include_directories(HipContext PUBLIC
     ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
     ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
     ${PHYSX_ROOT_DIR}/include/cudamanager
     ${PHYSX_ROOT_DIR}/source/gpucommon/include
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs
+    ${PHYSX_ROOT_DIR}/source/physxgpu/include
+    ${PHYSX_ROOT_DIR}/source/simulationcontroller/include
     /opt/dtk/include
 )
 target_compile_definitions(HipContext PRIVATE PX_DCU_PORT __HIP_PLATFORM_AMD__ PX_SUPPORT_GPU_PHYSX)
-target_compile_options(HipContext PRIVATE -fPIC -O2)
+# -include forces the DCU stub <cuda.h> to be included before EVERY header,
+# ensuring CUDA_VERSION is set and PxCudaTypes.h skips its own definitions
+# (which would otherwise pull in <hip/hip_runtime.h> and break float4/float2).
+target_compile_options(HipContext PRIVATE -fPIC -O2 -Wno-unused-parameter -Wno-reorder
+    -include${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs/cuda.h
+    -include${PHYSX_ROOT_DIR}/source/gpucommon/include/PxgHIPCompat.h
+)
 target_link_directories(HipContext PUBLIC /opt/dtk/hip/lib)
 target_link_libraries(HipContext PUBLIC amdhip64)
 

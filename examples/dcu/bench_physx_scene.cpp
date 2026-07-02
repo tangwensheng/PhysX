@@ -1,13 +1,14 @@
-// PhysX Scene Benchmark — PxScene::simulate() on CPU
+// PhysX Scene Benchmark — PxScene::simulate() on GPU
 // Same code for DCU (g++) and A800 (g++).
-// Measures real PhysX simulation frame time with Tower Collapse scene.
 
 #include "PxPhysicsAPI.h"
 #include "cudamanager/PxCudaContextManager.h"
+#include "gpu/PxGpu.h"
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
 #include <cmath>
+#include <ctime>
 
 using namespace physx;
 
@@ -17,13 +18,12 @@ int main()
     printf(" PhysX Scene Benchmark — Tower Collapse\n");
     printf("========================================\n\n");
 
-    // ---- PhysX Setup ----
     static PxDefaultErrorCallback gErr;
     static PxDefaultAllocator       gAlloc;
     PxFoundation* fnd = PxCreateFoundation(PX_PHYSICS_VERSION, gAlloc, gErr);
     PxPhysics*    phy = PxCreatePhysics(PX_PHYSICS_VERSION, *fnd, PxTolerancesScale());
 
-    // GPU setup via HIP context manager
+    // GPU setup
     PxCudaContextManagerDesc gpuDesc;
     gpuDesc.deviceOrdinal = 0;
     PxCudaContextManager* gpuMgr = PxCreateCudaContextManager(*fnd, gpuDesc, nullptr, false);
@@ -36,14 +36,18 @@ int main()
 
     PxSceneDesc sd(phy->getTolerancesScale());
     sd.gravity = PxVec3(0, -9.81f, 0);
-    sd.cudaContextManager = gpuMgr;  // GPU auto-enabled when context is valid
+    sd.cudaContextManager = gpuMgr;
+    if (gpuOk) {
+        sd.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
+        sd.gpuMaxNumPartitions = 8;
+    }
     PxDefaultCpuDispatcher* dsp = PxDefaultCpuDispatcherCreate(0);
     sd.cpuDispatcher = dsp;
     sd.filterShader  = PxDefaultSimulationFilterShader;
     PxScene* scene = phy->createScene(sd);
 
     // ---- Build Tower ----
-    const int LAYERS = 14, BASE = 30;
+    const int LAYERS = 20, BASE = 44;
     const float H = 0.5f;
     PxMaterial* mat = phy->createMaterial(0.5f, 0.5f, 0.3f);
     PxShape* boxShape = phy->createShape(PxBoxGeometry(H, H, H), *mat);
@@ -70,14 +74,13 @@ int main()
     printf("Bodies: %d (%d layers)\n", nBox, LAYERS);
 
     // ---- Sphere Cannon ----
-    const int NSPH = 200;
+    const int NSPH = 300;
     PxMaterial* matH = phy->createMaterial(0.8f, 0.8f, 0.1f);
     PxShape* sphShape = phy->createShape(PxSphereGeometry(0.6f), *matH);
     srand(42);
-
     for (int s = 0; s < NSPH; s++) {
-        float a = rand() / (float)RAND_MAX * 6.283f;
-        float v = 20 + rand() / (float)RAND_MAX * 35;
+        float a = rand()/(float)RAND_MAX * 6.283f;
+        float v = 20 + rand()/(float)RAND_MAX * 35;
         PxRigidDynamic* sp = phy->createRigidDynamic(
             PxTransform(PxVec3((rand()%60-30), 15+rand()%10, (rand()%60-30))));
         sp->attachShape(*sphShape);
@@ -95,17 +98,14 @@ int main()
 
     // ---- Benchmark ----
     printf("Running 300 simulation steps...\n");
-    float step = 1.0f / 60.0f;
+    float step = 1.0f/60.0f;
 
-    // Precision timing: use clock_gettime for wall-clock
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
-
     for (int f = 0; f < 300; f++) {
         scene->simulate(step);
         scene->fetchResults(true);
     }
-
     clock_gettime(CLOCK_MONOTONIC, &t1);
     double elapsed = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) * 1e-9;
     double avgMs = elapsed * 1000.0 / 300.0;
@@ -125,7 +125,6 @@ int main()
     printf("Above ground:   %d / %d\n", aboveGround, nTotal);
     printf("Height range:   [%.1f, %.1f]\n", minY, maxY);
 
-    // ---- Cleanup ----
     scene->release(); phy->release(); fnd->release(); dsp->release();
     return 0;
 }

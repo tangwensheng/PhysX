@@ -15,6 +15,7 @@ set(CMAKE_HIP_COMPILER_ID "Clang")
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_HIP
   "NDEBUG"
+  "PX_PHYSX_GPU_STATIC"
   "PX_PHYSX_STATIC_LIB"
   "PX_PUBLIC_RELEASE"
   "PX_SUPPORT_GPU_PHYSX"

@@ -137,13 +137,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/PhysXCommonGpu.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXBroadphaseGpu.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXArticulationGpu.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXSolverGpu.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXSimulationControllerGpu.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXNarrowphaseGpu.dir/DependInfo.cmake"
+  "CMakeFiles/PhysXGpuDCU.dir/DependInfo.cmake"
   "CMakeFiles/test_physx_dcu.dir/DependInfo.cmake"
   "CMakeFiles/test_functional.dir/DependInfo.cmake"
-  "CMakeFiles/PhysXGpuDCU.dir/DependInfo.cmake"
   )

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libPhysXArticulationGpu.a CMakeFiles/PhysXArticulationGpu.dir/public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/articulationDirectGpuApi.cu.o CMakeFiles/PhysXArticulationGpu.dir/public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/forwardDynamic2.cu.o CMakeFiles/PhysXArticulationGpu.dir/public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/internalConstraints2.cu.o CMakeFiles/PhysXArticulationGpu.dir/public/home/tangwsh/PhysX/physx/source/gpuarticulation/src/CUDA/inverseDynamic.cu.o
-/usr/bin/ranlib libPhysXArticulationGpu.a
