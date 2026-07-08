@@ -70,5 +70,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/PhysXCharacterKinematic.dir/DependInfo.cmake"
   "CMakeFiles/HipContext.dir/DependInfo.cmake"
   "CMakeFiles/bench_physx_scene.dir/DependInfo.cmake"
+  "CMakeFiles/bench_compare.dir/DependInfo.cmake"
   "CMakeFiles/test_integration.dir/DependInfo.cmake"
   )

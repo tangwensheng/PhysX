@@ -16,20 +16,26 @@ fi
 
 echo "HIP Clang: $HIP_CLANG"
 echo "Building PhysX DCU Examples..."
-rm -rf "$BUILD_DIR" && mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
 
-cmake "$SCRIPT_DIR" \
-    -DCMAKE_CXX_COMPILER="$(which g++)" \
-    -DCMAKE_HIP_COMPILER="$HIP_CLANG" \
-    -DPHYSX_ROOT_DIR="$PHYSX_ROOT"
+if [ ! -f "$BUILD_DIR/CMakeCache.txt" ]; then
+    rm -rf "$BUILD_DIR" && mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
+    cmake "$SCRIPT_DIR" \
+        -DCMAKE_CXX_COMPILER="$(which g++)" \
+        -DCMAKE_HIP_COMPILER="$HIP_CLANG" \
+        -DPHYSX_ROOT_DIR="$PHYSX_ROOT"
+else
+    cd "$BUILD_DIR"
+fi
 
-cmake --build . -j1
+TARGET="${1:-bench_physx_scene}"
+cmake --build . -j1 --target "$TARGET"
 
 echo ""
-echo "=== Running Examples ==="
-# for exe in render_scene; do
-#     if [ -f "$exe" ]; then
-#         echo ""
-#         ./"$exe"
-#     fi
-# done
+echo "=== Running $TARGET ==="
+if [ -f "$TARGET" ]; then
+    ./"$TARGET"
+else
+    echo "ERROR: $TARGET not found"
+    exit 1
+fi

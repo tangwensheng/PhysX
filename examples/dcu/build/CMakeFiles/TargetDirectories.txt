@@ -1,9 +1,0 @@
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/render_scene.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/benchmark_full.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_broadphase.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_simctrl.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_narrowphase.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_solver.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_gpu_pipeline.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/edit_cache.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/rebuild_cache.dir

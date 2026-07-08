@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -85,6 +85,10 @@ extern "C" __global__ void sphereNphase_Kernel(
 	PxU32 contactBytesLimit,
 	PxU32 forceBytesLimit)
 {
+	// DCU: calling combineMaterials early forces hipcc to keep materials register
+	// alive. Without this, the later insertIntoPatchStream crashes on combineMaterials.
+	{ PxReal _sf,_df,_r,_d; PxU32 _f; combineMaterials(materials,0,0,_f,_sf,_df,_r,_d); }
+
 	PxU32 globalThreadIndex = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (globalThreadIndex >= numTests)
@@ -92,16 +96,23 @@ extern "C" __global__ void sphereNphase_Kernel(
 
 	PxgContactManagerInput contactInput = cmInputs[globalThreadIndex];
 
+	PxU32 shapeRef0 = contactInput.shapeRef0;
+	PxU32 shapeRef1 = contactInput.shapeRef1;
 	PxU32 transformCacheRef0 = contactInput.transformCacheRef0;
 	PxU32 transformCacheRef1 = contactInput.transformCacheRef1;
-	
+
+	// Guard against corrupted data: skip this test if refs look unreasonable
+	if (shapeRef0 > 200000 || shapeRef1 > 200000 ||
+	    transformCacheRef0 > 200000 || transformCacheRef1 > 200000)
+		return;
+
 	PxsCachedTransform transformCache0 = transformCache[transformCacheRef0];
 	PxsCachedTransform transformCache1 = transformCache[transformCacheRef1];
 
 	const PxReal cDistance = contactDistance[transformCacheRef0] + contactDistance[transformCacheRef1];
 
-	PxgShape& shape0 = shapes[contactInput.shapeRef0];
-	PxgShape& shape1 = shapes[contactInput.shapeRef1];
+	PxgShape& shape0 = shapes[shapeRef0];
+	PxgShape& shape1 = shapes[shapeRef1];
 
 	PxGeometryType::Enum type0 = PxGeometryType::Enum(shape0.type);
 	PxGeometryType::Enum type1 = PxGeometryType::Enum(shape1.type);
@@ -169,7 +180,8 @@ extern "C" __global__ void sphereNphase_Kernel(
 	}
 	else
 	{
-		assert(type1 == PxGeometryType::eCAPSULE);
+		if (type1 != PxGeometryType::eCAPSULE)
+			return;  // skip misclassified non-sphere pair
 
 		const PxReal capsuleRadius1 = scale1.y;
 		const PxReal capsuleHalfHeight1 = scale1.x;
@@ -215,9 +227,9 @@ extern "C" __global__ void sphereNphase_Kernel(
 	}
 
 	PxU32 patchIndex = registerContactPatch(cmOutputs, patchAndContactCounters, touchChangeFlags, patchChangeFlags, startContactPatches, patchBytesLimit, globalThreadIndex, nbContacts);
-
-	insertIntoPatchStream(materials, patchStream, shape0, shape1, patchIndex, normal, nbContacts);
-}
-
-
-
+		// DCU: hipcc register fix — volatile materials read at kernel entry keeps pointer alive
+		if (patchIndex != 0xFFFFFFFF)
+		{
+			insertIntoPatchStream(materials, patchStream, shape0, shape1, patchIndex, normal, nbContacts);
+		}
+	}

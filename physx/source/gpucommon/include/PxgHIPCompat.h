@@ -32,14 +32,20 @@
 // which detects __HIPCC__ and sets WARP_SIZE=64, FULL_MASK=0xffffffffffffffffULL
 
 // ---- Warp shuffle intrinsics ----
-// Old HIP: __shfl(var, srcLane, width) — no mask argument, uses full wavefront
-// These variadic macros support both 3-arg (CUDA default width=32) and 4-arg calls.
-// When width is omitted, WARP_SIZE (64 on DCU) is used as default.
-#define __shfl_sync_4(mask, var, lane, width)       __shfl((var), (lane), (width))
-#define __shfl_sync_3(mask, var, lane)              __shfl((var), (lane), WARP_SIZE)
+// DCU: hardware wavefront=64, virtual warps=32. __shfl with width=32 may
+// use absolute lane numbering, breaking virtual warp isolation.
+// Fix: compute absolute hardware lane (0-63) and use width=64.
+// lane & (width-1) handles unsigned underflow (e.g. (0-1)&31 = 31).
+#define __shfl_sync_4(mask, var, lane, width) \
+    __shfl((var), ((lane) & ((width)-1)) + (threadIdx.x & ~((width)-1)), 64)
+#define __shfl_sync_3(mask, var, lane) \
+    __shfl((var), ((lane) & (WARP_SIZE-1)) + (threadIdx.x & ~(WARP_SIZE-1)), 64)
 #define __shfl_sync_DISP(_1,_2,_3,_4,NAME,...) NAME
 #define __shfl_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_sync_4, __shfl_sync_3, _DUMMY)(__VA_ARGS__)
 
+// __shfl_xor/up/down: these are self-relative (no explicit srcLane), so
+// they rely on the width parameter for subgroup isolation. KEEP original
+// width — virtual warp boundaries are handled by width-based splitting.
 #define __shfl_xor_sync_4(mask, var, offset, width)  __shfl_xor((var), (offset), (width))
 #define __shfl_xor_sync_3(mask, var, offset)         __shfl_xor((var), (offset), WARP_SIZE)
 #define __shfl_xor_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_xor_sync_4, __shfl_xor_sync_3, _DUMMY)(__VA_ARGS__)
@@ -53,14 +59,23 @@
 #define __shfl_down_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_down_sync_4, __shfl_down_sync_3, _DUMMY)(__VA_ARGS__)
 
 // ---- Warp vote intrinsics ----
-#define __ballot_sync(mask, pred)    __ballot(pred)       // returns unsigned long long (64-bit)
-#define __all_sync(mask, pred)       __all(pred)
-#define __any_sync(mask, pred)       __any(pred)
+// __ballot(pred) returns 64-bit ballot of ALL 64 hardware lanes regardless of mask.
+// Since WARP_SIZE=32 emulates two virtual warps per wavefront, we must extract
+// only the 32-bit sub-ballot for the current virtual warp:
+//   lanes 0..31 → lower 32 bits  (virtual warp 0,2,4,...)
+//   lanes 32..63 → upper 32 bits  (virtual warp 1,3,5,...)
+#define __ballot_sync(mask, pred)    \
+    (unsigned int)(((threadIdx.x & 32) ? (__ballot((pred)) >> 32) : __ballot((pred))))
+// __all(pred)/__any(pred) evaluate ALL 64 hardware lanes regardless of mask.
+// Use the fixed __ballot_sync to restrict to the 32-thread virtual warp.
+#define __all_sync(mask, pred)       (__ballot_sync((mask), (pred)) == 0xFFFFFFFFu)
+#define __any_sync(mask, pred)       (__ballot_sync((mask), (pred)) != 0)
 
 // ---- Warp synchronization ----
 // __syncwarp is not available in old HIP; use __syncthreads as fallback
 // (PhysX typically uses this within a single warp, so __syncthreads is safe)
 #define __syncwarp(mask)             __syncthreads()
+
 
 // ---- Bit operation intrinsics ----
 // CUDA __popc is 32-bit, HIP provides both __popc(32b) and __popcll(64b)

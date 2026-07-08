@@ -22,74 +22,73 @@ static bool gLoaded = false;
 #include <dirent.h>
 
 static void loadGpuLibrary() {
-	if(gLoaded) return;
-	gLoaded = true;
+    if(gLoaded) return;
+    gLoaded = true;
 
-	const char* dirs[] = {
-		"./kernels", "../build_dcu/kernels",
-		"/public/home/tangwsh/PhysX/build_dcu/kernels", nullptr};
+    const char* dirs[] = {
+        "./kernels", "../build_dcu/kernels",
+        "/public/home/tangwsh/PhysX/build_dcu/kernels", nullptr};
 
-	for(int d = 0; dirs[d]; d++) {
-		DIR* dp = opendir(dirs[d]);
-		if(!dp) continue;
-		int n = 0;
-		struct dirent* e;
-		while((e = readdir(dp))) {
-			const char* nm = e->d_name;
-			int len = strlen(nm);
-			if(len < 6 || strcmp(nm+len-6, ".hsaco")) continue;
+    for(int d = 0; dirs[d]; d++) {
+        DIR* dp = opendir(dirs[d]);
+        if(!dp) continue;
+        int n = 0;
+        struct dirent* e;
+        while((e = readdir(dp))) {
+            const char* nm = e->d_name;
+            int len = strlen(nm);
+            if(len < 6 || strcmp(nm+len-6, ".hsaco")) continue;
 
-			char path[512];
-			snprintf(path, sizeof(path), "%s/%s", dirs[d], nm);
-			FILE* fp = fopen(path, "rb");
-			if(!fp) continue;
-			fseek(fp, 0, SEEK_END);
-			size_t sz = ftell(fp); fseek(fp, 0, SEEK_SET);
-			void* buf = malloc(sz);
-			fread(buf, 1, sz, fp); fclose(fp);
+            char path[512];
+            snprintf(path, sizeof(path), "%s/%s", dirs[d], nm);
+            FILE* fp = fopen(path, "rb");
+            if(!fp) continue;
+            fseek(fp, 0, SEEK_END);
+            size_t sz = ftell(fp); fseek(fp, 0, SEEK_SET);
+            void* buf = malloc(sz);
+            fread(buf, 1, sz, fp); fclose(fp);
 
-			hipModule_t mod = nullptr;
-			hipError_t r = hipModuleLoadData(&mod, buf);
-			free(buf);
-			if(r == hipSuccess && mod) {
-				gModules.pushBack(mod);
-				if(n == 0) fprintf(stderr, "[DCU GPU] First hsaco: %s\n", path);
-				n++;
-			}
-		}
-		closedir(dp);
-		if(n > 0) {
-			g_DCU_ModuleCount = n;
-			fprintf(stderr, "[DCU GPU] Loaded %d hsaco modules from %s\n", n, dirs[d]);
-			return;
-		}
-	}
+            hipModule_t mod = nullptr;
+            hipError_t r = hipModuleLoadData(&mod, buf);
+            free(buf);
+            if(r == hipSuccess && mod) {
+                gModules.pushBack(mod);
+                if(n == 0) fprintf(stderr, "[DCU GPU] First hsaco: %s\n", path);
+                n++;
+            }
+        }
+        closedir(dp);
+        if(n > 0) {
+            g_DCU_ModuleCount = n;
+            fprintf(stderr, "[DCU GPU] Loaded %d hsaco modules from %s\n", n, dirs[d]);
+            return;
+        }
+    }
 
-	// Fallback: hipModuleLoad .so
-	fprintf(stderr, "[DCU GPU] No hsaco dir, trying .so...\n");
-	const char* paths[] = {
-		"./libPhysXGpuDCU.so", "../build_dcu/libPhysXGpuDCU.so",
-		"/public/home/tangwsh/PhysX/build_dcu/libPhysXGpuDCU.so", nullptr};
-	for(int i=0; paths[i]; i++) {
-		FILE* fp = fopen(paths[i], "r");
-		if(!fp) continue; fclose(fp);
-		hipModule_t mod = nullptr;
-		if(hipModuleLoad(&mod, paths[i]) == hipSuccess && mod) {
-			gModules.pushBack(mod);
-			g_DCU_ModuleCount = 1;
-			fprintf(stderr, "[DCU GPU] Loaded .so: %s\n", paths[i]);
-			return;
-		}
-	}
-	fprintf(stderr, "[DCU GPU] No module found\n");
+    // Fallback: hipModuleLoad .so
+    fprintf(stderr, "[DCU GPU] No hsaco dir, trying .so...\n");
+    const char* paths[] = {
+        "./libPhysXGpuDCU.so", "../build_dcu/libPhysXGpuDCU.so",
+        "/public/home/tangwsh/PhysX/build_dcu/libPhysXGpuDCU.so", nullptr};
+    for(int i=0; paths[i]; i++) {
+        FILE* fp = fopen(paths[i], "r");
+        if(!fp) continue; fclose(fp);
+        hipModule_t mod = nullptr;
+        if(hipModuleLoad(&mod, paths[i]) == hipSuccess && mod) {
+            gModules.pushBack(mod);
+            g_DCU_ModuleCount = 1;
+            fprintf(stderr, "[DCU GPU] Loaded .so: %s\n", paths[i]);
+            return;
+        }
+    }
+    fprintf(stderr, "[DCU GPU] No module found\n");
 }
 
 class HipCtx : public PxCudaContext {
     hipError_t mLast; bool mSync, mAbort;
-    int mLaunchCount;
 public:
     HipCtx(PxDeviceAllocatorCallback* cb, bool sync)
-        : mLast(hipSuccess), mSync(sync), mAbort(false), mLaunchCount(0)
+        : mLast(hipSuccess), mSync(sync), mAbort(false)
     { mAllocatorCallback = cb; }
     void release() override { delete this; }
 
@@ -154,8 +153,6 @@ public:
         unsigned sh, CUstream s, PxCudaKernelParam* p, size_t ps, void** ex,
         const char*, int) override
     {
-        if(mLaunchCount<5) fprintf(stderr,"[DCU GPU] launchKernel(v1) #%d %ux%u\n",mLaunchCount,gx,gy);
-        mLaunchCount++;
         if(mAbort) return PxCUresult(mLast);
         void* kp[32]; int n=(int)(ps/sizeof(PxCudaKernelParam));
         for(int i=0;i<n&&i<32;i++) kp[i]=p[i].data;
@@ -167,8 +164,6 @@ public:
         PxU32 gx,PxU32 gy,PxU32 gz, PxU32 bx,PxU32 by,PxU32 bz,
         PxU32 sh, CUstream s, void** params, void** ex, const char*, int) override
     {
-        if(mLaunchCount<5) fprintf(stderr,"[DCU GPU] launchKernel(v2) #%d %ux%u\n",mLaunchCount,gx,gy);
-        mLaunchCount++;
         if(mAbort) return PxCUresult(mLast);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,params,ex);
         return PxCUresult(mLast);
@@ -226,7 +221,12 @@ public:
         mTLS=PxTlsAlloc(); mValid=true;
     }
 
-    ~HipCtxMgr() override { if(mHCtx){ for(PxU32 i=0;i<mMods.size();i++) if(mMods[i]) hipModuleUnload(mMods[i]); mHCtx->release(); } if(mCtx) hipCtxDestroy(mCtx); PxTlsFree(mTLS); }
+    ~HipCtxMgr() override {
+        // Sync device before cleanup to prevent segfault from pending GPU work
+        if(mValid) hipDeviceSynchronize();
+        if(mHCtx){ for(PxU32 i=0;i<mMods.size();i++) if(mMods[i]) hipModuleUnload(mMods[i]); mHCtx->release(); }
+        if(mCtx) hipCtxDestroy(mCtx); PxTlsFree(mTLS);
+    }
 
     void release() override { delete this; }
     void acquireContext() override { hipCtxPushCurrent(mCtx); PxTlsSetValue(mTLS,PxTlsGetValue(mTLS)+1); }

@@ -245,9 +245,7 @@ extern "C" __global__ void mergeChangedAABBMgrHandlesLaunch(const PxgUpdateActor
 extern "C" __global__ void computeFrozenAndUnfrozenHistogramLaunch(const PxgSimulationCoreDesc* scDesc)
 {
 	const PxU32 WARP_PERBLOCK_SIZE = PxgSimulationCoreKernelBlockDim::COMPUTE_FROZEN_UNFROZEN_HISTOGRAM/WARP_SIZE;
-	const PxU32 LOG2_WARP_PERBLOCK_SIZE = 3;
-
-	assert((1 << LOG2_WARP_PERBLOCK_SIZE) == WARP_PERBLOCK_SIZE);
+	const PxU32 LOG2_WARP_PERBLOCK_SIZE = __builtin_ctz(WARP_PERBLOCK_SIZE);
 
 	__shared__ PxU32 sFrozenWarpAccumulator[WARP_PERBLOCK_SIZE];
 	__shared__ PxU32 sUnFrozenWarpAccumulator[WARP_PERBLOCK_SIZE];

@@ -14,12 +14,6 @@
 # EXTERNAL cache entries
 ########################
 
-//The directory containing a CMake configuration file for AMDDeviceLibs.
-AMDDeviceLibs_DIR:PATH=/opt/dtk/lib/cmake/AMDDeviceLibs
-
-//Path to a library.
-CLANGRT_BUILTINS:FILEPATH=/opt/dtk/llvm/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
-
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -34,7 +28,7 @@ CMAKE_BUILD_TYPE:STRING=
 CMAKE_COLOR_MAKEFILE:BOOL=ON
 
 //CXX compiler
-CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
+CMAKE_CXX_COMPILER:STRING=/usr/bin/g++
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -83,38 +77,8 @@ CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 //Value Computed by CMake.
 CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/pkgRedirects
 
-//HIP architectures
-CMAKE_HIP_ARCHITECTURES:STRING=gfx906;gfx926;gfx928;gfx936;gfx938
-
-//HIP compiler
-CMAKE_HIP_COMPILER:FILEPATH=/opt/dtk/llvm/bin/clang++
-
-//LLVM archiver
-CMAKE_HIP_COMPILER_AR:FILEPATH=/opt/dtk/dcc/bin/llvm-ar
-
-//`clang-scan-deps` dependency scanner
-CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS:FILEPATH=CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS-NOTFOUND
-
-//Generate index for LLVM archive
-CMAKE_HIP_COMPILER_RANLIB:FILEPATH=CMAKE_HIP_COMPILER_RANLIB-NOTFOUND
-
-//Flags used by the HIP compiler during all build types.
-CMAKE_HIP_FLAGS:STRING=
-
-//Flags used by the HIP compiler during DEBUG builds.
-CMAKE_HIP_FLAGS_DEBUG:STRING=-g -O
-
-//Flags used by the HIP compiler during MINSIZEREL builds.
-CMAKE_HIP_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
-
-//Flags used by the HIP compiler during RELEASE builds.
-CMAKE_HIP_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
-
-//Flags used by the HIP compiler during RELWITHDEBINFO builds.
-CMAKE_HIP_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
-
-//HIP platform
-CMAKE_HIP_PLATFORM:STRING=amd
+//No help, variable specified on the command line.
+CMAKE_HIP_COMPILER:UNINITIALIZED=/opt/dtk/dcc/bin/clang++
 
 //Install path prefix, prepended onto install directories.
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
@@ -228,17 +192,11 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
-//DCU architecture
-DCU_ARCH:STRING=gfx936
-
-//Path to a file.
-HIP_CLANG_INCLUDE_PATH:PATH=/opt/dtk/llvm/lib/clang/17.0.0/include
-
-//Path to a file.
-HSA_HEADER:PATH=/opt/hyhal/include
+//Path to a library.
+PHYSX_LIB:FILEPATH=PHYSX_LIB-NOTFOUND
 
 //No help, variable specified on the command line.
-PHYSX_ROOT_DIR:UNINITIALIZED=/public/home/tangwsh/PhysX/physx
+PHYSX_ROOT_DIR:UNINITIALIZED=/public/home/tangwsh/PhysX/examples/dcu/../../physx
 
 //Value Computed by CMake
 PhysXDcuExamples_BINARY_DIR:STATIC=/public/home/tangwsh/PhysX/examples/dcu/build
@@ -248,9 +206,6 @@ PhysXDcuExamples_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 PhysXDcuExamples_SOURCE_DIR:STATIC=/public/home/tangwsh/PhysX/examples/dcu
-
-//The directory containing a CMake configuration file for amd_comgr.
-amd_comgr_DIR:PATH=/opt/dtk/lib/cmake/amd_comgr
 
 
 ########################
@@ -319,24 +274,6 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
-//ADVANCED property for variable: CMAKE_HIP_COMPILER
-CMAKE_HIP_COMPILER-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_COMPILER_AR
-CMAKE_HIP_COMPILER_AR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS
-CMAKE_HIP_COMPILER_CLANG_SCAN_DEPS-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_COMPILER_RANLIB
-CMAKE_HIP_COMPILER_RANLIB-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_FLAGS
-CMAKE_HIP_FLAGS-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_FLAGS_DEBUG
-CMAKE_HIP_FLAGS_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_FLAGS_MINSIZEREL
-CMAKE_HIP_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_FLAGS_RELEASE
-CMAKE_HIP_FLAGS_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_HIP_FLAGS_RELWITHDEBINFO
-CMAKE_HIP_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/public/home/tangwsh/PhysX/examples/dcu

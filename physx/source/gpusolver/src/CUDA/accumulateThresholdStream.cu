@@ -151,9 +151,7 @@ extern "C" __global__ void computeAccumulateThresholdStream(PxgSolverCoreDesc* s
 
 	const PxU32 WARP_PERBLOCK_SIZE = PxgKernelBlockDim::COMPUTE_ACCUMULATED_THRESHOLDSTREAM / WARP_SIZE;
 
-	const PxU32 LOG2_WARP_PERBLOCK_SIZE = 3;
-
-	assert(WARP_PERBLOCK_SIZE == (1 << LOG2_WARP_PERBLOCK_SIZE));
+	const PxU32 LOG2_WARP_PERBLOCK_SIZE = __builtin_ctz(WARP_PERBLOCK_SIZE);  // DCU: compute from actual block dim, not hardcoded 3
 
 	__shared__ PxReal sWarpAccumulator[WARP_PERBLOCK_SIZE];
 	__shared__ PxReal sBlockAccumulator;

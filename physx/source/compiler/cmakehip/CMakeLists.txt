@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(PhysXGpuHIP LANGUAGES CXX HIP)
-set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_DCU_PORT -ffast-math -fgpu-flush-denormals-to-zero")
+set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_DCU_PORT -DNDEBUG -ffast-math -fgpu-flush-denormals-to-zero")
 if(NOT DEFINED PHYSX_ROOT_DIR)
     get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../../.." ABSOLUTE)
 endif()

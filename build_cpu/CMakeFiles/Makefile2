@@ -80,6 +80,7 @@ all: CMakeFiles/PhysXVehicle.dir/all
 all: CMakeFiles/PhysXCharacterKinematic.dir/all
 all: CMakeFiles/HipContext.dir/all
 all: CMakeFiles/bench_physx_scene.dir/all
+all: CMakeFiles/bench_compare.dir/all
 all: CMakeFiles/test_integration.dir/all
 .PHONY : all
 
@@ -105,6 +106,7 @@ clean: CMakeFiles/PhysXVehicle.dir/clean
 clean: CMakeFiles/PhysXCharacterKinematic.dir/clean
 clean: CMakeFiles/HipContext.dir/clean
 clean: CMakeFiles/bench_physx_scene.dir/clean
+clean: CMakeFiles/bench_compare.dir/clean
 clean: CMakeFiles/test_integration.dir/clean
 .PHONY : clean
 
@@ -195,12 +197,12 @@ CMakeFiles/LowLevel.dir/all: CMakeFiles/Foundation.dir/all
 CMakeFiles/LowLevel.dir/all: CMakeFiles/Common.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevel.dir/build.make CMakeFiles/LowLevel.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LowLevel.dir/build.make CMakeFiles/LowLevel.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=50,51,52 "Built target LowLevel"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=49,50,51,52 "Built target LowLevel"
 .PHONY : CMakeFiles/LowLevel.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevel.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevel.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevel.dir/rule
@@ -229,7 +231,7 @@ CMakeFiles/LowLevelAABB.dir/all: CMakeFiles/GeomUtils.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevelAABB.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 44
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 45
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevelAABB.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevelAABB.dir/rule
@@ -259,7 +261,7 @@ CMakeFiles/LowLevelDynamics.dir/all: CMakeFiles/GeomUtils.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/LowLevelDynamics.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 49
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 50
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/LowLevelDynamics.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/LowLevelDynamics.dir/rule
@@ -289,7 +291,7 @@ CMakeFiles/SceneQuery.dir/all: CMakeFiles/GeomUtils.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/SceneQuery.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 45
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 46
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/SceneQuery.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/SceneQuery.dir/rule
@@ -321,7 +323,7 @@ CMakeFiles/SimulationController.dir/all: CMakeFiles/GeomUtils.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/SimulationController.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 60
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 61
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/SimulationController.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/SimulationController.dir/rule
@@ -355,7 +357,7 @@ CMakeFiles/PhysXSDK.dir/all: CMakeFiles/PhysXTask.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXSDK.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 68
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 69
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXSDK.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXSDK.dir/rule
@@ -437,7 +439,7 @@ CMakeFiles/PhysXCooking.dir/all: CMakeFiles/LowLevel.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXCooking.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXCooking.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXCooking.dir/rule
@@ -473,7 +475,7 @@ CMakeFiles/PhysXExtensions.dir/all: CMakeFiles/PhysXCooking.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXExtensions.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 82
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 83
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXExtensions.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXExtensions.dir/rule
@@ -510,7 +512,7 @@ CMakeFiles/PhysXVehicle.dir/all: CMakeFiles/PhysXExtensions.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXVehicle.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 86
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 87
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXVehicle.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXVehicle.dir/rule
@@ -545,7 +547,7 @@ CMakeFiles/PhysXCharacterKinematic.dir/all: CMakeFiles/PhysXTask.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/PhysXCharacterKinematic.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 70
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 71
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/PhysXCharacterKinematic.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/PhysXCharacterKinematic.dir/rule
@@ -566,12 +568,12 @@ CMakeFiles/PhysXCharacterKinematic.dir/clean:
 CMakeFiles/HipContext.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/HipContext.dir/build.make CMakeFiles/HipContext.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=40,41,42,43,44,45,46,47,48,49 "Built target HipContext"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num=40,41,42,43,44,45,46,47,48 "Built target HipContext"
 .PHONY : CMakeFiles/HipContext.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/HipContext.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 10
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/HipContext.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
 .PHONY : CMakeFiles/HipContext.dir/rule
@@ -622,6 +624,44 @@ bench_physx_scene: CMakeFiles/bench_physx_scene.dir/rule
 CMakeFiles/bench_physx_scene.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_physx_scene.dir/build.make CMakeFiles/bench_physx_scene.dir/clean
 .PHONY : CMakeFiles/bench_physx_scene.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/bench_compare.dir
+
+# All Build rule for target.
+CMakeFiles/bench_compare.dir/all: CMakeFiles/Foundation.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/Common.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/LowLevel.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/LowLevelAABB.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/LowLevelDynamics.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/SceneQuery.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/SimulationController.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/PhysXSDK.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/GeomUtils.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/PhysXTask.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/PhysXCooking.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/PhysXExtensions.dir/all
+CMakeFiles/bench_compare.dir/all: CMakeFiles/HipContext.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/public/home/tangwsh/PhysX/build_cpu/CMakeFiles --progress-num= "Built target bench_compare"
+.PHONY : CMakeFiles/bench_compare.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/bench_compare.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 92
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_compare.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /public/home/tangwsh/PhysX/build_cpu/CMakeFiles 0
+.PHONY : CMakeFiles/bench_compare.dir/rule
+
+# Convenience name for target.
+bench_compare: CMakeFiles/bench_compare.dir/rule
+.PHONY : bench_compare
+
+# clean rule for target.
+CMakeFiles/bench_compare.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/clean
+.PHONY : CMakeFiles/bench_compare.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/test_integration.dir

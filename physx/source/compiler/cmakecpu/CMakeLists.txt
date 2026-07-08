@@ -389,6 +389,22 @@ target_link_libraries(bench_physx_scene PRIVATE
 )
 target_compile_options(bench_physx_scene PRIVATE -fPIC -O2)
 
+# ---- CPU vs GPU Comparison Test ----
+add_executable(bench_compare ${PHYSX_ROOT_DIR}/../examples/dcu/bench_compare.cpp)
+target_include_directories(bench_compare PRIVATE
+    ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
+    ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
+)
+target_link_libraries(bench_compare PRIVATE
+    -Wl,--start-group
+    Foundation Common PhysXSDK PhysXExtensions PhysXTask HipContext
+    LowLevel LowLevelAABB LowLevelDynamics SceneQuery SimulationController
+    GeomUtils
+    -Wl,--end-group
+    pthread dl
+)
+target_compile_options(bench_compare PRIVATE -fPIC -O2)
+
 # ---- Integration test: CPU Foundation + GPU kernels ----
 set(INTEGRATION_SRC ${PHYSX_ROOT_DIR}/source/compiler/cmakecpu/test_integration.cpp)
 set_source_files_properties(${INTEGRATION_SRC} PROPERTIES LANGUAGE HIP)

@@ -338,6 +338,19 @@ bench_physx_scene/fast:
 .PHONY : bench_physx_scene/fast
 
 #=============================================================================
+# Target rules for targets named bench_compare
+
+# Build rule for target.
+bench_compare: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_compare
+.PHONY : bench_compare
+
+# fast build rule for target.
+bench_compare/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/build
+.PHONY : bench_compare/fast
+
+#=============================================================================
 # Target rules for targets named test_integration
 
 # Build rule for target.
@@ -349,6 +362,30 @@ test_integration: cmake_check_build_system
 test_integration/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_integration.dir/build.make CMakeFiles/test_integration.dir/build
 .PHONY : test_integration/fast
+
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.o: public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.o
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.o
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.o
+
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.i: public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.i
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.i
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.i
+
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.s: public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.s
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_compare.dir/build.make CMakeFiles/bench_compare.dir/public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.s
+.PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_compare.cpp.s
 
 public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o: public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.cpp.o
 .PHONY : public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o
@@ -12085,9 +12122,13 @@ help:
 	@echo "... PhysXVehicle"
 	@echo "... SceneQuery"
 	@echo "... SimulationController"
+	@echo "... bench_compare"
 	@echo "... bench_physx_scene"
 	@echo "... test_cpu"
 	@echo "... test_integration"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_compare.o"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_compare.i"
+	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_compare.s"
 	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.o"
 	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.i"
 	@echo "... public/home/tangwsh/PhysX/examples/dcu/bench_physx_scene.s"

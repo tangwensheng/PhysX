@@ -24,7 +24,7 @@
 //
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
 #ifndef PXG_COMMON_DEFINES_H
 #define PXG_COMMON_DEFINES_H
@@ -42,16 +42,18 @@
 #define PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH 6 // corresponding CPU define is CONTACT_REDUCTION_MAX_CONTACTS
 
 // DCU/HIP platform detection: __HIPCC__ is defined by the hipcc compiler
+// NOTE: Hardware wavefront = 64, but PhysX GPU algorithms assume 32-thread
+// warps for block size calculations. PxgHIPCompat.h handles the 32→64
+// mapping for warp intrinsics (__shfl_sync, __ballot_sync, etc.).
 #if defined(__HIPCC__) || defined(PX_DCU_PORT)
-	// Hygon DCU: wavefront size = 64
-	#define LOG2_WARP_SIZE 6
-	#define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 64
-	#define FULL_MASK 0xffffffffffffffffULL    // full mask for 64 threads in a wavefront
+    #define LOG2_WARP_SIZE 5
+    #define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 32
+    #define FULL_MASK 0xffffffffULL             // full mask for 32 threads
 #else
-	// NVIDIA CUDA: warp size = 32
-	#define LOG2_WARP_SIZE 5
-	#define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 32
-	#define FULL_MASK 0xffffffff              // full mask for 32 threads in a warp
+    // NVIDIA CUDA: warp size = 32
+    #define LOG2_WARP_SIZE 5
+    #define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 32
+    #define FULL_MASK 0xffffffff              // full mask for 32 threads in a warp
 #endif
 
 

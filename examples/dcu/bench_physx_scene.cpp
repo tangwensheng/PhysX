@@ -40,6 +40,13 @@ int main()
     if (gpuOk) {
         sd.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
         sd.gpuMaxNumPartitions = 8;
+        // DCU: max out all GPU memory buffers
+        sd.gpuDynamicsConfig.maxRigidContactCount   = 1024u * 1024u * 8u;
+        sd.gpuDynamicsConfig.maxRigidPatchCount     = 1024u * 1024u;
+        sd.gpuDynamicsConfig.foundLostPairsCapacity = 1024u * 1024u * 2u;
+        sd.gpuDynamicsConfig.heapCapacity           = 512u * 1024u * 1024u;
+        sd.gpuDynamicsConfig.collisionStackSize     = 256u * 1024u * 1024u;
+        sd.gpuDynamicsConfig.tempBufferCapacity     = 128u * 1024u * 1024u;
     }
     PxDefaultCpuDispatcher* dsp = PxDefaultCpuDispatcherCreate(0);
     sd.cpuDispatcher = dsp;
@@ -125,6 +132,10 @@ int main()
     printf("Above ground:   %d / %d\n", aboveGround, nTotal);
     printf("Height range:   [%.1f, %.1f]\n", minY, maxY);
 
-    scene->release(); phy->release(); fnd->release(); dsp->release();
+    scene->release();
+    dsp->release();
+    if (gpuMgr) gpuMgr->release();
+    phy->release();
+    fnd->release();
     return 0;
 }
