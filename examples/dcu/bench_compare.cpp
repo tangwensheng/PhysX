@@ -78,8 +78,10 @@ int main()
         buildScene(phy, scene, bodies);
         printf("Bodies: %d\n", (int)bodies.size());
 
-        scene->simulate(1.0f/60.0f);
-        scene->fetchResults(true);
+        for (int f = 0; f < 10; f++) {
+            scene->simulate(1.0f/60.0f);
+            scene->fetchResults(true);
+        }
 
         // Save CPU poses
         std::vector<PxTransform> cpuPoses(bodies.size());
@@ -114,8 +116,10 @@ int main()
             buildScene(phy, scene2, bodies2);
             printf("Bodies: %d\n", (int)bodies2.size());
 
-            scene2->simulate(1.0f/60.0f);
-            scene2->fetchResults(true);
+            for (int f = 0; f < 10; f++) {
+                scene2->simulate(1.0f/60.0f);
+                scene2->fetchResults(true);
+            }
 
             // Compare
             printf("\n=== Comparison (CPU vs GPU) ===\n");

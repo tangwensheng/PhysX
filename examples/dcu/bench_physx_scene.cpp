@@ -9,6 +9,9 @@
 #include <vector>
 #include <cmath>
 #include <ctime>
+#if defined(__HIPCC__)
+#include <hip/hip_runtime.h>
+#endif
 
 using namespace physx;
 
@@ -34,13 +37,28 @@ int main()
         gpuOk ? gpuMgr->getDeviceTotalMemBytes()/(1024.0*1024.0*1024.0) : 0.0,
         gpuOk ? "GPU enabled" : "CPU only");
 
+    // ---- CPU warm-up: initialize ROCm/PhysX internals ----
+    printf("CPU warmup...\n");
+    {
+        PxDefaultCpuDispatcher* dspWarm = PxDefaultCpuDispatcherCreate(0);
+        PxSceneDesc sdCpu(phy->getTolerancesScale());
+        sdCpu.gravity = PxVec3(0, -9.81f, 0);
+        sdCpu.cpuDispatcher = dspWarm;
+        sdCpu.filterShader = PxDefaultSimulationFilterShader;
+        PxScene* cpuScene = phy->createScene(sdCpu);
+        cpuScene->simulate(1.0f/60.0f);
+        cpuScene->fetchResults(true);
+        cpuScene->release();
+        dspWarm->release();
+        printf("CPU warmup OK\n");
+    }
+
     PxSceneDesc sd(phy->getTolerancesScale());
     sd.gravity = PxVec3(0, -9.81f, 0);
     sd.cudaContextManager = gpuMgr;
     if (gpuOk) {
         sd.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
         sd.gpuMaxNumPartitions = 8;
-        // DCU: max out all GPU memory buffers
         sd.gpuDynamicsConfig.maxRigidContactCount   = 1024u * 1024u * 8u;
         sd.gpuDynamicsConfig.maxRigidPatchCount     = 1024u * 1024u;
         sd.gpuDynamicsConfig.foundLostPairsCapacity = 1024u * 1024u * 2u;
@@ -99,9 +117,37 @@ int main()
     nTotal = (int)bodies.size();
     printf("Projectiles: %d | Total: %d\n\n", NSPH, nTotal);
 
+    // ---- Diagnostic: zero-gravity zero-time step ----
+    printf("Diagnostic: 0 gravity + dt=0...\n");
+    scene->setGravity(PxVec3(0, 0, 0));
+    scene->simulate(0.0f);
+#if defined(__HIPCC__)
+    hipError_t e = hipDeviceSynchronize();
+    if (e != hipSuccess) {
+        printf("FATAL: crash during zero-step (init phase): %s\n", hipGetErrorString(e));
+        exit(1);
+    }
+#endif
+    scene->fetchResults(true);
+    printf("Diagnostic OK\n");
+    scene->setGravity(PxVec3(0, -9.81f, 0));
+
     // ---- Settle ----
     printf("Settling...\n");
+#if defined(__HIPCC__)
+    for (int s = 0; s < 120; s++) {
+        if (s % 10 == 0) printf("  step %d...\n", s);
+        scene->simulate(1.0f/60.0f);
+        e = hipDeviceSynchronize();
+        if (e != hipSuccess) {
+            printf("FATAL step %d: %s\n", s, hipGetErrorString(e));
+            exit(1);
+        }
+        scene->fetchResults(true);
+    }
+#else
     for (int s = 0; s < 120; s++) { scene->simulate(1.0f/60.0f); scene->fetchResults(true); }
+#endif
 
     // ---- Benchmark ----
     printf("Running 300 simulation steps...\n");
@@ -121,6 +167,7 @@ int main()
     int aboveGround = 0;
     float maxY = 0, minY = 1e10f;
     for (auto* b : bodies) {
+        if (b->isSleeping()) continue;
         float y = b->getGlobalPose().p.y;
         if (y > 0.5f) aboveGround++;
         if (y > maxY) maxY = y;

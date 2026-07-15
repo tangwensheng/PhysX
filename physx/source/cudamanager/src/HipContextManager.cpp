@@ -86,11 +86,16 @@ static void loadGpuLibrary() {
 
 class HipCtx : public PxCudaContext {
     hipError_t mLast; bool mSync, mAbort;
+    int mKernelCount;
 public:
     HipCtx(PxDeviceAllocatorCallback* cb, bool sync)
-        : mLast(hipSuccess), mSync(sync), mAbort(false)
+        : mLast(hipSuccess), mSync(sync), mAbort(false), mKernelCount(0)
     { mAllocatorCallback = cb; }
-    void release() override { delete this; }
+    void release() override {
+        fprintf(stderr, "[DCU PROFILER] Total kernel launches: %d\n", mKernelCount);
+        delete this;
+    }
+    int totalKernels() const { return mKernelCount; }
 
     PxCUresult memAlloc(CUdeviceptr* d, size_t b) override {
         if(mAbort){*d=0; return PxCUresult(mLast);}
@@ -156,6 +161,7 @@ public:
         if(mAbort) return PxCUresult(mLast);
         void* kp[32]; int n=(int)(ps/sizeof(PxCudaKernelParam));
         for(int i=0;i<n&&i<32;i++) kp[i]=p[i].data;
+        mKernelCount++;
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,kp,ex);
         return PxCUresult(mLast);
     }
@@ -165,6 +171,7 @@ public:
         PxU32 sh, CUstream s, void** params, void** ex, const char*, int) override
     {
         if(mAbort) return PxCUresult(mLast);
+        mKernelCount++;
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,params,ex);
         return PxCUresult(mLast);
     }
@@ -256,6 +263,7 @@ public:
     bool getUsingConcurrentStreams() const override { return true; }
     void getDeviceMemoryInfo(size_t& f, size_t& t) const override { hipMemGetInfo(&f,&t); }
     CUdeviceptr getMappedDevicePtr(void* pb) override { CUdeviceptr d=0; hipHostGetDevicePointer((void**)&d,pb,0); return d; }
+    int getKernelLaunchCount() const { return mHCtx ? mHCtx->totalKernels() : 0; }
 };
 
 // GPU stubs (replaces PxGpu.cpp)

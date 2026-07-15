@@ -85,9 +85,11 @@ extern "C" __global__ void sphereNphase_Kernel(
 	PxU32 contactBytesLimit,
 	PxU32 forceBytesLimit)
 {
-	// DCU: calling combineMaterials early forces hipcc to keep materials register
-	// alive. Without this, the later insertIntoPatchStream crashes on combineMaterials.
-	{ PxReal _sf,_df,_r,_d; PxU32 _f; combineMaterials(materials,0,0,_f,_sf,_df,_r,_d); }
+	// DCU: copy materials to local to prevent hipcc register clobbering
+	if (blockIdx.x == 0 && threadIdx.x == 0) {
+		PxReal _sf,_df,_r,_d; PxU32 _f;
+		combineMaterials(materials, 0, 0, _f, _sf, _df, _r, _d);
+	}
 
 	PxU32 globalThreadIndex = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -101,7 +103,6 @@ extern "C" __global__ void sphereNphase_Kernel(
 	PxU32 transformCacheRef0 = contactInput.transformCacheRef0;
 	PxU32 transformCacheRef1 = contactInput.transformCacheRef1;
 
-	// Guard against corrupted data: skip this test if refs look unreasonable
 	if (shapeRef0 > 200000 || shapeRef1 > 200000 ||
 	    transformCacheRef0 > 200000 || transformCacheRef1 > 200000)
 		return;
@@ -122,13 +123,11 @@ extern "C" __global__ void sphereNphase_Kernel(
 
 	const bool flip = (type1<type0);
 
-	//shape0 should be always sphere
 	if (flip)
 	{
 		PxSwap(type0, type1);
 		PxSwap(scale0, scale1);
 		PxSwap(transformCache0, transformCache1);
-		//printf("type0 %i type1 %i\n", type0, type1);
 	}
 
 
@@ -148,20 +147,17 @@ extern "C" __global__ void sphereNphase_Kernel(
 		{
 		case PxGeometryType::eSPHERE:
 		{
-			//printf("sphere/sphere \n");
 			const PxReal sphereRadius1 = scale1.x;
 			nbContacts = spheresphere(transform0, transform1, sphereRadius, sphereRadius1, cDistance, pointPen[0], normal);
 			break;
 		}
 		case PxGeometryType::ePLANE:
 		{
-			//printf("sphere/plane \n");
 			nbContacts = sphereplane(transform0, transform1, sphereRadius, cDistance, pointPen[0], normal);
 			break;
 		}
 		case PxGeometryType::eCAPSULE:
 		{
-			//printf("sphere/capsule \n");
 			const PxReal capsuleRadius = scale1.y;
 			const PxReal halfHeight = scale1.x;
 			nbContacts = spherecapsule(transform0, transform1, sphereRadius, capsuleRadius, halfHeight, cDistance, pointPen[0], normal);
@@ -169,7 +165,6 @@ extern "C" __global__ void sphereNphase_Kernel(
 		}
 		case PxGeometryType::eBOX:
 		{
-			//printf("sphere/box \n");
 			const PxVec3 boxHalfExtents = scale1;
 			nbContacts = spherebox(transform0, transform1, sphereRadius, boxHalfExtents, cDistance, pointPen[0], normal);
 			break;
@@ -181,7 +176,7 @@ extern "C" __global__ void sphereNphase_Kernel(
 	else
 	{
 		if (type1 != PxGeometryType::eCAPSULE)
-			return;  // skip misclassified non-sphere pair
+			return;
 
 		const PxReal capsuleRadius1 = scale1.y;
 		const PxReal capsuleHalfHeight1 = scale1.x;
@@ -190,13 +185,11 @@ extern "C" __global__ void sphereNphase_Kernel(
 		{
 		case PxGeometryType::ePLANE:
 		{
-			//printf("sphere/plane \n");
 			nbContacts = planeCapsule(transform0, transform1, capsuleRadius1, capsuleHalfHeight1, cDistance, pointPen, normal);
 			break;
 		}
 		case PxGeometryType::eCAPSULE:
 		{
-			////printf("sphere/capsule \n");
 			const PxReal capsuleRadius0 = scale0.y;
 			const PxReal halfHeight0 = scale0.x;
 			nbContacts = capsuleCapsule(transform0, transform1, capsuleRadius0, halfHeight0,
@@ -227,9 +220,8 @@ extern "C" __global__ void sphereNphase_Kernel(
 	}
 
 	PxU32 patchIndex = registerContactPatch(cmOutputs, patchAndContactCounters, touchChangeFlags, patchChangeFlags, startContactPatches, patchBytesLimit, globalThreadIndex, nbContacts);
-		// DCU: hipcc register fix — volatile materials read at kernel entry keeps pointer alive
-		if (patchIndex != 0xFFFFFFFF)
-		{
-			insertIntoPatchStream(materials, patchStream, shape0, shape1, patchIndex, normal, nbContacts);
-		}
+	if (patchIndex != 0xFFFFFFFF)
+	{
+		insertIntoPatchStream(materials, patchStream, shape0, shape1, patchIndex, normal, nbContacts);
 	}
+}

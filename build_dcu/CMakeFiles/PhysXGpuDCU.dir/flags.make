@@ -8,3 +8,5 @@ HIP_INCLUDES = -I/public/home/tangwsh/PhysX/physx/include -I/public/home/tangwsh
 
 HIP_FLAGS =  -include PxgHIPCompat.h -DPX_DCU_PORT -DNDEBUG -ffast-math -fgpu-flush-denormals-to-zero -std=gnu++17 --offload-arch=gfx936 -fPIC -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
 
+# Custom flags: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o_FLAGS = -mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0
+

@@ -199,126 +199,22 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.s"
 	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.s
 
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i
-
-CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s
-
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o"
+	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0 -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.i
+	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0 -E /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu > CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.i
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.s
+	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0 -S /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.s
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.i: cmake_force
@@ -331,7 +227,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.i: cmake_force
@@ -344,7 +240,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaSphere.cu.i: cmake_force
@@ -357,7 +253,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothClothMidPhase.cu.i: cmake_force
@@ -370,7 +266,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothHFMidPhase.cu.i: cmake_force
@@ -383,7 +279,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothMidPhase.cu.i: cmake_force
@@ -396,7 +292,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/femClothPrimitives.cu.i: cmake_force
@@ -409,7 +305,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/pairManagement.cu.i: cmake_force
@@ -422,7 +318,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemHFMidPhaseCG.cu.i: cmake_force
@@ -435,7 +331,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/particleSystemMeshMidphase.cu.i: cmake_force
@@ -448,7 +344,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyHFMidPhase.cu.i: cmake_force
@@ -461,7 +357,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyMidPhase.cu.i: cmake_force
@@ -474,7 +370,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodyPrimitives.cu.i: cmake_force
@@ -487,7 +383,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/softbodySoftbodyMidPhase.cu.i: cmake_force
@@ -500,7 +396,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.o: /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/trimeshCollision.cu.i: cmake_force
@@ -513,7 +409,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMCloth.cu.i: cmake_force
@@ -526,7 +422,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothConstraintPrep.cu.i: cmake_force
@@ -539,7 +435,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/FEMClothExternalSolve.cu.i: cmake_force
@@ -552,7 +448,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/SDFConstruction.cu.i: cmake_force
@@ -565,7 +461,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/algorithms.cu.i: cmake_force
@@ -578,7 +474,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/anisotropy.cu.i: cmake_force
@@ -591,7 +487,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/diffuseParticles.cu.i: cmake_force
@@ -604,7 +500,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/isosurfaceExtraction.cu.i: cmake_force
@@ -617,7 +513,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/particlesystem.cu.i: cmake_force
@@ -630,7 +526,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/rigidDeltaAccum.cu.i: cmake_force
@@ -643,7 +539,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBody.cu.i: cmake_force
@@ -656,7 +552,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu.i: cmake_force
@@ -669,7 +565,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/sparseGridStandalone.cu.i: cmake_force
@@ -682,7 +578,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateBodiesAndShapes.cu.i: cmake_force
@@ -695,7 +591,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationcontroller/src/CUDA/updateTransformAndBoundArray.cu.i: cmake_force
@@ -708,7 +604,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusimulationc
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/accumulateThresholdStream.cu.i: cmake_force
@@ -721,7 +617,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/artiConstraintPrep2.cu.i: cmake_force
@@ -734,7 +630,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrePrep.cu.i: cmake_force
@@ -747,7 +643,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrep.cu.i: cmake_force
@@ -760,7 +656,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/constraintBlockPrepTGS.cu.i: cmake_force
@@ -773,7 +669,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integration.cu.i: cmake_force
@@ -786,7 +682,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/integrationTGS.cu.i: cmake_force
@@ -799,7 +695,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegration.cu.i: cmake_force
@@ -812,7 +708,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/preIntegrationTGS.cu.i: cmake_force
@@ -825,7 +721,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solver.cu.i: cmake_force
@@ -838,7 +734,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlock.cu.i: cmake_force
@@ -851,7 +747,7 @@ CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o: CMakeFiles/PhysXGpuDCU.dir/flags.make
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o: /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_61) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building HIP object CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o"
 	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu
 
 CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpusolver/src/CUDA/solverMultiBlockTGS.cu.i: cmake_force
@@ -874,14 +770,6 @@ PhysXGpuDCU_OBJECTS = \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o" \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o" \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o" \
-"CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o" \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o" \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o" \
 "CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o" \
@@ -939,14 +827,6 @@ libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/so
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/radixSortImpl.cu.o
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/CUDA/utility.cu.o
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o
-libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaGJKEPA.cu.o
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaParticleSystem.cu.o
@@ -994,7 +874,7 @@ libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/build.make
 libPhysXGpuDCU.so: /opt/dtk/hip/lib/libgalaxyhip.so.5.2.26113.2065-6699a1f0
 libPhysXGpuDCU.so: /opt/dtk/dcc/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
 libPhysXGpuDCU.so: CMakeFiles/PhysXGpuDCU.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_62) "Linking HIP shared library libPhysXGpuDCU.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Linking HIP shared library libPhysXGpuDCU.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/PhysXGpuDCU.dir/link.txt --verbose=$(VERBOSE)
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold "Extracting .hsaco from .o files"
 	python3 /public/home/tangwsh/PhysX/physx/source/compiler/cmakehip/extract_hsaco.py /public/home/tangwsh/PhysX/build_dcu/CMakeFiles/PhysXGpuDCU.dir /public/home/tangwsh/PhysX/build_dcu/kernels

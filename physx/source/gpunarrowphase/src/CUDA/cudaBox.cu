@@ -430,7 +430,7 @@ template <PxU32 NumWarps>
 struct TempBoxBoxBuffer
 {
 	// space for 3 contacts per thread for all threads in the block
-	PxVec4 tempBuff[NumWarps * 32 * 3];
+	PxVec4 tempBuff[NumWarps * 64 * 3]; // DCU: WARP_SIZE=64, 2x buffer for 128-thread block
 };
 
 

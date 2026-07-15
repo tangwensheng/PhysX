@@ -37,11 +37,27 @@ file(GLOB GPU_ALL_CU_FILES
     ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/*.cu
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/*.cu
 )
+# DCU: exclude convex modules — API incompatibilities, not needed for box/sphere benchmark
+list(REMOVE_ITEM GPU_ALL_CU_FILES
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexHeightfield.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMesh.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu
+)
 
 # Build shared library (for tests, static linkage)
 add_library(PhysXGpuDCU SHARED ${GPU_ALL_CU_FILES})
 target_include_directories(PhysXGpuDCU PRIVATE ${PHYSX_INCLUDE_DIRS})
 set_source_files_properties(${GPU_ALL_CU_FILES} PROPERTIES LANGUAGE HIP)
+# DCU: disable inlining for cudaBox.cu (hipcc register-loss codegen bug)
+set_source_files_properties(
+    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaBox.cu
+    PROPERTIES COMPILE_FLAGS "-mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0"
+)
 
 # ---- POST_BUILD: extract .hsaco from each .o file via Python ----
 add_custom_command(TARGET PhysXGpuDCU POST_BUILD
