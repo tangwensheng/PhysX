@@ -72,15 +72,15 @@ include CMakeFiles/test_physx_dcu.dir/flags.make
 CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o: CMakeFiles/test_physx_dcu.dir/flags.make
 CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o: /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building HIP object CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o"
-	/opt/dtk/dcc/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip
+	/opt/dtk/llvm/bin/clang++  $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -o CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.o -x hip -c /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip
 
 CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing HIP source to CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.i"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip > CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.i
+	/opt/dtk/llvm/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -E /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip > CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.i
 
 CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling HIP source to assembly CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.s"
-	/opt/dtk/dcc/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip -o CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.s
+	/opt/dtk/llvm/bin/clang++ $(HIP_DEFINES) $(HIP_INCLUDES) $(HIP_FLAGS) -S /public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip -o CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/source/gpucommon/src/DCU/test_gpucommon.hip.s
 
 # Object files for target test_physx_dcu
 test_physx_dcu_OBJECTS = \
@@ -93,7 +93,7 @@ test_physx_dcu: CMakeFiles/test_physx_dcu.dir/public/home/tangwsh/PhysX/physx/so
 test_physx_dcu: CMakeFiles/test_physx_dcu.dir/build.make
 test_physx_dcu: libPhysXGpuDCU.so
 test_physx_dcu: /opt/dtk/hip/lib/libgalaxyhip.so.5.2.26113.2065-6699a1f0
-test_physx_dcu: /opt/dtk/dcc/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
+test_physx_dcu: /opt/dtk/llvm/lib/clang/17.0.0/lib/linux/libclang_rt.builtins-x86_64.a
 test_physx_dcu: CMakeFiles/test_physx_dcu.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/public/home/tangwsh/PhysX/build_dcu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking HIP executable test_physx_dcu"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_physx_dcu.dir/link.txt --verbose=$(VERBOSE)

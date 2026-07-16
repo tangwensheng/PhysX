@@ -28,7 +28,7 @@ set(PHYSX_INCLUDE_DIRS
     ${PHYSX_ROOT_DIR}/source/simulationcontroller/include ${PHYSX_ROOT_DIR}/source/scenequery/include
 )
 
-# Collect ALL .cu files
+# Collect ALL .cu files (including convex modules for DCU)
 file(GLOB GPU_ALL_CU_FILES
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/*.cu
     ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/*.cu
@@ -36,17 +36,6 @@ file(GLOB GPU_ALL_CU_FILES
     ${PHYSX_ROOT_DIR}/source/gpusolver/src/CUDA/*.cu
     ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/*.cu
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/*.cu
-)
-# DCU: exclude convex modules — API incompatibilities, not needed for box/sphere benchmark
-list(REMOVE_ITEM GPU_ALL_CU_FILES
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexHeightfield.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMesh.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu
-    ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu
 )
 
 # Build shared library (for tests, static linkage)

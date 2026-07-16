@@ -29,11 +29,10 @@
 
 // ---- Architecture constants ----
 // WARP_SIZE and FULL_MASK are already defined in PxgCommonDefines.h
-// which detects __HIPCC__ and sets WARP_SIZE=64, FULL_MASK=0xffffffffffffffffULL
+// which detects __HIPCC__ and keeps CUDA's logical 32-lane warp size.
 
 // ---- Warp shuffle intrinsics ----
-// DCU wavefront=64, HIP __shfl with width=32 correctly splits into 32-lane
-// virtual warps. width=32 is the CUDA warpSize default. No manual lane math needed.
+// DCU wavefront=64, HIP __shfl with width=32 splits into 32-lane virtual warps.
 #define __shfl_sync_4(mask, var, lane, width)  __shfl((var), (int)(lane), (int)(width))
 #define __shfl_sync_3(mask, var, lane)         __shfl((var), (int)(lane), 32)
 #define __shfl_sync_DISP(_1,_2,_3,_4,NAME,...) NAME
@@ -42,62 +41,57 @@
 
 #define __shfl_xor_sync_4(mask, var, offset, width)  __shfl_xor((var), (offset), (width))
 #define __shfl_xor_sync_3(mask, var, offset)         __shfl_xor((var), (offset), 32)
-#define __shfl_xor_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_xor_sync_4, __shfl_xor_sync_3, _DUMMY)(__VA_ARGS__)
+#define __shfl_xor_sync(...) \
+    __shfl_sync_DISP(__VA_ARGS__, __shfl_xor_sync_4, __shfl_xor_sync_3, _DUMMY)(__VA_ARGS__)
 
 #define __shfl_up_sync_4(mask, var, delta, width)    __shfl_up((var), (delta), (width))
 #define __shfl_up_sync_3(mask, var, delta)           __shfl_up((var), (delta), 32)
-#define __shfl_up_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_up_sync_4, __shfl_up_sync_3, _DUMMY)(__VA_ARGS__)
+#define __shfl_up_sync(...) \
+    __shfl_sync_DISP(__VA_ARGS__, __shfl_up_sync_4, __shfl_up_sync_3, _DUMMY)(__VA_ARGS__)
 
 #define __shfl_down_sync_4(mask, var, delta, width)  __shfl_down((var), (delta), (width))
 #define __shfl_down_sync_3(mask, var, delta)         __shfl_down((var), (delta), 32)
-#define __shfl_down_sync(...)  __shfl_sync_DISP(__VA_ARGS__, __shfl_down_sync_4, __shfl_down_sync_3, _DUMMY)(__VA_ARGS__)
+#define __shfl_down_sync(...) \
+    __shfl_sync_DISP(__VA_ARGS__, __shfl_down_sync_4, __shfl_down_sync_3, _DUMMY)(__VA_ARGS__)
 
 // ---- Hardware lane ----
 #define PXG_HW_LANE ((int)((threadIdx.z * blockDim.y + threadIdx.y) * blockDim.x + threadIdx.x) & 63)
 
 // ---- Warp vote intrinsics ----
-// Split 64-bit wavefront ballot into 32-bit virtual warps
+// Split 64-bit wavefront ballot into 32-bit virtual warps.
 #define __ballot_sync(mask, pred) \
     (unsigned int)(((PXG_HW_LANE & 32) ? (__ballot(pred) >> 32) : __ballot(pred)))
-// all/any: temporary revert to simple compare for boxBoxNphase_Kernel stability
-#define __all_sync(mask, pred)  __all(pred)
-#define __any_sync(mask, pred)  __any(pred)
+// Match CUDA vote semantics by applying the active mask after splitting.
+#define __any_sync(mask, pred) \
+    ((__ballot_sync((mask), (pred)) & (unsigned int)(mask)) != 0u)
+#define __all_sync(mask, pred) \
+    (((__ballot_sync((mask), (pred)) & (unsigned int)(mask)) == (unsigned int)(mask)))
 
 // ---- Warp synchronization ----
-// __syncwarp is not available in old HIP; use __syncthreads as fallback
-// (PhysX typically uses this within a single warp, so __syncthreads is safe)
+// __syncwarp is not available in old HIP; use __syncthreads as fallback.
 #define __syncwarp(mask)             __syncthreads()
 
 // ---- Bit operation intrinsics ----
-// CUDA __popc is 32-bit, HIP provides both __popc(32b) and __popcll(64b)
-// Keep __popc for 32-bit compatibility
-// On HIP, __popc(unsigned int) works on 32-bit values just like CUDA
-// Note: when ballot returns 64-bit, use __popcll explicitly in callers
+// CUDA __popc is 32-bit, HIP provides both __popc(32b) and __popcll(64b).
+// Keep __popc for 32-bit compatibility.
 
 // ---- Device-side memory fence ----
-// These have the same names in HIP
-// __threadfence(), __threadfence_block(), __threadfence_system()
+// These have the same names in HIP: __threadfence(), __threadfence_block(), etc.
 
 // ---- Other device intrinsics (same names in HIP) ----
 // atomicAdd, atomicCAS, atomicOr, atomicAnd, atomicMin, atomicMax, atomicExch
-// __int_as_float, __float_as_int
-// __syncthreads, __syncthreads_and, __syncthreads_or
-// __ldg (read-only cache load)
-// __launch_bounds__
+// __int_as_float, __float_as_int, __syncthreads, __ldg, __launch_bounds__
 
 // ---- Architecture macro remap ----
-// CUDA code uses __CUDA_ARCH__ for conditional compilation
-// HIP provides __HIP_DEVICE_COMPILE__ and __HIP_ARCH__
+// CUDA code uses __CUDA_ARCH__ for conditional compilation.
 #define __CUDA_ARCH__  __HIP_DEVICE_COMPILE__
 
 // ---- Inline assembly compatibility ----
-// red.global.add.f32 (L2 cache-level atomic) -> fall back to atomicAdd
-// The original code used inline asm for this optimization; on DCU we degrade
-// to the regular atomicAdd which is functionally correct but ~20% slower
+// red.global.add.f32 (L2 cache-level atomic) -> fall back to atomicAdd.
 #define PX_RED_GLOBAL_ADD_F32(addr, val) atomicAdd((addr), (val))
 
 // ---- Miscellaneous ----
-// CUDA alignment attribute → HIP/Clang
+// CUDA alignment attribute -> HIP/Clang.
 #define __builtin_align__(N)  __attribute__((aligned(N)))
 
 // __ffsll: CUDA 64-bit find-first-set. In HIP, __ffsll exists but may have
@@ -118,9 +112,9 @@ namespace physx { namespace Dy {
 #define DY_SC_FLAG_ORTHO_TARGET         0x0020
 #define DY_SC_FLAG_ROT_EQ               0x0040
 
-// Note: PxConstraintFlag comes from PxConstraint.h, included via the full build system
+// Note: PxConstraintFlag comes from PxConstraint.h, included via the full build system.
 
-// CUDA's WARP_SIZE definition is in PxgCommonDefines.h, already handled
+// CUDA's WARP_SIZE definition is in PxgCommonDefines.h, already handled.
 
 #endif // defined(__HIPCC__)
 #endif // PXG_HIP_COMPAT_H

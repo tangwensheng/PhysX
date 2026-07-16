@@ -1,4 +1,4 @@
-set(CMAKE_HIP_COMPILER "/opt/dtk/dcc/bin/clang++")
+set(CMAKE_HIP_COMPILER "/opt/dtk/llvm/bin/clang++")
 set(CMAKE_HIP_HOST_COMPILER "")
 set(CMAKE_HIP_HOST_LINK_LAUNCHER "")
 set(CMAKE_HIP_COMPILER_ID "Clang")

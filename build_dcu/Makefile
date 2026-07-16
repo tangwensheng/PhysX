@@ -443,6 +443,198 @@ public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputCon
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.s
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.cu.s
 
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.cu.s
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.o
+
+# target to build an object file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.o
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.i: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.i
+
+# target to preprocess a source file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.i
+
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.s: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.s
+
+# target to generate assembly for a file
+public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PhysXGpuDCU.dir/build.make CMakeFiles/PhysXGpuDCU.dir/public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s
+.PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.cu.s
+
 public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.o: public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.cu.o
 .PHONY : public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.o
 
@@ -1522,6 +1714,30 @@ help:
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/compressOutputContacts.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexCoreCollision.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHFMidphase.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexHeightfield.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMesh.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshCorrelate.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshMidphase.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshOutput.s"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.o"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.i"
+	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/convexMeshPostProcess.s"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.o"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.i"
 	@echo "... public/home/tangwsh/PhysX/physx/source/gpunarrowphase/src/CUDA/cudaBox.s"
