@@ -12,8 +12,10 @@
 // ---- Declare PhysX GPU kernels ----
 extern "C" __global__ void radixSortCopy(const PxU64* in, PxU64* out, PxU32* rank, const PxU32* numKeys);
 extern "C" __global__ void radixSortMultiBlockLaunch(void* desc, PxU32 startBit);
-extern "C" __global__ void MemCopyBalanced(void* desc, PxU32 count);
 extern "C" __global__ void clampMaxValue(PxU32* value, PxU32 maxValue);
+
+// Pull in the original gpucommon implementation so the kernel symbol is defined.
+#include "MemCopyBalanced.cu"
 
 // Simple custom kernels to fill the profile
 extern "C" __global__ void physx_broadphase_kernel(PxU32* data, int n)

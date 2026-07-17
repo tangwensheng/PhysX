@@ -1,5 +1,18 @@
 cmake_minimum_required(VERSION 3.21)
-project(PhysXDcuExamples LANGUAGES CXX)
+
+if(NOT DEFINED CMAKE_HIP_ARCHITECTURES)
+    set(CMAKE_HIP_ARCHITECTURES gfx936 CACHE STRING "DCU/HIP GPU architecture")
+endif()
+
+project(PhysXDcuExamples LANGUAGES CXX HIP)
+
+set(PHYSX_DCU_HIP_FLAGS
+    -include PxgHIPCompat.h
+    -DPX_DCU_PORT
+    -DNDEBUG
+    -ffast-math
+    -fgpu-flush-denormals-to-zero
+)
 
 if(NOT DEFINED PHYSX_ROOT_DIR)
     get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../../physx" ABSOLUTE)
@@ -42,6 +55,7 @@ set(PHYSX_INCLUDE_DIRS
     ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/include
     ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA
     ${PHYSX_ROOT_DIR}/source/gpubroadphase/include
+    ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA
     ${PHYSX_ROOT_DIR}/source/gpuarticulation/include
     ${PHYSX_ROOT_DIR}/source/lowleveldynamics/include
     ${PHYSX_ROOT_DIR}/source/lowleveldynamics/shared
@@ -76,12 +90,34 @@ set(PHYSX_LIBS
     -Wl,--end-group
 )
 
-file(GLOB EXAMPLE_SOURCES ${CMAKE_SOURCE_DIR}/*.cpp)
-
-foreach(SOURCE_FILE ${EXAMPLE_SOURCES})
+function(add_dcu_example SOURCE_FILE)
     get_filename_component(EXE_NAME ${SOURCE_FILE} NAME_WE)
-    add_executable(${EXE_NAME} ${SOURCE_FILE})
+    add_executable(${EXE_NAME} ${SOURCE_FILE} ${ARGN})
     target_include_directories(${EXE_NAME} PRIVATE ${PHYSX_INCLUDE_DIRS})
     target_link_directories(${EXE_NAME} PRIVATE /opt/dtk/hip/lib)
     target_link_libraries(${EXE_NAME} PRIVATE ${PHYSX_LIBS} amdhip64 pthread dl)
+    target_compile_definitions(${EXE_NAME} PRIVATE __HIP_PLATFORM_AMD__=1)
+    target_compile_options(${EXE_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:HIP>:${PHYSX_DCU_HIP_FLAGS}>
+    )
+endfunction()
+
+file(GLOB EXAMPLE_CPP_SOURCES ${CMAKE_SOURCE_DIR}/*.cpp)
+file(GLOB EXAMPLE_HIP_SOURCES ${CMAKE_SOURCE_DIR}/*.hip)
+list(FILTER EXAMPLE_HIP_SOURCES EXCLUDE REGEX ".*_kernel\.hip$")
+
+foreach(SOURCE_FILE ${EXAMPLE_CPP_SOURCES})
+    get_filename_component(EXE_NAME ${SOURCE_FILE} NAME_WE)
+    if(EXE_NAME STREQUAL "scene_tower")
+        set(KERNEL_SOURCE ${CMAKE_SOURCE_DIR}/scene_tower_kernel.hip)
+        set_source_files_properties(${KERNEL_SOURCE} PROPERTIES LANGUAGE HIP)
+        add_dcu_example(${SOURCE_FILE} ${KERNEL_SOURCE})
+    else()
+        add_dcu_example(${SOURCE_FILE})
+    endif()
+endforeach()
+
+foreach(SOURCE_FILE ${EXAMPLE_HIP_SOURCES})
+    set_source_files_properties(${SOURCE_FILE} PROPERTIES LANGUAGE HIP)
+    add_dcu_example(${SOURCE_FILE})
 endforeach()

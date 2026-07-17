@@ -1,7 +1,0 @@
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_compare.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_convex.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_convexmesh.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/bench_physx_scene.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/scene_tower.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/edit_cache.dir
-/public/home/tangwsh/PhysX/examples/dcu/build/CMakeFiles/rebuild_cache.dir

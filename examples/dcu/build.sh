@@ -25,8 +25,8 @@ fi
 
 cd "$BUILD_DIR"
 
-# Run cmake if needed
-if [ ! -f "Makefile" ]; then
+# Run cmake if needed, or when example build rules changed.
+if [ ! -f "Makefile" ] || [ "$SCRIPT_DIR/CMakeLists.txt" -nt "CMakeCache.txt" ]; then
     cmake "$SCRIPT_DIR" \
         -DCMAKE_CXX_COMPILER="$(which g++)" \
         -DCMAKE_HIP_COMPILER="$HIP_CLANG" \

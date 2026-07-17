@@ -196,7 +196,12 @@ int main()
 
     hipEventRecord(s1);
     for (int r = 0; r < RND; r++)
-        int h_count; hipMemcpy(&h_count, d_count, sizeof(int), hipMemcpyDeviceToHost); int np_n=(h_count>0&&h_count<N)?h_count:N; np_stage<<<(np_n+255)/256, 256>>>(d_pos, d_contacts, N, d_overlaps, np_n, 2.0f);
+    {
+        int h_count = 0;
+        hipMemcpy(&h_count, d_count, sizeof(int), hipMemcpyDeviceToHost);
+        int np_n = (h_count > 0 && h_count < N) ? h_count : N;
+        np_stage<<<(np_n + 255) / 256, 256>>>(d_pos, d_contacts, N, d_overlaps, np_n, 2.0f);
+    }
     hipEventRecord(s2); hipDeviceSynchronize();
     hipEventElapsedTime(&npMs, s1, s2);
 

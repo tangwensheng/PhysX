@@ -152,16 +152,16 @@ int main()
     // ---- Benchmark ----
     printf("Running 300 simulation steps...\n");
     float step = 1.0f/60.0f;
-
+    const int BENCH_STEPS = 10000;
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
-    for (int f = 0; f < 300; f++) {
+    for (int f = 0; f < BENCH_STEPS; f++) {
         scene->simulate(step);
         scene->fetchResults(true);
     }
     clock_gettime(CLOCK_MONOTONIC, &t1);
     double elapsed = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) * 1e-9;
-    double avgMs = elapsed * 1000.0 / 300.0;
+    double avgMs = elapsed * 1000.0 / BENCH_STEPS;
 
     // ---- Stats ----
     int aboveGround = 0;
