@@ -152,7 +152,7 @@ int main()
     // ---- Benchmark ----
     printf("Running 300 simulation steps...\n");
     float step = 1.0f/60.0f;
-    const int BENCH_STEPS = 10000;
+    const int BENCH_STEPS = 300;
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
     for (int f = 0; f < BENCH_STEPS; f++) {

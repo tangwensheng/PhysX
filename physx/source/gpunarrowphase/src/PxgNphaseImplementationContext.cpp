@@ -54,6 +54,9 @@
 
 #include "cudamanager/PxCudaContextManager.h"
 
+#include <cstdlib>
+#include <cstdio>
+
 #include "GuConvexGeometry.h"
 #include "GuConvexSupport.h"
 
@@ -574,6 +577,13 @@ void PxgNphaseImplementationContext::processResults()
 {
 	{
 		PX_PROFILE_ZONE("GpuNarrowPhase.processResults", 0);
+		const bool compactDiag =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#else
+			false;
+#endif
+		PX_UNUSED(compactDiag);
 
 		PxcNpThreadContext* PX_RESTRICT threadContext = mContext.getNpThreadContext(); 
 	
@@ -620,6 +630,16 @@ void PxgNphaseImplementationContext::processResults()
 
 			PxU32 nbLostFoundPairs = mGpuNarrowphaseCore->getTotalNbLostFoundPairs();
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (compactDiag)
+			{
+				std::fprintf(stderr,
+					"[DCU NP PROCESS BEGIN] lostFound=%u outputs=%u cms=%u maxCmIndex=%u\n",
+					nbLostFoundPairs, itChangedOutputs.size(), lostFoundIndIterator.size(),
+					mContext.getContactManagerPool().getMaxUsedIndex());
+			}
+#endif
+
 			// jcarius: Defensive coding added for OM-119911. In theory this should not be needed, as these counts
 			// should never get into an invalid state. We could/should remove this eventually.
 			// ### DEFENSIVE
@@ -638,6 +658,23 @@ void PxgNphaseImplementationContext::processResults()
 			for(PxU32 a = 0; a < nbLostFoundPairs; ++a)
 			{
 				PxsContactManager* cm = lostFoundIndIterator[a];
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				if (compactDiag)
+				{
+					std::fprintf(stderr,
+						"[DCU NP PROCESS ITEM %u] cm=%p patches=%u prev=%u status=%u\n",
+						a, static_cast<void*>(cm), itChangedOutputs[a].nbPatches,
+						itChangedOutputs[a].prevPatches, itChangedOutputs[a].statusFlag);
+				}
+#endif
+
+				if (!cm)
+				{
+					outputError<PxErrorCode::eINTERNAL_ERROR>(__LINE__,
+						"PxgNphaseImplementationContext::processResults: Null contact manager in compacted lost/found results!");
+					continue;
+				}
 
 				//PX_ASSERT(cm->getWorkUnit().statusFlags != itChangedOutputs[a].statusFlag);
 
@@ -672,6 +709,12 @@ void PxgNphaseImplementationContext::processResults()
 		threadContext->mMaxPatches = maxPatches;
 
 		mContext.putNpThreadContext(threadContext);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (compactDiag)
+			std::fprintf(stderr, "[DCU NP PROCESS DONE] newTouch=%u lostTouch=%u maxPatches=%u\n",
+				newTouchCMCount, lostTouchCMCount, maxPatches);
+#endif
 	}
 }
 
@@ -696,7 +739,21 @@ PxU32 PxgNphaseImplementationContext::getNbLostFoundPatchManagers()
 
 void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continuation*/)
 {
+	const bool compactDiag =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#else
+		false;
+#endif
+	PX_UNUSED(compactDiag);
+
 	mContext.getCudaContextManager()->acquireContext();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (compactDiag)
+		std::fprintf(stderr, "[DCU NP MERGE BEGIN] totalPairs=%u outputCapacity=%u\n",
+			mTotalNbPairs, mContactManagerOutputs.capacity());
+#endif
 
 	if (mContactManagerOutputs.capacity() < mTotalNbPairs)
 	{
@@ -717,6 +774,13 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 		mFallbackForUnsupportedCMs->getTorsionalDataGPU(),
 		nbFallbackPairs, mFallbackForUnsupportedCMs->getLostFoundPatchOutputCounts(), 
 		mFallbackForUnsupportedCMs->getLostFoundPatchManagers(), mFallbackForUnsupportedCMs->getNbLostFoundPatchManagers());
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (compactDiag)
+		std::fprintf(stderr, "[DCU NP MERGE FETCHED] totalPairs=%u outputs=%u lostFound=%u lostPatches=%u\n",
+			mTotalNbPairs, mContactManagerOutputs.size(), mGpuNarrowphaseCore->getTotalNbLostFoundPairs(),
+			mGpuNarrowphaseCore->getTotalNbLostFoundPatches());
+#endif
 
 	// AD: need to make sure we're safe if fetchNarrowphaseResults did not run completely because of abort.
 	if (mGpuNarrowphaseCore->mCudaContext->isInAbortMode())
@@ -771,7 +835,17 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 	//mGpuNarrowphaseCore->waitAndResetCopyQueues();
 
 	processResults();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (compactDiag)
+		std::fprintf(stderr, "[DCU NP MERGE PROCESSED]\n");
+#endif
 	mContext.getCudaContextManager()->releaseContext();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (compactDiag)
+		std::fprintf(stderr, "[DCU NP MERGE DONE]\n");
+#endif
 }
 
 PxsContactManagerOutput* PxgNphaseImplementationContext::getGPUContactManagerOutputBase()

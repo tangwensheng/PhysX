@@ -44,7 +44,7 @@
 #define	AXIS_Z					2
 #define	REGION_SIZE_PER_AXIS	4
 #define	TOTAL_REGION_SIZE		64
-#define	WARP_PERBLOCK_SIZE_16	16
+#define	BP_ACTIVE_HISTOGRAM_WARPS	(PxgBPKernelBlockDim::BP_COMPUTE_ACTIVE_HISTOGRAM / WARP_SIZE)
 
 using namespace physx;
 
@@ -1075,9 +1075,9 @@ extern "C" __global__ void writeOutStartAndActiveRegionHistogram(const PxgBroadP
 extern "C" __global__ void computeStartAndActiveRegionHistogram(const PxgBroadPhaseDesc* bpDesc)	// BP_COMPUTE_ACTIVE_HISTOGRAM //###ONESHOT
 {
 	//the compiler should be able to strip this out
-	__shared__ PxU32 sStartHistogram[WARP_SIZE * WARP_PERBLOCK_SIZE_16];
+	__shared__ PxU32 sStartHistogram[WARP_SIZE * BP_ACTIVE_HISTOGRAM_WARPS];
 
-	__shared__ PxU32 sStartWarpAccumulator[WARP_PERBLOCK_SIZE_16];
+	__shared__ PxU32 sStartWarpAccumulator[BP_ACTIVE_HISTOGRAM_WARPS];
 
 	__shared__ PxU32 sActiveBlockAccumulator;
 	__shared__ PxU32 sStartBlockAccumulator;
@@ -1109,7 +1109,7 @@ extern "C" __global__ void computeStartAndActiveRegionHistogram(const PxgBroadPh
 		   
 		for(PxU32 i = 0; i < nbIterationsPerBlock; ++i)
 		{
-			const PxU32 workIndex = i*WARP_SIZE*WARP_PERBLOCK_SIZE_16 + idx /*+ nbIterationsPerBlock * blockIdx.x * blockDim.x*/;
+			const PxU32 workIndex = i*WARP_SIZE*BP_ACTIVE_HISTOGRAM_WARPS + idx /*+ nbIterationsPerBlock * blockIdx.x * blockDim.x*/;
 			
 			PxU32 activeHistVal = 0;
 			PxU32 startHistVal = 0;
@@ -1132,14 +1132,14 @@ extern "C" __global__ void computeStartAndActiveRegionHistogram(const PxgBroadPh
 
 			if(warpIndex == 0)
 			{
-				unsigned mask_threadIndexInWarp = __ballot_sync(FULL_MASK, threadIndexInWarp < WARP_PERBLOCK_SIZE_16);
-				if(threadIndexInWarp < WARP_PERBLOCK_SIZE_16)
+				unsigned mask_threadIndexInWarp = __ballot_sync(FULL_MASK, threadIndexInWarp < BP_ACTIVE_HISTOGRAM_WARPS);
+				if(threadIndexInWarp < BP_ACTIVE_HISTOGRAM_WARPS)
 				{
 					PxU32 value = sStartWarpAccumulator[threadIndexInWarp];
 
-					const PxU32 output = warpScanAddWriteToSharedMem<WARP_PERBLOCK_SIZE_16>(mask_threadIndexInWarp, threadIndexInWarp, threadIndexInWarp, sStartWarpAccumulator, value, value);
+					const PxU32 output = warpScanAddWriteToSharedMem<BP_ACTIVE_HISTOGRAM_WARPS>(mask_threadIndexInWarp, threadIndexInWarp, threadIndexInWarp, sStartWarpAccumulator, value, value);
 					
-					if(threadIndexInWarp == (WARP_PERBLOCK_SIZE_16-1))
+					if(threadIndexInWarp == (BP_ACTIVE_HISTOGRAM_WARPS-1))
 					{
 						const PxU32 res = output + value;
 						sStartBlockAccumulator += (res >> 16);

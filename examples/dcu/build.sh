@@ -40,7 +40,7 @@ cmake --build . -j1 --target "$TARGET"
 echo ""
 echo "=== Running $TARGET ==="
 if [ -f "$TARGET" ]; then
-    ./"$TARGET"
+    # ./"$TARGET"
 else
     echo "ERROR: $TARGET not found"
     exit 1

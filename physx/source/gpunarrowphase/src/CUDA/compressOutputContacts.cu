@@ -31,6 +31,7 @@
 #endif
 #include <cuda_runtime.h>
 #include <assert.h>
+#include <stdint.h>
 
 //#include "foundation/PxVec3.h"
 //#include "foundation/PxTransform.h"
@@ -281,14 +282,34 @@ extern "C" __global__ void updateFrictionPatches(
 	const PxU32								pairCount,				//input
 	const PxU8* PX_RESTRICT					startContactPatches,	//input
 	PxU8* PX_RESTRICT						startFrictionPatches,	//input (but we need it non-const)
-	PxsContactManagerOutput* PX_RESTRICT	outputs					//input/output
+	PxsContactManagerOutput* PX_RESTRICT	outputs,					//input/output
+	const PxU32								diagnosticMode
 )
 {
 	const PxU32 threadIndex = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (threadIndex < pairCount)
 	{
+		if (diagnosticMode == 2)
+			return;
+
 		PxsContactManagerOutput& output = outputs[threadIndex];
-		output.frictionPatches = startFrictionPatches + (output.contactPatches - startContactPatches) * sizeof(PxFrictionPatch) / sizeof(PxContactPatch);
+		if (diagnosticMode == 1)
+		{
+			output.frictionPatches = NULL;
+			return;
+		}
+
+		if (output.nbPatches && output.contactPatches)
+		{
+			const uintptr_t contactPatchAddress = reinterpret_cast<uintptr_t>(output.contactPatches);
+			const uintptr_t contactPatchBaseAddress = reinterpret_cast<uintptr_t>(startContactPatches);
+			const uintptr_t frictionPatchBaseAddress = reinterpret_cast<uintptr_t>(startFrictionPatches);
+			const uintptr_t contactPatchByteOffset = contactPatchAddress - contactPatchBaseAddress;
+			const uintptr_t frictionPatchByteOffset = contactPatchByteOffset * sizeof(PxFrictionPatch) / sizeof(PxContactPatch);
+			output.frictionPatches = reinterpret_cast<PxU8*>(frictionPatchBaseAddress + frictionPatchByteOffset);
+		}
+		else
+			output.frictionPatches = NULL;
 	}
 }

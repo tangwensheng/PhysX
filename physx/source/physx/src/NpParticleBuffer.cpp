@@ -608,7 +608,10 @@ namespace physx
 		PxPhysXGpu* physxGpu = PxvGetPhysXGpu(true);
 		PX_ASSERT(physxGpu);
 		mGpuBuffer = physxGpu->createParticleBuffer(maxNumParticles, maxVolumes, cudaContextManager);
-		bufferUniqueId = mGpuBuffer->getUniqueId();
+		if(mGpuBuffer)
+			bufferUniqueId = mGpuBuffer->getUniqueId();
+		else
+			PxGetFoundation().error(PxErrorCode::eINVALID_OPERATION, PX_FL, "PxPhysics::createParticleBuffer: GPU particle buffers are not implemented by the active PxPhysXGpu backend.");
 	}
 
 	void NpParticleBuffer::release()
@@ -632,7 +635,10 @@ namespace physx
 		PxPhysXGpu* physxGpu = PxvGetPhysXGpu(true);
 		PX_ASSERT(physxGpu);
 		mGpuBuffer = physxGpu->createParticleAndDiffuseBuffer(maxNumParticles, maxVolumes, maxNumDiffuseParticles, cudaContextManager);
-		bufferUniqueId = mGpuBuffer->getUniqueId();
+		if(mGpuBuffer)
+			bufferUniqueId = mGpuBuffer->getUniqueId();
+		else
+			PxGetFoundation().error(PxErrorCode::eINVALID_OPERATION, PX_FL, "PxPhysics::createParticleAndDiffuseBuffer: GPU particle buffers are not implemented by the active PxPhysXGpu backend.");
 	}
 
 	void NpParticleAndDiffuseBuffer::release()
@@ -660,7 +666,10 @@ namespace physx
 		PxPhysXGpu* physxGpu = PxvGetPhysXGpu(true);
 		PX_ASSERT(physxGpu);
 		mGpuBuffer = physxGpu->createParticleClothBuffer(maxNumParticles, maxVolumes, maxNumCloths, maxNumTriangles, maxNumSprings, cudaContextManager);
-		bufferUniqueId = mGpuBuffer->getUniqueId();
+		if(mGpuBuffer)
+			bufferUniqueId = mGpuBuffer->getUniqueId();
+		else
+			PxGetFoundation().error(PxErrorCode::eINVALID_OPERATION, PX_FL, "PxPhysics::createParticleClothBuffer: GPU particle cloth buffers are not implemented by the active PxPhysXGpu backend.");
 	}
 
 	void NpParticleClothBuffer::release()
@@ -683,7 +692,10 @@ namespace physx
 		PxPhysXGpu* physxGpu = PxvGetPhysXGpu(true);
 		PX_ASSERT(physxGpu);
 		mGpuBuffer = physxGpu->createParticleRigidBuffer(maxNumParticles, maxVolumes, maxNumRigids, cudaContextManager);
-		bufferUniqueId = mGpuBuffer->getUniqueId();
+		if(mGpuBuffer)
+			bufferUniqueId = mGpuBuffer->getUniqueId();
+		else
+			PxGetFoundation().error(PxErrorCode::eINVALID_OPERATION, PX_FL, "PxPhysics::createParticleRigidBuffer: GPU particle rigid buffers are not implemented by the active PxPhysXGpu backend.");
 	}
 
 	void NpParticleRigidBuffer::release()

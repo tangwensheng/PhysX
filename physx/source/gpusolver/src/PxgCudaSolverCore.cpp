@@ -66,6 +66,8 @@
 
 #include "cudamanager/PxCudaContext.h"
 
+#include <cstdlib>
+
 //Turn me on for errors when stuff goes wrong and also to be able to capture PVD captures that indicate timers for individual parts of the GPU solver
 //pipeline. This makes overall performance about 5% slower so leave me off if you're not profiling using PVD or trying to track down a crash bug.
 #define GPU_DEBUG 0
@@ -1289,6 +1291,19 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 		PX_CUDA_KERNEL_PARAM(mSharedDescd)
 	};
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 staticSolverDiagnosticMode = std::getenv("PX_DCU_SOLVER_STATIC_DIAG") ? 1u : 0u;
+#else
+	const PxU32 staticSolverDiagnosticMode = 0u;
+#endif
+	const PxU32 blockConstraintBatchCount = PxU32(mBlockConstraintBatches.getNbElements());
+	const PxU32 contactHeaderCount = PxU32(mContactHeaderBlockStream.getSize() / sizeof(PxgBlockSolverContactHeader));
+	const PxU32 frictionHeaderCount = PxU32(mFrictionHeaderBlockStream.getSize() / sizeof(PxgBlockSolverFrictionHeader));
+	const PxU32 contactPointCount = PxU32(mContactBlockStream.getSize() / sizeof(PxgBlockSolverContactPoint));
+	const PxU32 frictionPointCount = PxU32(mFrictionBlockStream.getSize() / sizeof(PxgBlockSolverContactFriction));
+	const PxU32 solverBodyVelocityCount = PxU32(mSolverBodyPool.getNbElements());
+	const PxU32 tempStaticBodyOutputCount = PxU32(mTempStaticBodyOutputPool.getNbElements());
+
 	for(PxU32 a = 0; a < numIslands; ++a)
 	{
 		PxgIslandContext& context = islandContexts[a];	
@@ -1374,19 +1389,41 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 
 				if (nbBlocksRequired)
 				{
-					PxCudaKernelParam staticKernelParams[] =
+					PxCudaKernelParam staticSolveKernelParams[] =
 					{
 						PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
 						PX_CUDA_KERNEL_PARAM(mSharedDescd),
 						PX_CUDA_KERNEL_PARAM(a),
 						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions),
-						PX_CUDA_KERNEL_PARAM(doFriction)
+						PX_CUDA_KERNEL_PARAM(doFriction),
+						PX_CUDA_KERNEL_PARAM(staticSolverDiagnosticMode),
+						PX_CUDA_KERNEL_PARAM(blockConstraintBatchCount),
+						PX_CUDA_KERNEL_PARAM(contactHeaderCount),
+						PX_CUDA_KERNEL_PARAM(frictionHeaderCount),
+						PX_CUDA_KERNEL_PARAM(contactPointCount),
+						PX_CUDA_KERNEL_PARAM(frictionPointCount),
+						PX_CUDA_KERNEL_PARAM(solverBodyVelocityCount),
+						PX_CUDA_KERNEL_PARAM(tempStaticBodyOutputCount)
+					};
+					PxCudaKernelParam staticPropagateKernelParams[] =
+					{
+						PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
+						PX_CUDA_KERNEL_PARAM(mSharedDescd),
+						PX_CUDA_KERNEL_PARAM(a),
+						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
+						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions)
 					};
 
-					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticKernelParams, sizeof(staticKernelParams), 0, PX_FL);
+					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticSolveKernelParams, sizeof(staticSolveKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
+					if (staticSolverDiagnosticMode)
+					{
+						result = mCudaContext->streamSynchronize(mStream);
+						if (result != CUDA_SUCCESS)
+							PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock diagnostic synchronization failed!\n");
+					}
 						
 #if GPU_DEBUG
 					result = mCudaContext->streamSynchronize(mStream);
@@ -1394,7 +1431,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock kernel fail!\n");
 #endif			
 
-					result = mCudaContext->launchKernel(solvePropagateStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticKernelParams, sizeof(staticKernelParams), 0, PX_FL);
+					result = mCudaContext->launchKernel(solvePropagateStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticPropagateKernelParams, sizeof(staticPropagateKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
 				}
@@ -1594,26 +1631,48 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 
 				if (nbBlocksRequired)
 				{
-					PxCudaKernelParam staticKernelParams[] =
+					PxCudaKernelParam staticSolveKernelParams[] =
 					{
 						PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
 						PX_CUDA_KERNEL_PARAM(mSharedDescd),
 						PX_CUDA_KERNEL_PARAM(a),
 						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions),
-						PX_CUDA_KERNEL_PARAM(doFriction)
+						PX_CUDA_KERNEL_PARAM(doFriction),
+						PX_CUDA_KERNEL_PARAM(staticSolverDiagnosticMode),
+						PX_CUDA_KERNEL_PARAM(blockConstraintBatchCount),
+						PX_CUDA_KERNEL_PARAM(contactHeaderCount),
+						PX_CUDA_KERNEL_PARAM(frictionHeaderCount),
+						PX_CUDA_KERNEL_PARAM(contactPointCount),
+						PX_CUDA_KERNEL_PARAM(frictionPointCount),
+						PX_CUDA_KERNEL_PARAM(solverBodyVelocityCount),
+						PX_CUDA_KERNEL_PARAM(tempStaticBodyOutputCount)
+					};
+					PxCudaKernelParam staticPropagateKernelParams[] =
+					{
+						PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
+						PX_CUDA_KERNEL_PARAM(mSharedDescd),
+						PX_CUDA_KERNEL_PARAM(a),
+						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
+						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions)
 					};
 
-					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticKernelParams, sizeof(staticKernelParams), 0, PX_FL);
+					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticSolveKernelParams, sizeof(staticSolveKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
+					if (staticSolverDiagnosticMode)
+					{
+						result = mCudaContext->streamSynchronize(mStream);
+						if (result != CUDA_SUCCESS)
+							PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock diagnostic synchronization failed!\n");
+					}
 #if GPU_DEBUG
 					result = mCudaContext->streamSynchronize(mStream);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock kernel fail!\n");
 #endif			
 
-					result = mCudaContext->launchKernel(solvePropagateStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticKernelParams, sizeof(staticKernelParams), 0, PX_FL);
+					result = mCudaContext->launchKernel(solvePropagateStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticPropagateKernelParams, sizeof(staticPropagateKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
 				}

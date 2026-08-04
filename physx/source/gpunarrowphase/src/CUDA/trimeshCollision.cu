@@ -53,13 +53,54 @@
 
 #define PLANE_TRI_MAX_CONTACTS 6
 
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 32
+#else
+#define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 1024
+#endif
+
+#define DCU_TRIMESH_PLANE_NUM_WARPS (DCU_TRIMESH_PLANE_THREADS_PER_BLOCK / WARP_SIZE)
+
 using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels22() {}
 
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+static PX_FORCE_INLINE __device__ PxU32 reduceDcuTrimeshPlaneContacts(const PxReal separation, const PxU32 candidateMask)
+{
+	if (__popc(candidateMask) <= PLANE_TRI_MAX_CONTACTS)
+		return candidateMask;
+
+	PxU32 selectedMask = 0;
+	PxU32 remainingMask = candidateMask;
+	for (PxU32 selectedCount = 0; selectedCount < PLANE_TRI_MAX_CONTACTS && remainingMask; ++selectedCount)
+	{
+		PxReal deepestSeparation = PX_MAX_F32;
+		PxU32 deepestLane = WARP_SIZE;
+		for (PxU32 scanMask = remainingMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+		{
+			const PxU32 sourceLane = lowestSetIndex(scanMask);
+			const PxReal sourceSeparation = __shfl_sync(FULL_MASK, separation, sourceLane);
+			if (deepestLane == WARP_SIZE || sourceSeparation < deepestSeparation ||
+				(sourceSeparation == deepestSeparation && sourceLane < deepestLane))
+			{
+				deepestSeparation = sourceSeparation;
+				deepestLane = sourceLane;
+			}
+		}
+
+		const PxU32 deepestBit = PxU32(1) << deepestLane;
+		selectedMask |= deepestBit;
+		remainingMask &= ~deepestBit;
+	}
+
+	return selectedMask;
+}
+#endif
+
 //each block deal with one test
 extern "C" __global__ 
-__launch_bounds__(1024, 1) 
+__launch_bounds__(DCU_TRIMESH_PLANE_THREADS_PER_BLOCK, 1)
 void trimeshPlaneNarrowphase(
 	const PxReal toleranceLength,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
@@ -80,23 +121,28 @@ void trimeshPlaneNarrowphase(
 	PxU32 patchBytesLimit,
 	PxU32 contactBytesLimit,
 	PxU32 forceBytesLimit,
-	const PxReal clusterTolerance)
+	const PxReal clusterTolerance,
+	const PxU32 workOffset)
 {
 	__shared__ PxU32 sContacts[(sizeof(PxVec3)/sizeof(PxU32)) * (WARP_SIZE + 1) * PLANE_TRI_MAX_CONTACTS];
 	PxVec3* contacts = reinterpret_cast<PxVec3*>(sContacts);
 	__shared__ PxReal separations[(WARP_SIZE+1)*PLANE_TRI_MAX_CONTACTS];
 	__shared__ PxU32 counters[WARP_SIZE];
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	__shared__ PxU32 gatheredContactCount;
+#endif
 
 	__shared__ PxU32 retainedCount;
 
 	__shared__ bool doFullContactGen;
 
 	if (threadIdx.x == 0)
-	{
 		retainedCount = 0;
-	}
 
-	const PxU32 workIndex = blockIdx.x;
+	if (threadIdx.x < WARP_SIZE)
+		counters[threadIdx.x] = 0;
+
+	const PxU32 workIndex = workOffset + blockIdx.x;
 	const PxU32 threadIndexInWarp = threadIdx.x & 31;
 
 	PxgShape trimeshShape, planeShape;
@@ -106,7 +152,26 @@ void trimeshPlaneNarrowphase(
 
 	PxsCachedTransform trimeshTransformCache = transformCache[trimeshCacheRef];
 	PxsCachedTransform planeTransformCache = transformCache[planeCacheRef];
-	const PxReal cDistance = contactDistance[trimeshCacheRef] + contactDistance[planeCacheRef];
+
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	PxReal trimeshContactDistance = 0.0f;
+	if (threadIndexInWarp == 0)
+		trimeshContactDistance = contactDistance[trimeshCacheRef];
+	trimeshContactDistance = __shfl_sync(FULL_MASK, trimeshContactDistance, 0);
+#else
+	const PxReal trimeshContactDistance = contactDistance[trimeshCacheRef];
+#endif
+
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	PxReal planeContactDistance = 0.0f;
+	if (threadIndexInWarp == 0)
+		planeContactDistance = contactDistance[planeCacheRef];
+	planeContactDistance = __shfl_sync(FULL_MASK, planeContactDistance, 0);
+#else
+	const PxReal planeContactDistance = contactDistance[planeCacheRef];
+#endif
+
+	const PxReal cDistance = trimeshContactDistance + planeContactDistance;
 
 	PxTransform planeTransform = planeTransformCache.transform;
 	PxTransform trimeshTransform = trimeshTransformCache.transform;
@@ -116,7 +181,30 @@ void trimeshPlaneNarrowphase(
 
 	const Gu::BV32DataPacked* nodes;
 	const float4 * trimeshVerts;
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	PxU32 meshHeaderX = 0;
+	PxU32 meshHeaderY = 0;
+	PxU32 meshHeaderZ = 0;
+	PxU32 meshHeaderW = 0;
+	if (threadIndexInWarp == 0)
+	{
+		const PxU32* meshHeader = reinterpret_cast<const PxU32*>(trimeshGeomPtr);
+		meshHeaderX = meshHeader[0];
+		meshHeaderY = meshHeader[1];
+		meshHeaderZ = meshHeader[2];
+		meshHeaderW = meshHeader[3];
+	}
+	const uint4 counts = make_uint4(
+		__shfl_sync(FULL_MASK, meshHeaderX, 0),
+		__shfl_sync(FULL_MASK, meshHeaderY, 0),
+		__shfl_sync(FULL_MASK, meshHeaderZ, 0),
+		__shfl_sync(FULL_MASK, meshHeaderW, 0));
+	nodes = reinterpret_cast<const Gu::BV32DataPacked*>(trimeshGeomPtr + sizeof(uint4));
+	trimeshVerts = reinterpret_cast<const float4*>(
+		reinterpret_cast<const PxU8*>(nodes) + sizeof(Gu::BV32DataPacked) * counts.w);
+#else
 	uint4 counts = readTriangleMesh(trimeshGeomPtr, nodes, trimeshVerts);
+#endif
 	const PxU32 numVerts = counts.x;
 	
 	const PxU32 numIterationsRequired = (numVerts + blockDim.x - 1) / blockDim.x;
@@ -124,7 +212,34 @@ void trimeshPlaneNarrowphase(
 
 	PxVec3 min(PX_MAX_F32), max(-PX_MAX_F32);
 
-	if (threadIndexInWarp < nodes->mNbNodes)
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	PxU32 rootNodeCount = 0;
+	if (threadIndexInWarp == 0)
+		rootNodeCount = nodes->mNbNodes;
+	rootNodeCount = __shfl_sync(FULL_MASK, rootNodeCount, 0);
+	if (threadIndexInWarp == 0)
+	{
+		for (PxU32 nodeIndex = 0; nodeIndex < rootNodeCount; ++nodeIndex)
+		{
+			const PxVec4 min4 = nodes->mMin[nodeIndex];
+			const PxVec4 max4 = nodes->mMax[nodeIndex];
+			min.x = PxMin(min.x, min4.x);
+			min.y = PxMin(min.y, min4.y);
+			min.z = PxMin(min.z, min4.z);
+			max.x = PxMax(max.x, max4.x);
+			max.y = PxMax(max.y, max4.y);
+			max.z = PxMax(max.z, max4.z);
+		}
+	}
+	min.x = __shfl_sync(FULL_MASK, min.x, 0);
+	min.y = __shfl_sync(FULL_MASK, min.y, 0);
+	min.z = __shfl_sync(FULL_MASK, min.z, 0);
+	max.x = __shfl_sync(FULL_MASK, max.x, 0);
+	max.y = __shfl_sync(FULL_MASK, max.y, 0);
+	max.z = __shfl_sync(FULL_MASK, max.z, 0);
+#else
+	const PxU32 rootNodeCount = nodes->mNbNodes;
+	if (threadIndexInWarp < rootNodeCount)
 	{
 		const PxVec4 min4 = nodes->mMin[threadIndexInWarp];
 		const PxVec4 max4 = nodes->mMax[threadIndexInWarp];
@@ -135,6 +250,7 @@ void trimeshPlaneNarrowphase(
 
 	minIndex(min.x, FULL_MASK, min.x); minIndex(min.y, FULL_MASK, min.y); minIndex(min.z, FULL_MASK, min.z);
 	maxIndex(max.x, FULL_MASK, max.x); maxIndex(max.y, FULL_MASK, max.y); maxIndex(max.z, FULL_MASK, max.z);
+#endif
 
 	const float4 extents4_f = make_float4(max.x - min.x, max.y - min.y, max.z - min.z, 0.f)*0.5f;
 
@@ -150,7 +266,18 @@ void trimeshPlaneNarrowphase(
 
 	if (warpIndex == 0)
 	{
-		const bool invalidate = invalidateManifold(trimeshToPlane, multiManifold[workIndex], minMargin, ratio);
+		PxgPersistentContactMultiManifold& manifold = multiManifold[workIndex];
+		const bool invalidManifoldState = manifold.mNbManifolds > 1 ||
+			(manifold.mNbManifolds == 1 && manifold.mNbContacts[0] > PLANE_TRI_MAX_CONTACTS);
+		if (threadIdx.x == 0 && invalidManifoldState)
+		{
+			manifold.mNbManifolds = 0;
+			manifold.mNbContacts[0] = 0;
+		}
+		__syncwarp();
+
+		const bool invalidate = invalidManifoldState ||
+			invalidateManifold(trimeshToPlane, multiManifold[workIndex], minMargin, ratio);
 
 		if (!invalidate)
 		{
@@ -190,10 +317,9 @@ void trimeshPlaneNarrowphase(
 
 			if (i < numVerts)
 			{
-				float4 point = trimeshVerts[i];
-
-				PxVec3 tp = PxLoad3(point);
-				PxVec3 p = vertex2Shape(tp, trimeshShape.scale.scale, trimeshShape.scale.rotation);
+				const float4 point = trimeshVerts[i];
+				const PxVec3 tp = PxLoad3(point);
+				const PxVec3 p = vertex2Shape(tp, trimeshShape.scale.scale, trimeshShape.scale.rotation);
 
 				//v in plane space
 				const PxVec3 pInPlaneSpace = trimeshToPlane.transform(p);
@@ -213,15 +339,38 @@ void trimeshPlaneNarrowphase(
 
 			int mask = __ballot_sync(FULL_MASK, hasContact);
 
-			mask = contactReduce<true, true, PLANE_TRI_MAX_CONTACTS, false>(worldPoint, separation, worldNormal, mask, clusterTolerance);
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+			if (gridDim.x > 1)
+				mask = int(reduceDcuTrimeshPlaneContacts(separation, PxU32(mask)));
+			else
+#endif
+				mask = contactReduce<true, true, PLANE_TRI_MAX_CONTACTS, false>(worldPoint, separation, worldNormal, mask, clusterTolerance);
+			const PxU32 contactMask = PxU32(mask);
 
-			counters[warpIndex] = __popc(mask);
+			if (threadIndexInWarp == 0)
+				counters[warpIndex] = __popc(contactMask);
 
-			hasContact = mask & (1 << threadIndexInWarp);
+			hasContact = (contactMask & (PxU32(1) << threadIndexInWarp)) != 0;
 
 			__syncthreads();
 
-			PxU32 counter = counters[threadIndexInWarp];
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+			if (threadIdx.x == 0)
+			{
+				PxU32 contactOffset = 0;
+				for (PxU32 warp = 0; warp < DCU_TRIMESH_PLANE_NUM_WARPS; ++warp)
+				{
+					const PxU32 warpContactCount = counters[warp];
+					counters[warp] = contactOffset;
+					contactOffset += warpContactCount;
+				}
+				gatheredContactCount = contactOffset + retainedCount;
+			}
+			__syncthreads();
+
+			const PxU32 contactWarpOffset = counters[warpIndex];
+#else
+			PxU32 counter = threadIndexInWarp < DCU_TRIMESH_PLANE_NUM_WARPS ? counters[threadIndexInWarp] : 0;
 
 			PxU32 contactCount = warpScan<AddOpPxU32, PxU32>(FULL_MASK, counter);
 
@@ -230,9 +379,25 @@ void trimeshPlaneNarrowphase(
 
 
 			contactWarpOffset = __shfl_sync(FULL_MASK, contactWarpOffset, warpIndex);
+#endif
 
 
-			const PxU32 offset = warpScanExclusive(mask, threadIndexInWarp);
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+			PxU32 writeIndex = contactWarpOffset + retainedCount;
+			for (PxU32 remainingMask = contactMask; remainingMask; remainingMask = clearLowestSetBit(remainingMask))
+			{
+				const PxU32 sourceLane = lowestSetIndex(remainingMask);
+				const PxVec3 sourcePoint = shuffle(FULL_MASK, worldPoint, sourceLane);
+				const PxReal sourceSeparation = __shfl_sync(FULL_MASK, separation, sourceLane);
+				if (threadIndexInWarp == 0)
+				{
+					contacts[writeIndex] = sourcePoint;
+					separations[writeIndex] = sourceSeparation;
+					++writeIndex;
+				}
+			}
+#else
+			const PxU32 offset = warpScanExclusive(contactMask, threadIndexInWarp);
 
 			if (hasContact)
 			{
@@ -240,9 +405,14 @@ void trimeshPlaneNarrowphase(
 				contacts[index] = worldPoint;
 				separations[index] = separation;
 			}
+#endif
 
 
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+			const PxU32 totalContacts = gatheredContactCount;
+#else
 			const PxU32 totalContacts = __shfl_sync(FULL_MASK, contactCount, 31) + retainedCount;
+#endif
 			__syncthreads();
 
 			//Now do another loop with warp 0 doing reduction
@@ -258,24 +428,24 @@ void trimeshPlaneNarrowphase(
 					{
 						PxU32 readIndex = warpScanExclusive(readMask, threadIndexInWarp) + ind;
 
-						if (readIndex < totalContacts)
-						{
-							worldPoint = contacts[readIndex];
-							separation = separations[readIndex];
-							hasContact = true;
-						}
+					if (readIndex < totalContacts)
+					{
+						worldPoint = contacts[readIndex];
+						separation = separations[readIndex];
+						hasContact = true;
 					}
+				}
 
 					mask = __ballot_sync(FULL_MASK, hasContact);
 					ind += __popc(readMask);
 
 					mask = contactReduce<true, true, PLANE_TRI_MAX_CONTACTS, false>(worldPoint, separation, worldNormal, mask, clusterTolerance);
 
-					hasContact = mask & (1 << threadIndexInWarp);
+					hasContact = (PxU32(mask) & (PxU32(1) << threadIndexInWarp)) != 0;
 				}
 
 				__syncwarp();
-				retainedCount = __popc(__ballot_sync(FULL_MASK, hasContact));				
+				retainedCount = __popc(__ballot_sync(FULL_MASK, hasContact));
 
 				if (hasContact)
 				{
@@ -298,15 +468,12 @@ void trimeshPlaneNarrowphase(
 				if (threadIdx.x == 0)
 				{
 					manifold.mNbManifolds = 1;
-
 					manifold.mNbContacts[0] = retainedCount;
-
 					manifold.mRelativeTransform = trimeshToPlane;
 				}
 
 				if (threadIdx.x < retainedCount)
 				{
-					
 					PxgContact& contact = manifold.mContacts[0][threadIdx.x];
 					contact.pointA = trimeshTransform.transformInv(contacts[threadIdx.x]);
 					PxVec3 planePoint = planeTransform.transformInv(contacts[threadIdx.x]);
@@ -346,8 +513,6 @@ void trimeshPlaneNarrowphase(
 
 		__syncthreads();
 	}
-	
-	
 
 	//Retained counts stores the set of contacts we kept, which are stored in the first N 
 	//elements of contacts and separations buffer
@@ -680,4 +845,3 @@ void trimeshHeightfieldNarrowphase(
 		}
 	}
 }
-

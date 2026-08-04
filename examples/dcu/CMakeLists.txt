@@ -112,6 +112,27 @@ foreach(SOURCE_FILE ${EXAMPLE_CPP_SOURCES})
         set(KERNEL_SOURCE ${CMAKE_SOURCE_DIR}/scene_tower_kernel.hip)
         set_source_files_properties(${KERNEL_SOURCE} PROPERTIES LANGUAGE HIP)
         add_dcu_example(${SOURCE_FILE} ${KERNEL_SOURCE})
+    elseif(EXE_NAME STREQUAL "bench_deformable_surface_smoke")
+        # Some existing CPU PhysXExtensions archives were built before the
+        # deformable-surface extension was included. Compile this implementation
+        # into the smoke target so PxDeformableSurfaceExt symbols are available.
+        set(DEFORMABLE_SURFACE_EXT_SOURCE ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtDeformableSurfaceExt.cpp)
+        add_dcu_example(${SOURCE_FILE} ${DEFORMABLE_SURFACE_EXT_SOURCE})
+    elseif(EXE_NAME STREQUAL "bench_deformable_volume_smoke")
+        # Keep the volume smoke self-contained because the current static
+        # PhysXExtensions archive does not export deformable-volume helpers.
+        set(DEFORMABLE_VOLUME_EXT_SOURCES
+            ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtDeformableVolumeExt.cpp
+            ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtRemeshingExt.cpp
+            ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtTetMakerExt.cpp
+            ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtTetrahedronMeshExt.cpp
+        )
+        add_dcu_example(${SOURCE_FILE} ${DEFORMABLE_VOLUME_EXT_SOURCES})
+    elseif(EXE_NAME STREQUAL "bench_pbd_cloth_smoke")
+        # The existing static PhysXExtensions archive may not include GPU
+        # particle-cloth helpers, so compile the small implementation here.
+        set(PBD_CLOTH_EXT_SOURCE ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtParticleExt.cpp)
+        add_dcu_example(${SOURCE_FILE} ${PBD_CLOTH_EXT_SOURCE})
     else()
         add_dcu_example(${SOURCE_FILE})
     endif()

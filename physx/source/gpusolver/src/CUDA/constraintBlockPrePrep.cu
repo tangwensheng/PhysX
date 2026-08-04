@@ -737,7 +737,7 @@ static __device__ PxU32 D6JointSolverPrep(Px1DConstraint* constraints, const Pxg
 }
 
 extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
-	PxgSolverSharedDesc<IterativeSolveData>* sharedDesc)
+	PxgSolverSharedDesc<IterativeSolveData>* sharedDesc, const PxU32 diagnosticMode)
 {
 	__shared__ PxgBlockContactPoint* volatile blockContactPoints[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK/32];
 
@@ -787,6 +787,24 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 	const PxU32 dynamicBatchEnd = numBatches + numArtiBatches;
 	const PxU32 totalStaticPlusDynamic = dynamicBatchEnd + numArtiStaticBatches;
 	const PxU32 totalBatches = totalStaticPlusDynamic + numArtiSelfBatches + numStaticBatches;
+	const PxU32 firstStaticBatch = totalBatches - numStaticBatches;
+
+	if(diagnosticMode && blockIdx.x == 0 && warpIndexInBlock == 0 && threadIndexInWarp == 0)
+	{
+		const PxU32 globalNumStaticBatches = gDesc->numStaticBatches;
+		const PxU32 globalTotalBatches = gDesc->numBatches + gDesc->numArtiBatches + gDesc->numArtiStaticBatches +
+			gDesc->numArtiSelfBatches + globalNumStaticBatches;
+		const PxU32 globalFirstStaticBatch = globalTotalBatches - globalNumStaticBatches;
+		const PxgConstraintBatchHeader sharedHeader = numStaticBatches ? shDesc.mBatchHeaders[firstStaticBatch] : PxgConstraintBatchHeader();
+		const PxgConstraintBatchHeader globalHeader = globalNumStaticBatches ? gDesc->mBatchHeaders[globalFirstStaticBatch] : PxgConstraintBatchHeader();
+		printf("[DCU PREPREP INPUT] batches=(dynamic=%u static=%u arti=%u artiStatic=%u artiSelf=%u total=%u) firstStatic=%u sharedHeader=(stride=%u type=%u index=%u start=%u mask=0x%08x) global=(static=%u total=%u firstStatic=%u header=(stride=%u type=%u index=%u start=%u mask=0x%08x)) ptrs=(sharedHeaders=%p globalHeaders=%p blocks=%p)\n",
+			numBatches, numStaticBatches, numArtiBatches, numArtiStaticBatches, numArtiSelfBatches, totalBatches,
+			firstStaticBatch, PxU32(sharedHeader.mDescStride), PxU32(sharedHeader.constraintType), sharedHeader.mConstraintBatchIndex,
+			sharedHeader.mStartPartitionIndex, sharedHeader.mask, globalNumStaticBatches, globalTotalBatches, globalFirstStaticBatch,
+			PxU32(globalHeader.mDescStride), PxU32(globalHeader.constraintType), globalHeader.mConstraintBatchIndex,
+			globalHeader.mStartPartitionIndex, globalHeader.mask, static_cast<void*>(shDesc.mBatchHeaders),
+			static_cast<void*>(gDesc->mBatchHeaders), static_cast<void*>(shDesc.blockBatches));
+	}
 
 	const PxU32 nbElemsPerBody = gDesc->nbElementsPerBody;
 
@@ -811,6 +829,11 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 			batch.mConstraintBatchIndex = batchHeader.mConstraintBatchIndex;
 			batch.mDescStride = batchHeader.mDescStride;
 			batch.mask = batchHeader.mask;
+			if(diagnosticMode && a == firstStaticBatch && threadIndexInWarp == 0)
+			{
+				printf("[DCU PREPREP OUTPUT META] batch=%u stride=%u type=%u index=%u mask=0x%08x\n",
+					a, PxU32(batch.mDescStride), PxU32(batch.constraintType), batch.mConstraintBatchIndex, batch.mask);
+			}
 
 			/*if(threadIndexInWarp == 0)
 				printf("warpIndex %i conType %i constraintBatchIndex %i descStride %i\n", warpIndex, conType, batchHeader.mConstraintBatchIndex, batchHeader.mDescStride);*/
@@ -1046,6 +1069,13 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 			/*createSolverContactConstraintDescsFromPatch(contactBlockPrepData, blockContactPoints[warpIndexInBlock], n, batch,
 				threadIndexInWarp, contactPatch, contacts,
 				batch.mDescStride, prevFrictionPatchCount);*/
+		}
+
+		if(diagnosticMode && a == firstStaticBatch && threadIndexInWarp == 0)
+		{
+			printf("[DCU PREPREP OUTPUT] batch=%u stride=%u type=%u index=%u mask=0x%08x starts=(partition=%u constraint=%u friction=%u blockContact=%u)\n",
+				a, PxU32(batch.mDescStride), PxU32(batch.constraintType), batch.mConstraintBatchIndex, batch.mask,
+				batch.mStartPartitionIndex, batch.startConstraintIndex, batch.startFrictionIndex, batch.blockContactIndex);
 		}
 	}
 }
@@ -1516,7 +1546,7 @@ void rigidSumInternalContactAndJointBatches1(
 
 
 
-	if (threadIdx.x == (WARP_SIZE - 1))
+	if (threadIdx.x == 0)
 	{
 		sContactUniqueIndicesAccum = 0;
 		sJointUniqueIndicesAccum = 0;
@@ -1566,30 +1596,14 @@ void rigidSumInternalContactAndJointBatches1(
 
 		__syncthreads();
 
-		unsigned mask_idx = __ballot_sync(FULL_MASK, threadIndexInWarp < warpPerBlock);
-
-		if (threadIdx.x < warpPerBlock)
+		if (threadIdx.x == 0)
 		{
-			PxU32 contactUniqueIndicesWarpSum = shContactUniqueIndicesWarpSum[threadIndexInWarp];
-			PxU32 jointUniqueIndicesWarpSum = shJointUniqueIndicesWarpSum[threadIndexInWarp];
-			PxU32 contactHeaderWarpSum = shContactHeaderWarpSum[threadIndexInWarp];
-			PxU32 jointHeaderWarpSum = shJointHeaderWarpSum[threadIndexInWarp];
-
-			contactUniqueIndicesWarpSum = warpReduction<AddOpPxU32, PxU32>(mask_idx, contactUniqueIndicesWarpSum);
-			jointUniqueIndicesWarpSum = warpReduction<AddOpPxU32, PxU32>(mask_idx, jointUniqueIndicesWarpSum);
-			contactHeaderWarpSum = warpReduction<AddOpPxU32, PxU32>(mask_idx, contactHeaderWarpSum);
-			jointHeaderWarpSum = warpReduction<AddOpPxU32, PxU32>(mask_idx, jointHeaderWarpSum);
-
-			if (threadIdx.x == (warpPerBlock - 1))
+			for (PxU32 warp = 0; warp < warpPerBlock; ++warp)
 			{
-				sContactUniqueIndicesAccum += contactUniqueIndicesWarpSum;
-				sJointUniqueIndicesAccum += jointUniqueIndicesWarpSum;
-				sContactHeaderAccum += contactHeaderWarpSum;
-				sJointHeaderAccum += jointHeaderWarpSum;
-
-				/*			if(blockIdx.x == 0)
-						printf("contactUniqueIndicesWarpSum %i jointUniqueIndicesWarpSum %i contactHeaderWarpSum %i sJointHeaderAccum %i\n", contactUniqueIndicesWarpSum,
-							jointUniqueIndicesWarpSum, contactHeaderWarpSum, jointHeaderWarpSum);*/
+				sContactUniqueIndicesAccum += shContactUniqueIndicesWarpSum[warp];
+				sJointUniqueIndicesAccum += shJointUniqueIndicesWarpSum[warp];
+				sContactHeaderAccum += shContactHeaderWarpSum[warp];
+				sJointHeaderAccum += shJointHeaderWarpSum[warp];
 			}
 		}
 
@@ -1597,7 +1611,7 @@ void rigidSumInternalContactAndJointBatches1(
 
 	}
 
-	if (threadIdx.x == (warpPerBlock - 1))
+	if (threadIdx.x == 0)
 	{
 		tempStaticContactUniqueIndicesBlockSum[blockIdx.x] = sContactUniqueIndicesAccum;
 		tempStaticJointUniqueIndicesBlockSum[blockIdx.x] = sJointUniqueIndicesAccum;
@@ -1616,7 +1630,7 @@ void rigidSumInternalContactAndJointBatches2(
 	PxgPrePrepDesc* PX_RESTRICT prePrepDesc,
 	PxgSolverCoreDesc* PX_RESTRICT solverCoreDesc,
 	PxgConstraintPrepareDesc* constraintPrepDesc, 
-	const PxU32 nbBodies)
+	const PxU32 nbBodies, const PxU32 diagnosticMode)
 {
 
 	const PxU32 numThreadsPerBlock = PxgKernelBlockDim::COMPUTE_STATIC_CONTACT_CONSTRAINT_COUNT;
@@ -1668,6 +1682,10 @@ void rigidSumInternalContactAndJointBatches2(
 	__shared__ PxU32 sJointUniqueIndicesAccum;
 	__shared__ PxU32 sContactHeaderAccum;
 	__shared__ PxU32 sJointHeaderAccum;
+	__shared__ PxU32 sContactUniqueIndicesIterationSum;
+	__shared__ PxU32 sJointUniqueIndicesIterationSum;
+	__shared__ PxU32 sContactHeaderIterationSum;
+	__shared__ PxU32 sJointHeaderIterationSum;
 
 	PxU32* jointConstraintBatchIndices = constraintPrepDesc->jointConstraintBatchIndices;
 	PxU32* contactConstraintBatchIndices = constraintPrepDesc->contactConstraintBatchIndices;
@@ -1692,7 +1710,7 @@ void rigidSumInternalContactAndJointBatches2(
 	const PxU32 staticJointBatchOffset = prePrepDesc->artiStaticConstraintBatchOffset + constraintPrepDesc->numArtiStatic1dConstraintBatches + constraintPrepDesc->numArtiSelf1dConstraintBatches;
 
 
-	if (threadIdx.x == (WARP_SIZE - 1))
+	if (threadIdx.x == 0)
 	{
 		sContactUniqueIndicesAccum = 0;
 		sJointUniqueIndicesAccum = 0;
@@ -1702,30 +1720,25 @@ void rigidSumInternalContactAndJointBatches2(
 
 
 	//accumulate num pairs per block and compute exclusive run sum
-	//unsigned mask_idx = __ballot_sync(FULL_MASK, threadIndexInWarp < block_size);
-	if (warpIndex == 0/* && threadIndexInWarp < block_size*/)
+	if (threadIdx.x == 0)
 	{
-		const PxU32 oriContactUniqueIndiceOffset = tempStaticContactUniqueIndicesBlock[threadIndexInWarp];
-		const PxU32 oriJointUniqueIndiceOffset = tempStaticJointUniqueIndicesBlock[threadIndexInWarp];
-		const PxU32 oriContactHeaderOffset = tempStaticContactHeaderBlock[threadIndexInWarp];
-		const PxU32 oriJointHeaderOffset = tempStaticJointHeaderBlock[threadIndexInWarp];
-
-		const PxU32 contactUniqueIndiceOffset = warpScan<AddOpPxU32, PxU32>(FULL_MASK, oriContactUniqueIndiceOffset);
-		const PxU32 jointUniqueIndiceOffset = warpScan<AddOpPxU32, PxU32>(FULL_MASK, oriJointUniqueIndiceOffset);
-		const PxU32 contactHeaderOffset = warpScan<AddOpPxU32, PxU32>(FULL_MASK, oriContactHeaderOffset);
-		const PxU32 jointHeaderOffset = warpScan<AddOpPxU32, PxU32>(FULL_MASK, oriJointHeaderOffset);
-		//store exclusive run sum
-		sContactUniqueIndicesBlockHistogram[threadIndexInWarp] = contactUniqueIndiceOffset - oriContactUniqueIndiceOffset;
-		sJointUniqueIndicesBlockHistogram[threadIndexInWarp] = jointUniqueIndiceOffset - oriJointUniqueIndiceOffset;
-		sContactHeaderBlockHistogram[threadIndexInWarp] = contactHeaderOffset - oriContactHeaderOffset;
-		sJointHeaderBlockHistogram[threadIndexInWarp] = jointHeaderOffset - oriJointHeaderOffset;
-
-		/*if (blockIdx.x == 0)
+		PxU32 contactUniqueIndiceOffset = 0;
+		PxU32 jointUniqueIndiceOffset = 0;
+		PxU32 contactHeaderOffset = 0;
+		PxU32 jointHeaderOffset = 0;
+		for (PxU32 block = 0; block < block_size; ++block)
 		{
-			printf("sContactHeaderBlockHistogram[%i] = %i + %i\n", threadIndexInWarp, contactHeaderOffset, oriContactHeaderOffset);
-		}*/
+			sContactUniqueIndicesBlockHistogram[block] = contactUniqueIndiceOffset;
+			sJointUniqueIndicesBlockHistogram[block] = jointUniqueIndiceOffset;
+			sContactHeaderBlockHistogram[block] = contactHeaderOffset;
+			sJointHeaderBlockHistogram[block] = jointHeaderOffset;
+			contactUniqueIndiceOffset += tempStaticContactUniqueIndicesBlock[block];
+			jointUniqueIndiceOffset += tempStaticJointUniqueIndicesBlock[block];
+			contactHeaderOffset += tempStaticContactHeaderBlock[block];
+			jointHeaderOffset += tempStaticJointHeaderBlock[block];
+		}
 
-		if (blockIdx.x == 0 && threadIdx.x == (WARP_SIZE - 1))
+		if (blockIdx.x == 0)
 		{
 			//Output total number of articulation static blocks
 			const PxU32 totalNumStaticBatches = contactHeaderOffset + jointHeaderOffset;
@@ -1737,6 +1750,12 @@ void rigidSumInternalContactAndJointBatches2(
 
 			PxgIslandContext& island = solverCoreDesc->islandContextPool[0];
 			island.mStaticRigidBatchCount = totalNumStaticBatches;
+			if (diagnosticMode)
+			{
+				printf("[DCU PREPREP STATIC COUNT] contact=%u joint=%u total=%u offsets=(batch=%u contactUnique=%u jointUnique=%u staticContact=%u staticJoint=%u)\n",
+					contactHeaderOffset, jointHeaderOffset, totalNumStaticBatches, batchOffset, contactUniqueIndexOffset,
+					jointUniqueIndexOffset, staticContactBatchOffset, staticJointBatchOffset);
+			}
 			/*printf("StaticContactCount = %i, dynamicContactCount = %i, staticJointCount = %i, %p\n", contactHeaderOffset, constraintPrepDesc->numContactBatches, jointHeaderOffset,
 				constraintPrepDesc);*/
 
@@ -1802,37 +1821,43 @@ void rigidSumInternalContactAndJointBatches2(
 		PxU32 contactHeaderWarpSum = 0;
 		PxU32 jointHeaderWarpSum = 0;
 
-		unsigned mask_idx = __ballot_sync(FULL_MASK, threadIndexInWarp < warpPerBlock);
-
-		//warpPerBlock should be less than 32, each warp will do the runsum
-		if (threadIndexInWarp < warpPerBlock)
+		if (threadIdx.x == 0)
 		{
-
-			const PxU32 oriContactUniqueIndicesWarpSum = shContactUniqueIndicesWarpSum[threadIndexInWarp];
-			const PxU32 oriJointUniqueIndicesWarpSum = shJointUniqueIndicesWarpSum[threadIndexInWarp];
-			const PxU32 oriContactHeaderWarpSum = shContactHeaderWarpSum[threadIndexInWarp];
-			const PxU32 oriJointHeaderWarpSum = shJointHeaderWarpSum[threadIndexInWarp];
-
-			contactUniqueIndicesWarpSum = warpScan<AddOpPxU32, PxU32>(mask_idx, oriContactUniqueIndicesWarpSum);
-			jointUniqueIndicesWarpSum = warpScan<AddOpPxU32, PxU32>(mask_idx, oriJointUniqueIndicesWarpSum);
-			contactHeaderWarpSum = warpScan<AddOpPxU32, PxU32>(mask_idx, oriContactHeaderWarpSum);
-			jointHeaderWarpSum = warpScan<AddOpPxU32, PxU32>(mask_idx, oriJointHeaderWarpSum);
-
-
-			//exclusive runsum
-			contactWarpOffset = contactUniqueIndicesWarpSum - oriContactUniqueIndicesWarpSum;
-			jointWarpOffset = jointUniqueIndicesWarpSum - oriJointUniqueIndicesWarpSum;
-			contactBlockWarpOffset = contactHeaderWarpSum - oriContactHeaderWarpSum;
-			jointBlockWarpOffset = jointHeaderWarpSum - oriJointHeaderWarpSum;
-
-
+			PxU32 contactUniqueIndicesSum = 0;
+			PxU32 jointUniqueIndicesSum = 0;
+			PxU32 contactHeaderSum = 0;
+			PxU32 jointHeaderSum = 0;
+			for (PxU32 warp = 0; warp < warpPerBlock; ++warp)
+			{
+				const PxU32 contactUniqueIndicesWarpCount = shContactUniqueIndicesWarpSum[warp];
+				const PxU32 jointUniqueIndicesWarpCount = shJointUniqueIndicesWarpSum[warp];
+				const PxU32 contactHeaderWarpCount = shContactHeaderWarpSum[warp];
+				const PxU32 jointHeaderWarpCount = shJointHeaderWarpSum[warp];
+				shContactUniqueIndicesWarpSum[warp] = contactUniqueIndicesSum;
+				shJointUniqueIndicesWarpSum[warp] = jointUniqueIndicesSum;
+				shContactHeaderWarpSum[warp] = contactHeaderSum;
+				shJointHeaderWarpSum[warp] = jointHeaderSum;
+				contactUniqueIndicesSum += contactUniqueIndicesWarpCount;
+				jointUniqueIndicesSum += jointUniqueIndicesWarpCount;
+				contactHeaderSum += contactHeaderWarpCount;
+				jointHeaderSum += jointHeaderWarpCount;
+			}
+			sContactUniqueIndicesIterationSum = contactUniqueIndicesSum;
+			sJointUniqueIndicesIterationSum = jointUniqueIndicesSum;
+			sContactHeaderIterationSum = contactHeaderSum;
+			sJointHeaderIterationSum = jointHeaderSum;
 		}
 
-		//make sure each thread in a warp has the correct warp offset
-		contactWarpOffset = __shfl_sync(FULL_MASK, contactWarpOffset, warpIndex);
-		jointWarpOffset = __shfl_sync(FULL_MASK, jointWarpOffset, warpIndex);
-		contactBlockWarpOffset = __shfl_sync(FULL_MASK, contactBlockWarpOffset, warpIndex);
-		jointBlockWarpOffset = __shfl_sync(FULL_MASK, jointBlockWarpOffset, warpIndex);
+		__syncthreads();
+
+		contactWarpOffset = shContactUniqueIndicesWarpSum[warpIndex];
+		jointWarpOffset = shJointUniqueIndicesWarpSum[warpIndex];
+		contactBlockWarpOffset = shContactHeaderWarpSum[warpIndex];
+		jointBlockWarpOffset = shJointHeaderWarpSum[warpIndex];
+		contactUniqueIndicesWarpSum = sContactUniqueIndicesIterationSum;
+		jointUniqueIndicesWarpSum = sJointUniqueIndicesIterationSum;
+		contactHeaderWarpSum = sContactHeaderIterationSum;
+		jointHeaderWarpSum = sJointHeaderIterationSum;
 
 
 		/*if (workIndex == 512)
@@ -1863,7 +1888,7 @@ void rigidSumInternalContactAndJointBatches2(
 		//sContactHeaderAccum, sJointHeaderAccum before we overwrite those values for another iterations
 		__syncthreads();
 
-		if (threadIdx.x == (warpPerBlock - 1))
+		if (threadIdx.x == 0)
 		{
 			sContactUniqueIndicesAccum += contactUniqueIndicesWarpSum;
 			sJointUniqueIndicesAccum += jointUniqueIndicesWarpSum;
@@ -1886,6 +1911,16 @@ void rigidSumInternalContactAndJointBatches2(
 
 			const PxU32 stride = __popc(mask);
 			const PxU32 offset = warpScanExclusive(mask, threadIndexInWarp);
+			const bool printFirstStaticHeader = diagnosticMode && blockOffset == batchOffset;
+			PxU32 firstLane = 0;
+			PxU32 firstWorkIndex = 0;
+			PxU32 firstContactCount = 0;
+			if (printFirstStaticHeader)
+			{
+				firstLane = PxU32(__ffs(mask) - 1);
+				firstWorkIndex = __shfl_sync(FULL_MASK, workIndex, firstLane);
+				firstContactCount = __shfl_sync(FULL_MASK, contactCount, firstLane);
+			}
 
 			if (contactCount > i)
 			{
@@ -1907,6 +1942,13 @@ void rigidSumInternalContactAndJointBatches2(
 				header.mask = mask;
 				batchHeaders[blockOffset] = header;
 				contactConstraintBatchIndices[contactBlockOffset + numContactBatches + i] = blockOffset;// -numArtiBatches;
+				if (printFirstStaticHeader)
+				{
+					printf("[DCU PREPREP STATIC HEADER] work=%u firstLane=%u firstWork=%u firstCount=%u maxContact=%u contactOffset=%u blockOffset=%u mask=0x%08x stride=%u header=(type=%u index=%u start=%u mask=0x%08x)\n",
+						workIndex, firstLane, firstWorkIndex, firstContactCount, maxContact, contactOffset, blockOffset,
+						mask, stride, PxU32(header.constraintType), header.mConstraintBatchIndex,
+						header.mStartPartitionIndex, header.mask);
+				}
 
 				//printf("batchIndex %i blockOffset %i contactOffset %i mStartPartitionIndex %i numRigidContacts %i contactConstraintBatchIndices[%i] = %i\n", 
 				//	batchIndex, blockOffset,
@@ -1960,4 +2002,3 @@ void rigidSumInternalContactAndJointBatches2(
 		}
 	}
 }
-

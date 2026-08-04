@@ -46,6 +46,8 @@
 #include "DyConstraintPrep.h"
 #include "PxgIslandContext.h"
 
+#include <cstdlib>
+
 #define GPU_CORE_DEBUG 0
 
 using namespace physx;
@@ -513,6 +515,12 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 {
 	PX_PROFILE_ZONE("GpuDynamics.ConstraintPrePrepParallel", 0);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 prePrepDiagnosticMode = std::getenv("PX_DCU_SOLVER_PREPREP_DIAG") ? 1u : 0u;
+#else
+	const PxU32 prePrepDiagnosticMode = 0u;
+#endif
+
 	///////////////////////////////////////
 	//New step here!!!
 	//We need to prep up the static rigid body contact buffers prior to contact pre-prep
@@ -548,7 +556,8 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 			PX_CUDA_KERNEL_PARAM(mPrePrepDescd),
 			PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
 			PX_CUDA_KERNEL_PARAM(mPrepareDescd),
-			PX_CUDA_KERNEL_PARAM(numBodies)
+			PX_CUDA_KERNEL_PARAM(numBodies),
+			PX_CUDA_KERNEL_PARAM(prePrepDiagnosticMode)
 		};
 
 		const PxU32 nbBlocksRequired = 32;
@@ -556,6 +565,12 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 		CUresult launchResult = mCudaContext->launchKernel(staticKernel2, nbBlocksRequired, 1, 1, PxgKernelBlockDim::COMPUTE_STATIC_CONTACT_CONSTRAINT_COUNT, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 		PX_ASSERT(launchResult == CUDA_SUCCESS);
 		PX_UNUSED(launchResult);
+		if (prePrepDiagnosticMode)
+		{
+			const CUresult result = mCudaContext->streamSynchronize(mStream);
+			if (result != CUDA_SUCCESS)
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU rigidSumInternalContactAndJointBatches2 diagnostic synchronization failed!\n");
+		}
 
 #if GPU_CORE_DEBUG
 		CUresult result = mCudaContext->streamSynchronize(mStream);
@@ -571,19 +586,31 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 
 	CUdeviceptr descd = mPrePrepDescd;
 	CUdeviceptr shDescd = mSharedDescd;
-	PxCudaKernelParam kernelParams[] =
+	PxCudaKernelParam commonKernelParams[] =
 	{
 		PX_CUDA_KERNEL_PARAM(descd),
 		PX_CUDA_KERNEL_PARAM(shDescd)
+	};
+	PxCudaKernelParam contactKernelParams[] =
+	{
+		PX_CUDA_KERNEL_PARAM(descd),
+		PX_CUDA_KERNEL_PARAM(shDescd),
+		PX_CUDA_KERNEL_PARAM(prePrepDiagnosticMode)
 	};
 
 	const PxU32 nbBlocksRequired = (nbConstraintBatches*PXG_BATCH_SIZE + PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK - 1) / PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK;
 
 	if (nbBlocksRequired > 0)
 	{
-		CUresult launchResult = mCudaContext->launchKernel(kernelFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+		CUresult launchResult = mCudaContext->launchKernel(kernelFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 1, 1, 0, mStream, contactKernelParams, sizeof(contactKernelParams), 0, PX_FL);
 		PX_ASSERT(launchResult == CUDA_SUCCESS);
 		PX_UNUSED(launchResult);
+		if (prePrepDiagnosticMode)
+		{
+			const CUresult result = mCudaContext->streamSynchronize(mStream);
+			if (result != CUDA_SUCCESS)
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU constraintContactBlockPrePrepLaunch diagnostic synchronization failed!\n");
+		}
 
 #if GPU_CORE_DEBUG
 		CUresult result = mCudaContext->streamSynchronize(mStream);
@@ -599,7 +626,7 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 		//non-block joint constraint pre-prepare
 		kernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::JOINT_CONSTRAINT_PREPREP);
 
-		CUresult result = mCudaContext->launchKernel(kernelFunction, nbD6JointsBlocks, 1, 1, PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+		CUresult result = mCudaContext->launchKernel(kernelFunction, nbD6JointsBlocks, 1, 1, PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 1, 1, 0, mStream, commonKernelParams, sizeof(commonKernelParams), 0, PX_FL);
 
 		PX_ASSERT(result == CUDA_SUCCESS);
 		PX_UNUSED(result);

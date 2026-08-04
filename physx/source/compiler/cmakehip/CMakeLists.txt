@@ -42,7 +42,7 @@ file(GLOB GPU_ALL_CU_FILES
 add_library(PhysXGpuDCU SHARED ${GPU_ALL_CU_FILES})
 target_include_directories(PhysXGpuDCU PRIVATE ${PHYSX_INCLUDE_DIRS})
 set_source_files_properties(${GPU_ALL_CU_FILES} PROPERTIES LANGUAGE HIP)
-# DCU: disable inlining for cudaBox.cu (hipcc register-loss codegen bug)
+# DCU: cudaBox.cu still requires the hipcc register-loss codegen workaround.
 set_source_files_properties(
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaBox.cu
     PROPERTIES COMPILE_FLAGS "-mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0"

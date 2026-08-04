@@ -39,6 +39,11 @@
 #include "geometry/PxHeightFieldSample.h"
 #include "PxSceneDesc.h"			// for PxGpuDynamicsMemoryConfig
 
+#include <cstdlib>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 #include "foundation/PxSort.h"
 
 #include "GuBV32.h"
@@ -329,6 +334,13 @@ void PxgGpuNarrowphaseCore::drawManifold(PxgPersistentContactManifold* manifolds
 void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuManagers, const PxU32 numTests, PxU32* touchChangeFlags, PxsContactManagerOutput* cmOutputs)
 {
 	CUresult result;
+	const bool compactDiag =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#else
+		false;
+#endif
+	PX_UNUSED(compactDiag);
 
 	PxU32* tempRunsum = (PxU32*)gpuManagers.mTempRunsumArray2.getDevicePtr();
 	PxsContactManagerOutputCounts* lostFoundOutputs = (PxsContactManagerOutputCounts*)gpuManagers.mLostFoundPairsOutputData.getDevicePtr();
@@ -336,6 +348,24 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 	PxU32* blockAccumArray = (PxU32*)gpuManagers.mBlockAccumulationArray.getDevicePtr();
 	uint2* lostAndTotalReportedPairsCount = reinterpret_cast<uint2*>(getMappedDevicePtr(mCudaContext, gpuManagers.mLostAndTotalReportedPairsCountPinned));
 	PxsContactManager** cmArray = (PxsContactManager**)gpuManagers.mCpuContactManagerMapping.getDevicePtr();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (compactDiag)
+	{
+		std::fprintf(stderr,
+			"[DCU NP COMPACT LAUNCH] bucket=%u pairs=%u pinned=(%u,%u) flags=%p outputs=%p mapping=%p compactOut=%p compactCms=%p capacities=(flags=%llu scan=%llu out=%llu cms=%llu mapping=%llu)\n",
+			gpuManagers.mBucketIndex, numTests,
+			gpuManagers.mLostAndTotalReportedPairsCountPinned->x,
+			gpuManagers.mLostAndTotalReportedPairsCountPinned->y,
+			static_cast<void*>(touchChangeFlags), static_cast<void*>(cmOutputs), static_cast<void*>(cmArray),
+			static_cast<void*>(lostFoundOutputs), static_cast<void*>(lostFoundCms),
+			static_cast<unsigned long long>(gpuManagers.mTempRunsumArray.getNbElements()),
+			static_cast<unsigned long long>(gpuManagers.mTempRunsumArray2.getNbElements()),
+			static_cast<unsigned long long>(gpuManagers.mLostFoundPairsOutputData.getNbElements()),
+			static_cast<unsigned long long>(gpuManagers.mLostFoundPairsCms.getNbElements()),
+			static_cast<unsigned long long>(gpuManagers.mCpuContactManagerMapping.getNbElements()));
+	}
+#endif
 
 	{
 		CUfunction kernelFunction1 = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::COMPACT_LOST_FOUND_PAIRS_1);
@@ -362,24 +392,51 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(cmArray)
 		};
 
-		result = mCudaContext->launchKernel(kernelFunction1, PxgNarrowPhaseGridDims::COMPACT_LOST_FOUND_PAIRS, 1, 1,
-			WARP_SIZE, PxgNarrowPhaseBlockDims::COMPACT_LOST_FOUND_PAIRS / WARP_SIZE, 1,
-			0, mStream, kernelParams1, sizeof(kernelParams1), 0, PX_FL);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const bool useSerialCompact = numTests <= 256;
+#else
+		const bool useSerialCompact = false;
+#endif
 
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage1 fail to launch kernel!!\n");
+		if (!useSerialCompact)
+		{
+			result = mCudaContext->launchKernel(kernelFunction1, PxgNarrowPhaseGridDims::COMPACT_LOST_FOUND_PAIRS, 1, 1,
+				WARP_SIZE, PxgNarrowPhaseBlockDims::COMPACT_LOST_FOUND_PAIRS / WARP_SIZE, 1,
+				0, mStream, kernelParams1, sizeof(kernelParams1), 0, PX_FL);
+
+			if (result != CUDA_SUCCESS)
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage1 fail to launch kernel!!\n");
 
 #if GPU_NP_DEBUG
-		result = mCudaContext->streamSynchronize(mStream);
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage1 kernel fail!!!\n");
+			result = mCudaContext->streamSynchronize(mStream);
+			if (result != CUDA_SUCCESS)
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage1 kernel fail!!!\n");
 #endif
-		result = mCudaContext->launchKernel(kernelFunction2, PxgNarrowPhaseGridDims::COMPACT_LOST_FOUND_PAIRS, 1, 1,
-			WARP_SIZE, PxgNarrowPhaseBlockDims::COMPACT_LOST_FOUND_PAIRS / WARP_SIZE, 1,
+		}
+
+		const PxU32 compactGridSize = useSerialCompact ? 1 : PxgNarrowPhaseGridDims::COMPACT_LOST_FOUND_PAIRS;
+		const PxU32 compactBlockSizeX = useSerialCompact ? 1 : WARP_SIZE;
+		const PxU32 compactBlockSizeY = useSerialCompact ? 1 : PxgNarrowPhaseBlockDims::COMPACT_LOST_FOUND_PAIRS / WARP_SIZE;
+		result = mCudaContext->launchKernel(kernelFunction2, compactGridSize, 1, 1,
+			compactBlockSizeX, compactBlockSizeY, 1,
 			0, mStream, kernelParams2, sizeof(kernelParams2), 0, PX_FL);
 
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage2 fail to launch kernel!!\n");
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (compactDiag)
+		{
+			result = mCudaContext->streamSynchronize(mStream);
+			std::fprintf(stderr,
+				"[DCU NP COMPACT DONE] bucket=%u pairs=%u result=%d touch=%u total=%u limit=%u\n",
+				gpuManagers.mBucketIndex, numTests, int(result),
+				gpuManagers.mLostAndTotalReportedPairsCountPinned->x,
+				gpuManagers.mLostAndTotalReportedPairsCountPinned->y, 2 * numTests);
+			if (result != CUDA_SUCCESS)
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU prepareLostFoundPairs_Stage2 diagnostic synchronize failed! %d\n", result);
+		}
+#endif
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(mStream);
@@ -1232,37 +1289,54 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshPlaneGpu(PxgGpuContactManagers& gpuMan
 
 	{
 		CUfunction triMeshPlaneKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::TRIMESH_PLANE_CORE);
-
-		PxCudaKernelParam kernelParams_stage[] =
+		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const PxU32 numThreadsPerBlock = 32;
+		PxU32 maxBlocksPerLaunch = 1;
+		const char* maxBlocksPerLaunchEnv = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH");
+		if (maxBlocksPerLaunchEnv)
 		{
-			PX_CUDA_KERNEL_PARAM(toleranceLength),
-			PX_CUDA_KERNEL_PARAM(cmInputs),
-			PX_CUDA_KERNEL_PARAM(cmOutputs),
-			PX_CUDA_KERNEL_PARAM(gpuShapes),
-			PX_CUDA_KERNEL_PARAM(transformCache),
-			PX_CUDA_KERNEL_PARAM(contactDistance),
-			PX_CUDA_KERNEL_PARAM(materials),
-			PX_CUDA_KERNEL_PARAM(cmPersistentMultiManifolds),
-			PX_CUDA_KERNEL_PARAM(mContactStream),
-			PX_CUDA_KERNEL_PARAM(mPatchStream),
-			PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
-			PX_CUDA_KERNEL_PARAM(touchLostFlags),
-			PX_CUDA_KERNEL_PARAM(touchFoundFlags),
-			PX_CUDA_KERNEL_PARAM(baseContactPatches),
-			PX_CUDA_KERNEL_PARAM(baseContactPoints),
-			PX_CUDA_KERNEL_PARAM(baseContactForces),
-			PX_CUDA_KERNEL_PARAM(patchBytesLimit),
-			PX_CUDA_KERNEL_PARAM(contactBytesLimit),
-			PX_CUDA_KERNEL_PARAM(forceBytesLimit),
-			PX_CUDA_KERNEL_PARAM(clusterBias)
-		};
-
+			const PxU32 requestedBatchSize = PxU32(std::strtoul(maxBlocksPerLaunchEnv, NULL, 10));
+			if (requestedBatchSize)
+				maxBlocksPerLaunch = requestedBatchSize;
+		}
+		#else
 		const PxU32 numThreadsPerBlock = 1024;
-		const PxU32 numBlocks = numTests;
-		//Each thread do one collision detection
-		result = mCudaContext->launchKernel(triMeshPlaneKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU trimeshPlaneNarrowphase fail to launch kernel!!\n");
+		const PxU32 maxBlocksPerLaunch = numTests;
+		#endif
+		for (PxU32 workOffset = 0; workOffset < numTests; workOffset += maxBlocksPerLaunch)
+		{
+			const PxU32 numBlocks = PxMin(maxBlocksPerLaunch, numTests - workOffset);
+			PxCudaKernelParam kernelParams_stage[] =
+			{
+				PX_CUDA_KERNEL_PARAM(toleranceLength),
+				PX_CUDA_KERNEL_PARAM(cmInputs),
+				PX_CUDA_KERNEL_PARAM(cmOutputs),
+				PX_CUDA_KERNEL_PARAM(gpuShapes),
+				PX_CUDA_KERNEL_PARAM(transformCache),
+				PX_CUDA_KERNEL_PARAM(contactDistance),
+				PX_CUDA_KERNEL_PARAM(materials),
+				PX_CUDA_KERNEL_PARAM(cmPersistentMultiManifolds),
+				PX_CUDA_KERNEL_PARAM(mContactStream),
+				PX_CUDA_KERNEL_PARAM(mPatchStream),
+				PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
+				PX_CUDA_KERNEL_PARAM(touchLostFlags),
+				PX_CUDA_KERNEL_PARAM(touchFoundFlags),
+				PX_CUDA_KERNEL_PARAM(baseContactPatches),
+				PX_CUDA_KERNEL_PARAM(baseContactPoints),
+				PX_CUDA_KERNEL_PARAM(baseContactForces),
+				PX_CUDA_KERNEL_PARAM(patchBytesLimit),
+				PX_CUDA_KERNEL_PARAM(contactBytesLimit),
+				PX_CUDA_KERNEL_PARAM(forceBytesLimit),
+				PX_CUDA_KERNEL_PARAM(clusterBias),
+				PX_CUDA_KERNEL_PARAM(workOffset)
+			};
+			result = mCudaContext->launchKernel(triMeshPlaneKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			if (result != CUDA_SUCCESS)
+			{
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU trimeshPlaneNarrowphase fail to launch kernel!!\n");
+				break;
+			}
+		}
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(mStream);
@@ -1446,8 +1520,12 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 		};
 	
 		const PxU32 numBlocks = numTests;
-		//Each thread do one collision detection
-		result = mCudaContext->launchKernel(tritriKernelFunction, numBlocks, 1, 1, 1024, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const PxU32 meshMidphaseThreadsPerBlock = 256;
+		#else
+		const PxU32 meshMidphaseThreadsPerBlock = 1024;
+		#endif
+		result = mCudaContext->launchKernel(tritriKernelFunction, numBlocks, 1, 1, meshMidphaseThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleCollision fail to launch !!\n");
 
@@ -1465,15 +1543,77 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 	mIntermStackAlloc.mMutex.unlock();
 }
 
-static void fetchLostFoundPatchData(PxgGpuContactManagers& gpuContactManagers, PxPinnedArray<PxsContactManagerOutputCounts>& lostFoundPairsOutputData, 
-	PxPinnedArray<PxsContactManager*>& lostFoundPairsCms, PxCudaContext* cudaContext, CUstream stream, PxU32& touchChangeOffset, PxU32& patchChangeOffset)
+static bool validateLostFoundPairCounts(PxgGpuContactManagers& gpuContactManagers, const PxU32 numPairs, const char* passName, const bool diagnostic)
 {
+	uint2& counts = *gpuContactManagers.mLostAndTotalReportedPairsCountPinned;
+	const PxU64 requiredElements = PxU64(numPairs) * 2;
+	const bool countsValid = counts.x <= counts.y && PxU64(counts.y) <= requiredElements;
+	const bool buffersValid =
+		gpuContactManagers.mTempRunsumArray.getNbElements() >= requiredElements &&
+		gpuContactManagers.mTempRunsumArray2.getNbElements() >= requiredElements &&
+		gpuContactManagers.mLostFoundPairsOutputData.getNbElements() >= requiredElements &&
+		gpuContactManagers.mLostFoundPairsCms.getNbElements() >= requiredElements &&
+		gpuContactManagers.mCpuContactManagerMapping.getNbElements() >= numPairs;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (diagnostic || !countsValid || !buffersValid)
+	{
+		std::fprintf(stderr,
+			"[DCU NP COMPACT COUNT] bucket=%u pass=%s pairs=%u touch=%u total=%u limit=%llu capacities=(flags=%llu scan=%llu out=%llu cms=%llu mapping=%llu) valid=(count=%u buffers=%u)\n",
+			gpuContactManagers.mBucketIndex, passName, numPairs, counts.x, counts.y,
+			static_cast<unsigned long long>(requiredElements),
+			static_cast<unsigned long long>(gpuContactManagers.mTempRunsumArray.getNbElements()),
+			static_cast<unsigned long long>(gpuContactManagers.mTempRunsumArray2.getNbElements()),
+			static_cast<unsigned long long>(gpuContactManagers.mLostFoundPairsOutputData.getNbElements()),
+			static_cast<unsigned long long>(gpuContactManagers.mLostFoundPairsCms.getNbElements()),
+			static_cast<unsigned long long>(gpuContactManagers.mCpuContactManagerMapping.getNbElements()),
+			countsValid ? 1u : 0u, buffersValid ? 1u : 0u);
+	}
+#else
+	PX_UNUSED(passName);
+	PX_UNUSED(diagnostic);
+#endif
+
+	if (!countsValid || !buffersValid)
+	{
+		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+			"GPU lost/found compact produced invalid counts or used undersized buffers; dropping compacted events for this bucket.\n");
+		counts.x = 0;
+		counts.y = 0;
+		return false;
+	}
+
+	return true;
+}
+
+static void fetchLostFoundPatchData(PxgGpuContactManagers& gpuContactManagers, const PxU32 numPairs,
+	PxPinnedArray<PxsContactManagerOutputCounts>& lostFoundPairsOutputData, PxPinnedArray<PxsContactManager*>& lostFoundPairsCms,
+	PxCudaContext* cudaContext, CUstream stream, PxU32& touchChangeOffset, PxU32& patchChangeOffset)
+{
+	uint2& counts = *gpuContactManagers.mLostAndTotalReportedPairsCountPinned;
+	if (counts.x > counts.y || PxU64(counts.y) > PxU64(numPairs) * 2)
+	{
+		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+			"GPU lost/found compact count changed to an invalid value before fetch; dropping compacted events for this bucket.\n");
+		counts.x = 0;
+		counts.y = 0;
+		return;
+	}
+
 	if (gpuContactManagers.mLostAndTotalReportedPairsCountPinned->x)
 	{
 		const PxU32 count = gpuContactManagers.mLostAndTotalReportedPairsCountPinned->x;
 
 		PX_ASSERT(lostFoundPairsOutputData.size() >= (touchChangeOffset + count));
 		PX_ASSERT(lostFoundPairsCms.size() >= touchChangeOffset + count);
+		if (PxU64(touchChangeOffset) + count > lostFoundPairsOutputData.size() || PxU64(touchChangeOffset) + count > lostFoundPairsCms.size())
+		{
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+				"GPU lost/found touch result exceeds the host destination array; dropping compacted events for this bucket.\n");
+			counts.x = 0;
+			counts.y = 0;
+			return;
+		}
 
 		PxsContactManagerOutputCounts* p = &lostFoundPairsOutputData[touchChangeOffset];
 		PxsContactManager** p2 = &lostFoundPairsCms[touchChangeOffset];
@@ -1496,6 +1636,13 @@ static void fetchLostFoundPatchData(PxgGpuContactManagers& gpuContactManagers, P
 	{
 		PX_ASSERT(lostFoundPairsOutputData.size() >= patchChangeOffset);
 		PX_ASSERT(lostFoundPairsCms.size() >= patchChangeOffset);
+		if (PxU64(patchChangeOffset) + count > lostFoundPairsOutputData.size() || PxU64(patchChangeOffset) + count > lostFoundPairsCms.size())
+		{
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+				"GPU lost/found patch result exceeds the host destination array; dropping patch events for this bucket.\n");
+			counts.y = counts.x;
+			return;
+		}
 
 		PxsContactManagerOutputCounts* p = &lostFoundPairsOutputData[patchChangeOffset];
 		PxsContactManager** p2 = &lostFoundPairsCms[patchChangeOffset];
@@ -1536,6 +1683,12 @@ void PxgGpuNarrowphaseCore::fetchNarrowPhaseResults(
 	)
 {
 	PX_PROFILE_ZONE("GpuNarrowPhase.fetchGpuNarrowPhaseResults", 0);
+	const bool compactDiag =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#else
+		false;
+#endif
 
 	PxU32 numTests = 0;
 	for (PxU32 i = GPU_BUCKET_ID::eConvex; i < GPU_BUCKET_ID::eCount; ++i)
@@ -1626,6 +1779,69 @@ void PxgGpuNarrowphaseCore::fetchNarrowPhaseResults(
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "Synchronizing GPU Narrowphase failed! %d\n", result);
 		}	
 
+		for (PxU32 i = GPU_BUCKET_ID::eConvex; i < GPU_BUCKET_ID::eCount; ++i)
+		{
+			validateLostFoundPairCounts(mGpuContactManagers[i]->mContactManagers,
+				mContactManagers[i]->getNbFirstPassTests(), "existing", compactDiag);
+			validateLostFoundPairCounts(mGpuContactManagers[i]->mNewContactManagers,
+				mContactManagers[i]->getNbSecondPassTests(), "new", compactDiag);
+		}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (std::getenv("PX_DCU_NP_OUTPUT_DIAG"))
+		{
+			PxcDataStreamPool& frictionStreamPool = mGpuContext->getFrictionPatchStreamPool();
+			const uintptr_t patchBase = reinterpret_cast<uintptr_t>(patchStreamPool->mDataStream);
+			const uintptr_t contactBase = reinterpret_cast<uintptr_t>(contactStreamPool->mDataStream);
+			const uintptr_t forceBase = reinterpret_cast<uintptr_t>(forceStreamPool->mDataStream);
+			const uintptr_t frictionBase = reinterpret_cast<uintptr_t>(frictionStreamPool.mDataStream);
+			const void* patchDeviceBase = getMappedDeviceConstPtr(mCudaContext, patchStreamPool->mDataStream);
+			const void* contactDeviceBase = getMappedDeviceConstPtr(mCudaContext, contactStreamPool->mDataStream);
+			const void* forceDeviceBase = getMappedDeviceConstPtr(mCudaContext, forceStreamPool->mDataStream);
+			const void* frictionDeviceBase = getMappedDeviceConstPtr(mCudaContext, frictionStreamPool.mDataStream);
+
+			std::fprintf(stderr,
+				"[DCU NP OUTPUT] count=%u fallback=%u counters=(patch=%u contact=%u force=%u)\n",
+				numTests, nbFallbackPairs, mPatchAndContactCountersReadback->patchesBytes,
+				mPatchAndContactCountersReadback->contactsBytes, mPatchAndContactCountersReadback->forceAndIndiceBytes);
+			std::fprintf(stderr,
+				"[DCU NP STREAM] patch host=%p device=%p size=%u contact host=%p device=%p size=%u force host=%p device=%p size=%u friction host=%p device=%p size=%u\n",
+				static_cast<void*>(patchStreamPool->mDataStream), patchDeviceBase, patchStreamPool->mDataStreamSize,
+				static_cast<void*>(contactStreamPool->mDataStream), contactDeviceBase, contactStreamPool->mDataStreamSize,
+				static_cast<void*>(forceStreamPool->mDataStream), forceDeviceBase, forceStreamPool->mDataStreamSize,
+				static_cast<void*>(frictionStreamPool.mDataStream), frictionDeviceBase, frictionStreamPool.mDataStreamSize);
+
+			for (PxU32 index = 0; index < numTests; ++index)
+			{
+				const PxsContactManagerOutput& output = contactManagerOutputs[nbFallbackPairs + index];
+				const uintptr_t patchAddress = reinterpret_cast<uintptr_t>(output.contactPatches);
+				const uintptr_t contactAddress = reinterpret_cast<uintptr_t>(output.contactPoints);
+				const uintptr_t forceAddress = reinterpret_cast<uintptr_t>(output.contactForces);
+				const uintptr_t frictionAddress = reinterpret_cast<uintptr_t>(output.frictionPatches);
+				const bool patchValid = output.nbPatches == 0 ||
+					(patchAddress >= patchBase && patchAddress - patchBase <= patchStreamPool->mDataStreamSize &&
+					PxU64(output.nbPatches) * sizeof(PxContactPatch) <= patchStreamPool->mDataStreamSize - (patchAddress - patchBase));
+				const bool contactValid = output.nbContacts == 0 ||
+					(contactAddress >= contactBase && contactAddress - contactBase <= contactStreamPool->mDataStreamSize &&
+					PxU64(output.nbContacts) * sizeof(PxContact) <= contactStreamPool->mDataStreamSize - (contactAddress - contactBase));
+				const bool forceValid = output.nbContacts == 0 ||
+					(forceAddress >= forceBase && forceAddress - forceBase <= forceStreamPool->mDataStreamSize &&
+					PxU64(output.nbContacts) * sizeof(PxReal) <= forceStreamPool->mDataStreamSize - (forceAddress - forceBase));
+				const bool frictionValid = output.nbPatches == 0 ||
+					(frictionAddress >= frictionBase && frictionAddress - frictionBase <= frictionStreamPool.mDataStreamSize &&
+					PxU64(output.nbPatches) * sizeof(PxFrictionPatch) <= frictionStreamPool.mDataStreamSize - (frictionAddress - frictionBase));
+
+				std::fprintf(stderr,
+					"[DCU NP OUTPUT %u] patches=%u contacts=%u status=%u flags=%u patch=%p(%u) contact=%p(%u) force=%p(%u) friction=%p(%u)\n",
+					index, output.nbPatches, output.nbContacts, output.statusFlag, output.flags,
+					static_cast<void*>(output.contactPatches), patchValid ? 1u : 0u,
+					static_cast<void*>(output.contactPoints), contactValid ? 1u : 0u,
+					static_cast<void*>(output.contactForces), forceValid ? 1u : 0u,
+					static_cast<void*>(output.frictionPatches), frictionValid ? 1u : 0u);
+			}
+		}
+#endif
+
 		PxU32 err = mPatchAndContactCountersReadback->getOverflowError();
 		if (err)
 		{
@@ -1693,8 +1909,10 @@ void PxgGpuNarrowphaseCore::fetchNarrowPhaseResults(
 		// we are doing DtoH copies in here.
 		for (PxU32 i = GPU_BUCKET_ID::eConvex; i < GPU_BUCKET_ID::eCount; ++i)
 		{
-			fetchLostFoundPatchData(mGpuContactManagers[i]->mContactManagers, mLostFoundPairsOutputData, mLostFoundPairsCms, mCudaContext, mStream, touchChangeOffset, patchChangeOffset);
-			fetchLostFoundPatchData(mGpuContactManagers[i]->mNewContactManagers, mLostFoundPairsOutputData, mLostFoundPairsCms, mCudaContext, mStream, touchChangeOffset, patchChangeOffset);
+			fetchLostFoundPatchData(mGpuContactManagers[i]->mContactManagers, mContactManagers[i]->getNbFirstPassTests(),
+				mLostFoundPairsOutputData, mLostFoundPairsCms, mCudaContext, mStream, touchChangeOffset, patchChangeOffset);
+			fetchLostFoundPatchData(mGpuContactManagers[i]->mNewContactManagers, mContactManagers[i]->getNbSecondPassTests(),
+				mLostFoundPairsOutputData, mLostFoundPairsCms, mCudaContext, mStream, touchChangeOffset, patchChangeOffset);
 		}
 
 		// now we have touchChangeOffset holding the number of lost/found changes,
@@ -1736,6 +1954,24 @@ void PxgGpuNarrowphaseCore::fetchNarrowPhaseResults(
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "Fetching GPU Narrowphase failed! %d\n", result);
 		}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (compactDiag)
+		{
+			std::fprintf(stderr,
+				"[DCU NP FETCH DONE] pairs=%u patches=%u storage=%u touchOffset=%u patchOffset=%u fallbackPatches=%u\n",
+				mTotalLostFoundPairs, mTotalLostFoundPatches, mLostFoundPairsCms.size(),
+				touchChangeOffset, patchChangeOffset, nbFoundPatchManagersFallback);
+			for (PxU32 index = 0; index < mLostFoundPairsCms.size(); ++index)
+			{
+				const PxsContactManagerOutputCounts& output = mLostFoundPairsOutputData[index];
+				std::fprintf(stderr,
+					"[DCU NP FETCH ITEM %u] cm=%p patches=%u prev=%u status=%u\n",
+					index, static_cast<void*>(mLostFoundPairsCms[index]), output.nbPatches,
+					output.prevPatches, output.statusFlag);
+			}
+		}
+#endif
 		
 		//KS - no need for atomics - we now fetch all results at once!
 		//FD: if there is an overflow, the counter value may exceed the limit, though the contacts\patches should be dropped
@@ -7214,10 +7450,31 @@ void PxgGpuNarrowphaseCore::updateFrictionPatches(PxgGpuContactManagers& gpuMana
 	PxScopedCudaLock lock(*mCudaContextManager);
 
 	PxsContactManagerOutput* cmOutputs = reinterpret_cast<PxsContactManagerOutput*>(gpuManagers.mContactManagerOutputData.getDevicePtr());
+	PxU32 diagnosticMode = 0;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const char* diagnostic = std::getenv("PX_DCU_FRICTION_DIAG");
+	if (diagnostic && !std::strcmp(diagnostic, "skip"))
+	{
+		std::fprintf(stderr, "[DCU FRICTION] skipping updateFrictionPatches count=%u contactBase=%p frictionBase=%p outputs=%p\n",
+			count, static_cast<void*>(baseContactPatches), static_cast<void*>(baseFrictionPatches), static_cast<void*>(cmOutputs));
+		return;
+	}
+	if (diagnostic && !std::strcmp(diagnostic, "null"))
+		diagnosticMode = 1;
+	else if (diagnostic && !std::strcmp(diagnostic, "noop"))
+		diagnosticMode = 2;
+#endif
 
 	CUresult result;
 	{
 		CUfunction kernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::UPDATE_FRICTION_PATCHES);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (diagnostic)
+			std::fprintf(stderr, "[DCU FRICTION] mode=%s function=%p count=%u contactBase=%p frictionBase=%p outputs=%p\n",
+				diagnostic, reinterpret_cast<void*>(kernelFunction), count, static_cast<void*>(baseContactPatches), static_cast<void*>(baseFrictionPatches), static_cast<void*>(cmOutputs));
+#endif
 
 		PxCudaKernelParam kernelParams_stage[] =
 		{
@@ -7225,6 +7482,7 @@ void PxgGpuNarrowphaseCore::updateFrictionPatches(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM((baseContactPatches)),
 			PX_CUDA_KERNEL_PARAM((baseFrictionPatches)),
 			PX_CUDA_KERNEL_PARAM(cmOutputs),
+			PX_CUDA_KERNEL_PARAM(diagnosticMode),
 		};
 
 		const PxU32 numThreadsPerBlock = 256;

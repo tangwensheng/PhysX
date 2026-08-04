@@ -922,7 +922,10 @@ extern "C" __global__
 //__launch_bounds__(PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 16)
 void solveStaticBlock(
 	PxgSolverCoreDesc* PX_RESTRICT solverDesc, const PxgSolverSharedDesc<IterativeSolveData>* PX_RESTRICT sharedDesc,
-	const PxU32 islandIndex, const PxU32 nbStaticSlabs, const PxU32 maxStaticPartitions, bool doFriction)
+	const PxU32 islandIndex, const PxU32 nbStaticSlabs, const PxU32 maxStaticPartitions, bool doFriction,
+	const PxU32 diagnosticMode, const PxU32 blockConstraintBatchCount, const PxU32 contactHeaderCount,
+	const PxU32 frictionHeaderCount, const PxU32 contactPointCount, const PxU32 frictionPointCount,
+	const PxU32 solverBodyVelocityCount, const PxU32 tempStaticBodyOutputCount)
 {
 	const PxgIslandContext& island = solverDesc->islandContextPool[islandIndex];
 	const IterativeSolveData& iterativeData = sharedDesc->iterativeData;
@@ -957,7 +960,8 @@ void solveStaticBlock(
 	{
 		if (bodyIndex < numDynamicBodies)
 		{
-			PxU32 contactCount = PxMin(maxStaticPartitions, PxMax(startIndex, solverDesc->mRigidStaticContactCounts[bodyIndex]) - startIndex);
+			const PxU32 staticContactCount = solverDesc->mRigidStaticContactCounts[bodyIndex];
+			PxU32 contactCount = PxMin(maxStaticPartitions, PxMax(startIndex, staticContactCount) - startIndex);
 			PxU32 jointCount = PxMin(maxStaticPartitions, PxMax(startIndex, solverDesc->mRigidStaticJointCounts[bodyIndex]) - startIndex);
 
 			const PxU32 outputBody = slabIdx * totalBodiesIncKinematics * 2;
@@ -972,45 +976,108 @@ void solveStaticBlock(
 				const PxU32 startContactIndex = solverDesc->mRigidStaticContactStartIndices[bodyIndex] + startIndex;
 				const PxU32 startJointIndex = solverDesc->mRigidStaticJointStartIndices[bodyIndex] + startIndex;
 
-				assert(startContactIndex >= solverDesc->numBatches);
+				if (!diagnosticMode)
+					assert(startContactIndex >= solverDesc->numBatches);
 
 				const PxU32 inputBody = deltaVOffset + bodyIndex + bodyOffset;
+				const bool inputBodyValid = inputBody < solverBodyVelocityCount &&
+					inputBody + totalBodiesIncKinematics < solverBodyVelocityCount;
+				const bool outputBodyValid = bodyIndex + outputBody < tempStaticBodyOutputCount &&
+					bodyIndex + outputBody + totalBodiesIncKinematics < tempStaticBodyOutputCount;
 
-				//Load in velocity data...
-				float4 linVel = bodyVelocities[inputBody];
-				float4 angVel = bodyVelocities[inputBody + totalBodiesIncKinematics];
-
-				PxVec3 lv0(linVel.x, linVel.y, linVel.z);
-				PxVec3 lv1(0.f);
-				PxVec3 av0(angVel.x, angVel.y, angVel.z);
-				PxVec3 av1(0.f);
-
-				for (PxU32 i = 0; i < jointCount; ++i)
+				if (diagnosticMode)
 				{
-					const PxgBlockConstraintBatch& batch = iterativeData.blockConstraintBatch[startJointIndex + i];
-
-					assert(batch.constraintType == PxgSolverConstraintDesc::eCONSTRAINT_1D);
-
-					PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
-
-					// For interaction with static objects, mass-splitting is not used; thus, reference counts are 1.
-					solve1DBlock(batch, lv0, av0, lv1, av1, idx, iterativeData.blockJointConstraintHeaders, iterativeData.blockJointConstraintRowsCon,
-						iterativeData.blockJointConstraintRowsMod, solverDesc->contactErrorAccumulator.mCounter >= 0, 1.f, 1.f);
+					printf("[DCU SOLVER STATIC BODY] global=%u lane=%u body=%u slab=%u start=%u staticContacts=%u contacts=%u joints=%u startContact=%u startJoint=%u numBatches=%u input=%u output=%u bodyCaps=(%u,%u) valid=(%u,%u) ptrs=(batch=%p ch=%p fh=%p cp=%p fp=%p bv=%p bo=%p)\n",
+						globalThreadIdx, threadIndexInWarp, bodyIndex, slabIdx, startIndex, staticContactCount,
+						contactCount, jointCount, startContactIndex, startJointIndex, solverDesc->numBatches,
+						inputBody, bodyIndex + outputBody, solverBodyVelocityCount, tempStaticBodyOutputCount,
+						PxU32(inputBodyValid), PxU32(outputBodyValid), static_cast<void*>(iterativeData.blockConstraintBatch),
+						static_cast<void*>(iterativeData.blockContactHeaders), static_cast<void*>(iterativeData.blockFrictionHeaders),
+						static_cast<void*>(iterativeData.blockContactPoints), static_cast<void*>(iterativeData.blockFrictions),
+						static_cast<void*>(bodyVelocities), static_cast<void*>(bodyOutVelocities));
 				}
 
-				for (PxU32 i = 0; i < contactCount; ++i)
+				if (!diagnosticMode || (inputBodyValid && outputBodyValid))
 				{
-					const PxgBlockConstraintBatch& batch = iterativeData.blockConstraintBatch[startContactIndex + i];
+					//Load in velocity data...
+					float4 linVel = bodyVelocities[inputBody];
+					float4 angVel = bodyVelocities[inputBody + totalBodiesIncKinematics];
 
-					assert(batch.constraintType == PxgSolverConstraintDesc::eCONTACT);
+					PxVec3 lv0(linVel.x, linVel.y, linVel.z);
+					PxVec3 lv1(0.f);
+					PxVec3 av0(angVel.x, angVel.y, angVel.z);
+					PxVec3 av1(0.f);
 
-					PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
+					for (PxU32 i = 0; i < jointCount; ++i)
+					{
+						const PxgBlockConstraintBatch& batch = iterativeData.blockConstraintBatch[startJointIndex + i];
 
-					// For interaction with static objects, mass-splitting is not used; thus, reference counts are 1.
-					solveContactBlock(batch, lv0, av0, lv1, av1, doFriction, idx, iterativeData.blockContactHeaders, iterativeData.blockFrictionHeaders,
-						iterativeData.blockContactPoints, iterativeData.blockFrictions, residualAccumulationEnabled ? &error : NULL, 
-						1.f, 1.f);
-				}
+						assert(batch.constraintType == PxgSolverConstraintDesc::eCONSTRAINT_1D);
+
+						PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
+
+						// For interaction with static objects, mass-splitting is not used; thus, reference counts are 1.
+						solve1DBlock(batch, lv0, av0, lv1, av1, idx, iterativeData.blockJointConstraintHeaders, iterativeData.blockJointConstraintRowsCon,
+							iterativeData.blockJointConstraintRowsMod, solverDesc->contactErrorAccumulator.mCounter >= 0, 1.f, 1.f);
+					}
+
+					for (PxU32 i = 0; i < contactCount; ++i)
+					{
+						const PxU32 batchIndex = startContactIndex + i;
+						if (diagnosticMode && batchIndex >= blockConstraintBatchCount)
+						{
+							printf("[DCU SOLVER STATIC BATCH OOB] global=%u lane=%u body=%u batch=%u batchCap=%u startContact=%u i=%u contactCount=%u\n",
+								globalThreadIdx, threadIndexInWarp, bodyIndex, batchIndex, blockConstraintBatchCount,
+								startContactIndex, i, contactCount);
+							continue;
+						}
+
+						const PxgBlockConstraintBatch& batch = iterativeData.blockConstraintBatch[batchIndex];
+
+						if (!diagnosticMode)
+							assert(batch.constraintType == PxgSolverConstraintDesc::eCONTACT);
+
+						PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
+						const bool maskHasLane = (batch.mask & (PxU32(1) << threadIndexInWarp)) != 0;
+						const bool batchMetadataValid = maskHasLane && batch.mDescStride > 0 && idx < batch.mDescStride &&
+							batch.constraintType == PxgSolverConstraintDesc::eCONTACT &&
+							batch.mConstraintBatchIndex < contactHeaderCount &&
+							batch.mConstraintBatchIndex < frictionHeaderCount &&
+							batch.startConstraintIndex < contactPointCount;
+
+						PxU32 numNormalConstr = 0;
+						PxU32 numFrictionConstr = 0;
+						bool contactRangeValid = false;
+						bool frictionRangeValid = false;
+						if (batchMetadataValid)
+						{
+							numNormalConstr = iterativeData.blockContactHeaders[batch.mConstraintBatchIndex].numNormalConstr[idx];
+							numFrictionConstr = iterativeData.blockFrictionHeaders[batch.mConstraintBatchIndex].numFrictionConstr[idx];
+							contactRangeValid = numNormalConstr <= contactPointCount - batch.startConstraintIndex;
+							frictionRangeValid = !doFriction || numFrictionConstr == 0 ||
+								(batch.startFrictionIndex < frictionPointCount &&
+								numFrictionConstr <= frictionPointCount - batch.startFrictionIndex);
+						}
+
+						if (diagnosticMode)
+						{
+							printf("[DCU SOLVER STATIC BATCH] global=%u lane=%u body=%u batch=%u/%u mask=0x%08x hasLane=%u idx=%u stride=%u type=%u header=%u starts=(%u,%u) caps=(h%u fh%u c%u f%u) counts=(%u,%u) valid=(meta%u contact%u friction%u)\n",
+								globalThreadIdx, threadIndexInWarp, bodyIndex, batchIndex, blockConstraintBatchCount,
+								batch.mask, PxU32(maskHasLane), idx, PxU32(batch.mDescStride), PxU32(batch.constraintType),
+								batch.mConstraintBatchIndex, batch.startConstraintIndex, batch.startFrictionIndex,
+								contactHeaderCount, frictionHeaderCount, contactPointCount, frictionPointCount,
+								numNormalConstr, numFrictionConstr, PxU32(batchMetadataValid),
+								PxU32(contactRangeValid), PxU32(frictionRangeValid));
+						}
+
+						if (diagnosticMode && (!batchMetadataValid || !contactRangeValid || !frictionRangeValid))
+							continue;
+
+						// For interaction with static objects, mass-splitting is not used; thus, reference counts are 1.
+						solveContactBlock(batch, lv0, av0, lv1, av1, doFriction, idx, iterativeData.blockContactHeaders, iterativeData.blockFrictionHeaders,
+							iterativeData.blockContactPoints, iterativeData.blockFrictions, residualAccumulationEnabled ? &error : NULL,
+							1.f, 1.f);
+					}
 
 				//if (globalThreadIdx == 33)
 				////if(startContactIndex == (solverDesc->numBatches))
@@ -1020,15 +1087,16 @@ void solveStaticBlock(
 				//		globalThreadIdx, contactCount, linVel.x, linVel.y, linVel.z, lv0.x, lv0.y, lv0.z, lv1.x, lv1.y, lv1.z, av1.x, av1.y, av1.z, startContactIndex, solverDesc->numBatches);
 				//}
 
-				linVel.x = lv0.x; linVel.y = lv0.y; linVel.z = lv0.z;
-				angVel.x = av0.x; angVel.y = av0.y; angVel.z = av0.z;
+					linVel.x = lv0.x; linVel.y = lv0.y; linVel.z = lv0.z;
+					angVel.x = av0.x; angVel.y = av0.y; angVel.z = av0.z;
 
 				/*printf("%i: BodyOutVelocities[%i] = (%f, %f, %f, %f), bodyOutVelocities[%i] = (%f, %f, %f, %f)\n",
 					globalThreadIdx, bodyIndex + outputBody, linVel.x, linVel.y, linVel.z, linVel.w,
 					bodyIndex + outputBody + totalBodiesIncKinematics, angVel.x, angVel.y, angVel.z, angVel.w);*/
 
-				bodyOutVelocities[bodyIndex + outputBody] = linVel;
-				bodyOutVelocities[bodyIndex + outputBody + totalBodiesIncKinematics] = angVel;
+					bodyOutVelocities[bodyIndex + outputBody] = linVel;
+					bodyOutVelocities[bodyIndex + outputBody + totalBodiesIncKinematics] = angVel;
+				}
 
 			}
 		}

@@ -1544,6 +1544,36 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 															PxU32 numPairs,
 															PxsContactManager** PX_RESTRICT contactManagerArray)
 {
+#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+	if (numPairs <= 256)
+	{
+		if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+		{
+			PxU32 outputCount = 0;
+			lostAndTotalReportedPairsCount->x = 0;
+
+			for (PxU32 idx = 0; idx < 2 * numPairs; ++idx)
+			{
+				if (idx == numPairs)
+					lostAndTotalReportedPairsCount->x = outputCount;
+
+				if (inputFlagsArray[idx])
+				{
+					const PxU32 index = idx % numPairs;
+					compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+					compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+					compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+					outputManagersPtrs[outputCount] = contactManagerArray[index];
+					++outputCount;
+				}
+			}
+
+			lostAndTotalReportedPairsCount->y = outputCount;
+		}
+		return;
+	}
+#endif
+
 	ReadArrayFunctor<PxU32> readF(tempRunsumArray);
 	CompactContactManagersFunctor contactF(inputFlagsArray,
 											allOutputManagers,
@@ -3233,4 +3263,3 @@ extern "C" __global__ void convexPlaneNphase_Kernel(
 		forceBytesLimit,
 		toleranceLength);
 }
-

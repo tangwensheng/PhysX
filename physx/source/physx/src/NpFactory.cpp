@@ -467,32 +467,56 @@ PxParticleBuffer* NpFactory::createParticleBuffer(PxU32 maxParticles, PxU32 maxV
 {
 	PxMutex::ScopedLock lock(mParticleBufferPoolLock);
 	PxParticleBuffer* buffer = mParticleBufferPool.construct(maxParticles, maxVolumes, cudaContextManager);
-	addParticleBuffer(buffer);
-	return buffer;
+	if(static_cast<NpParticleBuffer*>(buffer)->getLowLevelParticleBuffer())
+	{
+		addParticleBuffer(buffer);
+		static_cast<NpParticleBuffer*>(buffer)->markAsTracked();
+		return buffer;
+	}
+	mParticleBufferPool.destroy(static_cast<NpParticleBuffer*>(buffer));
+	return NULL;
 }
 
 PxParticleAndDiffuseBuffer* NpFactory::createParticleAndDiffuseBuffer(PxU32 maxParticles, PxU32 maxVolumes, PxU32 maxDiffuseParticles, PxCudaContextManager& cudaContextManager)
 {
 	PxMutex::ScopedLock lock(mParticleAndDiffuseBufferPoolLock);
 	PxParticleAndDiffuseBuffer* buffer = mParticleAndDiffuseBufferPool.construct(maxParticles, maxVolumes, maxDiffuseParticles, cudaContextManager);
-	addParticleBuffer(buffer);
-	return buffer;
+	if(static_cast<NpParticleAndDiffuseBuffer*>(buffer)->getLowLevelParticleBuffer())
+	{
+		addParticleBuffer(buffer);
+		static_cast<NpParticleAndDiffuseBuffer*>(buffer)->markAsTracked();
+		return buffer;
+	}
+	mParticleAndDiffuseBufferPool.destroy(static_cast<NpParticleAndDiffuseBuffer*>(buffer));
+	return NULL;
 }
 
 PxParticleClothBuffer* NpFactory::createParticleClothBuffer(PxU32 maxParticles, PxU32 maxNumVolumes, PxU32 maxNumCloths, PxU32 maxNumTriangles, PxU32 maxNumSprings, PxCudaContextManager& cudaContextManager)
 {
 	PxMutex::ScopedLock lock(mParticleClothBufferPoolLock);
 	PxParticleClothBuffer* buffer = mParticleClothBufferPool.construct(maxParticles, maxNumVolumes, maxNumCloths, maxNumTriangles, maxNumSprings, cudaContextManager);
-	addParticleBuffer(buffer);
-	return buffer;
+	if(static_cast<NpParticleClothBuffer*>(buffer)->getLowLevelParticleBuffer())
+	{
+		addParticleBuffer(buffer);
+		static_cast<NpParticleClothBuffer*>(buffer)->markAsTracked();
+		return buffer;
+	}
+	mParticleClothBufferPool.destroy(static_cast<NpParticleClothBuffer*>(buffer));
+	return NULL;
 }
 
 PxParticleRigidBuffer* NpFactory::createParticleRigidBuffer(PxU32 maxParticles, PxU32 maxNumVolumes, PxU32 maxNumRigids, PxCudaContextManager& cudaContextManager)
 {
 	PxMutex::ScopedLock lock(mParticleRigidBufferPoolLock);
 	PxParticleRigidBuffer* buffer = mParticleRigidBufferPool.construct(maxParticles, maxNumVolumes, maxNumRigids, cudaContextManager);
-	addParticleBuffer(buffer);
-	return buffer;
+	if(static_cast<NpParticleRigidBuffer*>(buffer)->getLowLevelParticleBuffer())
+	{
+		addParticleBuffer(buffer);
+		static_cast<NpParticleRigidBuffer*>(buffer)->markAsTracked();
+		return buffer;
+	}
+	mParticleRigidBufferPool.destroy(static_cast<NpParticleRigidBuffer*>(buffer));
+	return NULL;
 }
 
 void NpFactory::addParticleBuffer(PxParticleBuffer* buffer, bool lock)

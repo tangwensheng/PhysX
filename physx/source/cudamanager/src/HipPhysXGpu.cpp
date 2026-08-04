@@ -19,6 +19,7 @@
 #include "PxgNphaseImplementationContext.h"
 #include "PxgSimulationController.h"
 #include "PxgDynamicsContext.h"
+#include "PxgTGSDynamicsContext.h"
 #include "PxgBroadPhase.h"
 #include "PxgCommon.h"
 #include "PxgNarrowphase.h"
@@ -180,7 +181,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 			collisionStackSizeBytes, enableBodyAccelerations);
 	}
 
-	// ---- GPU Dynamics Context (PGS only for now) ----
+	// ---- GPU Dynamics Context ----
 	Dy::Context* createGpuDynamicsContext(
 		Cm::FlushPool& taskPool, PxsKernelWranglerManager* gpuKernelWrangler,
 		PxCudaContextManager* cudaContextManager, const PxGpuDynamicsMemoryConfig& config,
@@ -196,9 +197,17 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		DCU_TRACE("createGpuDynamicsContext solverType=%d", (int)solverType);
 		if(solverType == PxSolverType::eTGS)
 		{
-			(void)externalForcesEveryTgsIterationEnabled;
-			return nullptr;   // TGS not yet compiled for DCU
+			return PX_PLACEMENT_NEW(
+				PX_ALLOC(sizeof(PxgTGSDynamicsContext), "PxgTGSDynamicsContext"),
+				PxgTGSDynamicsContext)(taskPool, gpuKernelWrangler, cudaContextManager,
+				config, islandManager, maxNumPartitions, maxNumStaticPartitions,
+				enableStabilization, useEnhancedDeterminism,
+				solveArticulationContactLast, maxBiasCoefficient,
+				simStats, static_cast<PxgHeapMemoryAllocatorManager*>(heapMemoryManager),
+				externalForcesEveryTgsIterationEnabled, lengthScale, enableDirectGPUAPI,
+				contextID, isResidualReportingEnabled);
 		}
+
 		return PX_PLACEMENT_NEW(
 			PX_ALLOC(sizeof(PxgDynamicsContext), "PxgDynamicsContext"),
 			PxgDynamicsContext)(taskPool, gpuKernelWrangler, cudaContextManager,

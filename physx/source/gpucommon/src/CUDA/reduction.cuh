@@ -449,8 +449,21 @@ static __device__ void scanKernel2of2(
 
 	__shared__ T blockAccum[gridSize];
 
+#if defined(__HIPCC__)
+	if (threadIdx.x == 0 && threadIdx.y == 0)
+	{
+		T accumulation = OP::defaultValue();
+		for (PxU32 i = 0; i < gridSize; ++i)
+		{
+			blockAccum[i] = accumulation;
+			accumulation = OP::op(accumulation, crossBlockTotalAccumulator[i]);
+		}
+
+		if (blockIdx.x == 0)
+			writeTotalF(accumulation);
+	}
+#else
 	const PxU32 threadIndexInWarp = threadIdx.x;
-	
 
 	if (threadIdx.y == 0)
 	{
@@ -470,6 +483,7 @@ static __device__ void scanKernel2of2(
 			writeTotalF(OP::op(val, res));
 		}
 	}
+#endif
 
 	__syncthreads();
 

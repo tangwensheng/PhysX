@@ -56,7 +56,14 @@ struct PxgBPKernelBlockDim
 		BP_OUTPUT_REGION_HISTOGRAM				= 256, 
 
 		BP_WRITEOUT_ACTIVE_HISTOGRAM			= 256,
+#if defined(PX_DCU_PORT)
+		// DCU builds currently compile this kernel with a 256-thread launch bound.
+		// Launching the CUDA default 512-thread block trips the HIP runtime before
+		// the broadphase can run, so keep the DCU block size within the bound.
+		BP_COMPUTE_ACTIVE_HISTOGRAM				= 256,
+#else
 		BP_COMPUTE_ACTIVE_HISTOGRAM				= 512,
+#endif
 		BP_OUTPUT_ACTIVE_HISTOGRAM				= 256,
 
 		BP_COMPUTE_OVERLAPCHECKS_HISTOGRAM		= 256,

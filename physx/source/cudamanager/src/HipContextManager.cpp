@@ -1,6 +1,7 @@
 // HipContextManager — full HIP PxCudaContext / PxCudaContextManager for DCU
 #include <hip/hip_runtime.h>
 #include <cstring>
+#include <cstdlib>
 #include <cstdio>
 #include <dlfcn.h>
 #include "foundation/PxPreprocessor.h"
@@ -156,23 +157,39 @@ public:
     PxCUresult launchKernel(CUfunction f,
         unsigned gx,unsigned gy,unsigned gz, unsigned bx,unsigned by,unsigned bz,
         unsigned sh, CUstream s, PxCudaKernelParam* p, size_t ps, void** ex,
-        const char*, int) override
+        const char* name, int line) override
     {
         if(mAbort) return PxCUresult(mLast);
         void* kp[32]; int n=(int)(ps/sizeof(PxCudaKernelParam));
         for(int i=0;i<n&&i<32;i++) kp[i]=p[i].data;
         mKernelCount++;
+        if(std::getenv("PX_DCU_TRACE_KERNELS"))
+            fprintf(stderr, "[DCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u paramBytes=%zu\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, ps);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,kp,ex);
+        if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
+        {
+            mLast = hipStreamSynchronize((hipStream_t)s);
+            if(mLast != hipSuccess)
+                fprintf(stderr, "[DCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
+        }
         return PxCUresult(mLast);
     }
 
     PxCUresult launchKernel(CUfunction f,
         PxU32 gx,PxU32 gy,PxU32 gz, PxU32 bx,PxU32 by,PxU32 bz,
-        PxU32 sh, CUstream s, void** params, void** ex, const char*, int) override
+        PxU32 sh, CUstream s, void** params, void** ex, const char* name, int line) override
     {
         if(mAbort) return PxCUresult(mLast);
         mKernelCount++;
+        if(std::getenv("PX_DCU_TRACE_KERNELS"))
+            fprintf(stderr, "[DCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u params=%p\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, params);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,params,ex);
+        if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
+        {
+            mLast = hipStreamSynchronize((hipStream_t)s);
+            if(mLast != hipSuccess)
+                fprintf(stderr, "[DCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
+        }
         return PxCUresult(mLast);
     }
 

@@ -85,9 +85,10 @@ namespace physx
 		, mGpuBuffer(NULL)
 		, mParticleSystem(NULL) 
 		, mBufferIndex(0xffffffff)
+		, mIsTracked(false)
 		{}
 
-		virtual ~NpParticleBufferBase() PX_OVERRIDE { NpFactory::getInstance().onParticleBufferRelease(this); }
+		virtual ~NpParticleBufferBase() PX_OVERRIDE { if(mIsTracked) NpFactory::getInstance().onParticleBufferRelease(this); }
 
 		virtual PxVec4* getPositionInvMasses() const PX_OVERRIDE PX_FINAL
 		{
@@ -174,9 +175,20 @@ namespace physx
 			mGpuBuffer->allocHostBuffers();
 		}
 
+		PxsParticleBuffer* getLowLevelParticleBuffer() const
+		{
+			return mGpuBuffer;
+		}
+
+		void markAsTracked()
+		{
+			mIsTracked = true;
+		}
+
 		PxsParticleBuffer*		mGpuBuffer;
 		NpPBDParticleSystem*	mParticleSystem;
 		PxU32					mBufferIndex;
+		bool					mIsTracked;
 	};
 
 	class NpParticleBuffer : public NpParticleBufferBase<PxParticleBuffer>
