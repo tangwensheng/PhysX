@@ -920,8 +920,7 @@ namespace physx
 
 			//update duplicate verts
 			{
-				//each block has 1024 threads
-				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
+				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::CLOTH;
 				const PxU32 numBlocks = (maxSprings + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
 				PxCudaKernelParam kernelParams[] =
@@ -934,7 +933,8 @@ namespace physx
 
 				CUresult result = mCudaContext->launchKernel(updateRemapKernel, numBlocks, mMaxClothBuffersPerSystem, nbActiveParticleSystems, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_initializeSpringsLaunch kernel launch failed: %d\n", result);
 
 
 #if PS_GPU_DEBUG
@@ -959,8 +959,7 @@ namespace physx
 		{
 			//update duplicate verts
 			{
-				//each block has 1024 threads
-				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
+				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::CLOTH;
 
 				const PxU32 numBlocks = (maxSprings * 2 + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
@@ -974,7 +973,8 @@ namespace physx
 
 				CUresult result = mCudaContext->launchKernel(updateRemapKernel, numBlocks, mMaxClothBuffersPerSystem, nbActiveParticleSystems, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_updateRemapVertsLaunch kernel launch failed: %d\n", result);
 
 
 #if PS_GPU_DEBUG
@@ -994,7 +994,7 @@ namespace physx
 
 				const PxU32 maxPartitions = getMaxSpringPartitionsPerBuffer();
 				const PxU32 maxSpringsPerPartitions = getMaxSpringsPerPartitionPerBuffer();
-				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA;
+				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::CLOTH;
 				const PxU32 numBlocks = (maxSpringsPerPartitions + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
 				for (PxU32 i = 0; i < maxPartitions; ++i)
@@ -1013,7 +1013,8 @@ namespace physx
 
 					CUresult result = mCudaContext->launchKernel(solveSpringKernel, numBlocks, mMaxClothBuffersPerSystem, nbActiveParticleSystems, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 					PX_ASSERT(result == CUDA_SUCCESS);
-					PX_UNUSED(result);
+					if (result != CUDA_SUCCESS)
+						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_solveSpringsLaunch kernel launch failed: %d\n", result);
 
 
 #if PS_GPU_DEBUG
@@ -1031,8 +1032,7 @@ namespace physx
 			//compute average verts and update sorted positions
 			{
 
-				//each block has 1024 threads
-				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
+				const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::CLOTH;
 				const PxU32 numBlocks = (maxParticles + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
 				PxCudaKernelParam kernelParams[] =
@@ -1048,7 +1048,8 @@ namespace physx
 			        computeAverageKernel, numBlocks, mMaxClothBuffersPerSystem, nbActiveParticleSystems,
 			        numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_averageVertsLaunch kernel launch failed: %d\n", result);
 
 
 #if PS_GPU_DEBUG

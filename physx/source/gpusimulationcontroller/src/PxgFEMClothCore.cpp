@@ -126,7 +126,9 @@ namespace physx
 	void PxgFEMClothCore::preIntegrateSystems(PxU32 nbActiveFEMCloths, const PxVec3& gravity, PxReal dt)
 	{
 		// integrateSystems run on the broad phase stream so we don't need to have an extra event to sync in updateBounds
-		CUstream bpStream = mGpuContext->mGpuBp->getBpStream();
+		CUstream bpStream = 0;
+		if(mGpuContext->mGpuBp)
+			bpStream = mGpuContext->mGpuBp->getBpStream();
 		PxgSimulationCore* core = mSimController->getSimulationCore();
 
 		PxgCudaBuffer& femClothsBuffer = core->getFEMClothBuffer();
@@ -646,7 +648,8 @@ namespace physx
 			CUfunction updateValidityKernelFunction =
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_UPDATE_CLOTH_CONTACT_VALIDITY);
 
-			const PxU32 numBlocks = (maxClothVerts + PxgFEMClothKernelBlockDim::CLOTH_STEP - 1) / PxgFEMClothKernelBlockDim::CLOTH_STEP;
+			const PxU32 contactValidityBlockDim = 256;
+			const PxU32 numBlocks = (maxClothVerts + contactValidityBlockDim - 1) / contactValidityBlockDim;
 
 			{
 				PxCudaKernelParam kernelParams[] = { PX_CUDA_KERNEL_PARAM(femClothsd),
@@ -659,8 +662,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(dt) };
 
 				CUresult result = mCudaContext->launchKernel(updateValidityKernelFunction, numBlocks, nbActiveFEMCloths, 1,
-															 PxgFEMClothKernelBlockDim::CLOTH_STEP, 1, 1, 0, mStream, kernelParams,
-															 sizeof(kernelParams), 0, PX_FL);
+														 contactValidityBlockDim, 1, 1, 0, mStream, kernelParams,
+														 sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				PX_UNUSED(result);
 
@@ -839,6 +842,8 @@ namespace physx
 
 	void PxgFEMClothCore::sortContacts(PxU32 nbActiveFemClothes)
 	{
+		const PxU32 radixCopyBlockDim = 256;
+
 		clampContactCounts();
 
 		// we need 2x rsDesc on the host fem cloth. The reason for this is that, while the sorting occurs synchronously
@@ -938,8 +943,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(tempContactByRigidd), PX_CUDA_KERNEL_PARAM(rankd),
 													 PX_CUDA_KERNEL_PARAM(totalRFContactCountsd) };
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1,
-														  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1,
+													  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if(resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
 										"GPU radixSortCopyBits fail to launch kernel!!\n");
@@ -994,8 +999,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(outContactByRigidd), PX_CUDA_KERNEL_PARAM(rankd),
 													 PX_CUDA_KERNEL_PARAM(totalRFContactCountsd) };
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1,
-														  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1,
+													  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if(resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopy fail to launch kernel!!\n");
 
@@ -1023,8 +1028,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(rankd),
 													 PX_CUDA_KERNEL_PARAM(totalPFContactCountsd) };
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1,
-														  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1,
+													  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if(resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
 										"GPU radixSortCopyBits fail to launch kernel!!\n");
@@ -1081,8 +1086,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(outContactByParticled), PX_CUDA_KERNEL_PARAM(rankd),
 													 PX_CUDA_KERNEL_PARAM(totalPFContactCountsd) };
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1,
-														  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1,
+													  1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if(resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopy fail to launch kernel!!\n");
 
@@ -1228,8 +1233,13 @@ namespace physx
 			CUfunction finalizeKernelFunction =
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_FINALIZE_VELOCITIES);
 
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			const PxU32 finalizeBlockDim = 256;
+	#else
+			const PxU32 finalizeBlockDim = PxgFEMClothKernelBlockDim::CLOTH_STEP;
+	#endif
 			const PxU32 numBlocks =
-				(maxClothVerts + PxgFEMClothKernelBlockDim::CLOTH_STEP - 1) / PxgFEMClothKernelBlockDim::CLOTH_STEP;
+				(maxClothVerts + finalizeBlockDim - 1) / finalizeBlockDim;
 
 			{
 				PxCudaKernelParam kernelParams[] = { PX_CUDA_KERNEL_PARAM(femClothsd),
@@ -1237,8 +1247,8 @@ namespace physx
 													 PX_CUDA_KERNEL_PARAM(dt), PX_CUDA_KERNEL_PARAM(alwaysRunVelocityAveraging) };
 
 				CUresult result = mCudaContext->launchKernel(finalizeKernelFunction, numBlocks, nbActiveFEMCloths, 1,
-															 PxgFEMClothKernelBlockDim::CLOTH_STEP, 1, 1, 0, mStream,
-															 kernelParams, sizeof(kernelParams), 0, PX_FL);
+													 finalizeBlockDim, 1, 1, 0, mStream,
+													 kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				PX_UNUSED(result);
 
@@ -1257,8 +1267,13 @@ namespace physx
 			CUfunction sleepKernelFunction =
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_SLEEPING);
 
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			const PxU32 sleepingBlockDim = 256;
+	#else
+			const PxU32 sleepingBlockDim = PxgFEMClothKernelBlockDim::CLOTH_STEP;
+	#endif
 			const PxU32 numBlocks =
-				(nbActiveFEMCloths + PxgFEMClothKernelBlockDim::CLOTH_STEP - 1) / PxgFEMClothKernelBlockDim::CLOTH_STEP;
+				(nbActiveFEMCloths + sleepingBlockDim - 1) / sleepingBlockDim;
 
 			const PxReal resetCounter = 0.4f;
 			{
@@ -1270,7 +1285,7 @@ namespace physx
 				};
 
 				CUresult result =
-					mCudaContext->launchKernel(sleepKernelFunction, numBlocks, 1, 1, PxgFEMClothKernelBlockDim::CLOTH_STEP,
+					mCudaContext->launchKernel(sleepKernelFunction, numBlocks, 1, 1, sleepingBlockDim,
 											   1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				PX_UNUSED(result);
@@ -1666,10 +1681,10 @@ namespace physx
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_SIM_TRIANGLEPAIR_AVERAGE_VERTS);
 
 			PxCudaKernelParam kernelParams[] = { PX_CUDA_KERNEL_PARAM(femClothsd), PX_CUDA_KERNEL_PARAM(activeFEMClothsd),
-												 PX_CUDA_KERNEL_PARAM(dtInv), PX_CUDA_KERNEL_PARAM(isSharedTrianglePair) };
+										 PX_CUDA_KERNEL_PARAM(dtInv), PX_CUDA_KERNEL_PARAM(isSharedTrianglePair) };
 
 			CUresult result =
-				mCudaContext->launchKernel(averageVertsFunction, numBlocks, nbActiveFEMCloths, 1, PxgFEMClothKernelBlockDim::CLOTH_STEP, 1, 1,
+				mCudaContext->launchKernel(averageVertsFunction, numBlocks, nbActiveFEMCloths, 1, numThreadsPerBlock, 1, 1,
 					0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 
 			PX_ASSERT(result == CUDA_SUCCESS);
@@ -1930,6 +1945,9 @@ namespace physx
 
 	void PxgFEMClothCore::prepareClothClothCollision(bool forceUpdateClothContactPairs, bool adaptiveCollisionPairUpdate, PxReal dt)
 	{
+		if(mGpuContext->mGpuBp == NULL)
+			return;
+
 		if(forceUpdateClothContactPairs || adaptiveCollisionPairUpdate)
 		{
 			updateClothContactPairValidity(forceUpdateClothContactPairs, adaptiveCollisionPairUpdate, dt);

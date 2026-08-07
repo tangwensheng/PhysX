@@ -20,6 +20,7 @@
 #include "PxgSimulationController.h"
 #include "PxgDynamicsContext.h"
 #include "PxgTGSDynamicsContext.h"
+#include "PxgParticleSystem.h"
 #include "PxgBroadPhase.h"
 #include "PxgCommon.h"
 #include "PxgNarrowphase.h"
@@ -219,10 +220,26 @@ struct HipPhysXGpu final : public PxPhysXGpu
 			contextID, isResidualReportingEnabled);
 	}
 
-	// ---- Particle buffers (not yet implemented for DCU) ----
-	PxsParticleBuffer*              createParticleBuffer(PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
+	// ---- Particle buffers ----
+	PxsParticleBuffer* createParticleBuffer(
+		PxU32 maxNumParticles, PxU32 maxVolumes, PxCudaContextManager& cudaContextManager) override
+	{
+		return static_cast<PxsParticleBuffer*>(
+			PX_NEW(PxgParticleBuffer)(maxNumParticles, maxVolumes, cudaContextManager));
+	}
+
+	PxsParticleClothBuffer* createParticleClothBuffer(
+		PxU32 maxNumParticles, PxU32 maxVolumes, PxU32 maxNumCloths,
+		PxU32 maxNumTriangles, PxU32 maxNumSprings,
+		PxCudaContextManager& cudaContextManager) override
+	{
+		return static_cast<PxsParticleClothBuffer*>(
+			PX_NEW(PxgParticleClothBuffer)(maxNumParticles, maxVolumes, maxNumCloths,
+				maxNumTriangles, maxNumSprings, cudaContextManager));
+	}
+
+	// Diffuse and rigid particle buffers remain unsupported on DCU.
 	PxsParticleAndDiffuseBuffer*    createParticleAndDiffuseBuffer(PxU32, PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
-	PxsParticleClothBuffer*         createParticleClothBuffer(PxU32, PxU32, PxU32, PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
 	PxsParticleRigidBuffer*         createParticleRigidBuffer(PxU32, PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
 
 private:

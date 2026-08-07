@@ -109,6 +109,34 @@ PX_FORCE_INLINE __device__ PxU32 calcGridHashInBounds(const PxBounds3& bounds, P
 	return calcGridHash(gridPos, wrappedGridSize);
 }
 
+static __device__ PX_FORCE_INLINE PxU32 calculatePrimitiveBoundCellCount(
+	const PxgContactManagerInput* PX_RESTRICT cmInputs,
+	const PxgShape* PX_RESTRICT shapes,
+	const PxBounds3* PX_RESTRICT bounds,
+	const PxReal* contactDistance,
+	const PxgParticleSystem* particleSystems,
+	const PxU32 workIndex)
+{
+	PxgShape particleShape, rigidShape;
+	PxU32 particleCacheRef, rigidCacheRef;
+	LoadShapePair<PxGeometryType::ePARTICLESYSTEM>(cmInputs, workIndex, shapes,
+		particleShape, particleCacheRef, rigidShape, rigidCacheRef);
+
+	const PxgParticleSystem& particleSystem = particleSystems[particleShape.particleOrSoftbodyId];
+	const PxReal cellWidth = particleSystem.mCommonData.mGridCellWidth;
+	const uint3 wrappedGridSize = make_uint3(particleSystem.mCommonData.mGridSizeX,
+		particleSystem.mCommonData.mGridSizeY, particleSystem.mCommonData.mGridSizeZ);
+	const PxReal cDistance = contactDistance[particleCacheRef] + contactDistance[rigidCacheRef];
+
+	PxBounds3 overlapBound = combine(bounds[rigidCacheRef], bounds[particleCacheRef]);
+	overlapBound.fattenFast(cDistance);
+
+	int3 gridPosMin, gridPosMax;
+	calcGridRange(gridPosMin, gridPosMax, overlapBound, cellWidth);
+	const uint3 rangeSize = calcWrappedGridRangeSize(gridPosMin, gridPosMax, wrappedGridSize);
+	return rangeSize.x * rangeSize.y * rangeSize.z;
+}
+
 extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1) ps_primitivesBoundFirstPassLaunch(
 	const PxU32									numTests,
 	const PxgContactManagerInput* PX_RESTRICT	cmInputs,
@@ -123,13 +151,13 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 {
 
 	//numWarpsPerBlock can't be larger than 32
-	const PxU32 numWarpsPerBlock = PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE / WARP_SIZE;
+	const PxU32 numWarpsPerBlock = blockDim.x / WARP_SIZE;
 
-	__shared__ PxU32 sWarpAccumulator[numWarpsPerBlock];
+	__shared__ PxU32 sWarpAccumulator[PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE / WARP_SIZE];
 
 	__shared__ PxU32 sBlockAccumulator;
 
-	const PxU32 nbBlocksRequired = (numTests + PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE - 1) / PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE;
+	const PxU32 nbBlocksRequired = (numTests + blockDim.x - 1) / blockDim.x;
 
 	//gridDim should be 64
 	const PxU32 nbIterationsPerBlock = (nbBlocksRequired + PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE - 1) / PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE;
@@ -137,6 +165,39 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 	const PxU32 threadIndexInWarp = threadIdx.x&(WARP_SIZE - 1);
 	PxU32 warpIndex = threadIdx.x / (WARP_SIZE);
 	const PxU32 idx = threadIdx.x;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ PxU32 sDcuCellCounts[128];
+	if (numTests <= 128)
+	{
+		if (blockIdx.x != 0)
+		{
+			if (idx == 0)
+				blockOffsets[blockIdx.x] = 0;
+			return;
+		}
+
+		if (idx < numTests)
+		{
+			const PxU32 cellNumCount = calculatePrimitiveBoundCellCount(
+				cmInputs, shapes, bounds, contactDistance, particleSystems, idx);
+			sDcuCellCounts[idx] = cellNumCount;
+		}
+
+		__syncthreads();
+		if (idx == 0)
+		{
+			PxU32 totalCellCount = 0;
+			for (PxU32 testIndex = 0; testIndex < numTests; ++testIndex)
+			{
+				offsets[testIndex] = totalCellCount;
+				totalCellCount += sDcuCellCounts[testIndex];
+			}
+			blockOffsets[0] = totalCellCount;
+		}
+		return;
+	}
+#endif
 
 	if (threadIdx.x == 0)
 	{
@@ -147,38 +208,12 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 
 	for (PxU32 i = 0; i < nbIterationsPerBlock; ++i)
 	{
-		const PxU32 workIndex = i * PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE + idx + nbIterationsPerBlock * blockIdx.x * blockDim.x;
+		const PxU32 workIndex = i * blockDim.x + idx + nbIterationsPerBlock * blockIdx.x * blockDim.x;
 
 		PxU32 cellNumCount = 0;
 		if (workIndex < numTests)
-		{			
-			PxgShape particleShape, rigidShape;
-			PxU32 particleCacheRef, rigidCacheRef;
-			LoadShapePair<PxGeometryType::ePARTICLESYSTEM>(cmInputs, workIndex, shapes,
-				particleShape, particleCacheRef, rigidShape, rigidCacheRef);
-
-			const PxU32 particleInd = particleShape.particleOrSoftbodyId;
-
-			const PxgParticleSystem& particleSystem = particleSystems[particleInd];
-			const PxReal cellWidth = particleSystem.mCommonData.mGridCellWidth;
-			const uint3 wrappedGridSize = make_uint3(particleSystem.mCommonData.mGridSizeX, 
-													 particleSystem.mCommonData.mGridSizeY,
-													 particleSystem.mCommonData.mGridSizeZ);
-
-			const PxReal cDistance = contactDistance[particleCacheRef] + contactDistance[rigidCacheRef];
-
-			PxBounds3 bound0 = bounds[rigidCacheRef];
-			PxBounds3 bound1 = bounds[particleCacheRef];
-
-			PxBounds3 overlapBound = combine(bound0, bound1);
-			overlapBound.fattenFast(cDistance);
-
-			int3 gridPosMin, gridPosMax;
-			calcGridRange(gridPosMin, gridPosMax, overlapBound, cellWidth);
-
-			uint3 rangeSize = calcWrappedGridRangeSize(gridPosMin, gridPosMax, wrappedGridSize);
-			cellNumCount = rangeSize.x * rangeSize.y * rangeSize.z;
-		}
+			cellNumCount = calculatePrimitiveBoundCellCount(
+				cmInputs, shapes, bounds, contactDistance, particleSystems, workIndex);
 
 		PxU32 offset = warpScan<AddOpPxU32, PxU32>(FULL_MASK, cellNumCount) - cellNumCount;
 
@@ -228,6 +263,15 @@ extern "C" __global__ void ps_primitivesBoundSecondPassLaunch(
 )
 {
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (numTests <= 128)
+	{
+		if (blockIdx.x == 0 && threadIdx.x == 0)
+			*totalNumPairs = blockOffsets[0];
+		return;
+	}
+#endif
+
 	__shared__ PxU32 sBlockAccum[PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE];
 	__shared__ PxU32 sTotalPairs;
 
@@ -245,7 +289,7 @@ extern "C" __global__ void ps_primitivesBoundSecondPassLaunch(
 	if (idx == (PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE - 1))
 		sTotalPairs = res + val;
 
-	const PxU32 totalBlockRequired = (numTests + (PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE - 1)) / PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE;
+	const PxU32 totalBlockRequired = (numTests + blockDim.x - 1) / blockDim.x;
 
 	const PxU32 numIterationPerBlock = (totalBlockRequired + (PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE - 1)) / PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE;
 
@@ -255,7 +299,7 @@ extern "C" __global__ void ps_primitivesBoundSecondPassLaunch(
 
 	for (PxU32 i = 0; i<numIterationPerBlock; ++i)
 	{
-		const PxU32 workIndex = i * PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE + idx + numIterationPerBlock * blockIdx.x * blockDim.x;
+		const PxU32 workIndex = i * blockDim.x + idx + numIterationPerBlock * blockIdx.x * blockDim.x;
 
 		if (workIndex < numTests)
 		{
@@ -478,10 +522,9 @@ __device__ void psPrimitivesCollision(
 				compressedParticleIndex = PxEncodeParticleIndex(particleSystemId, particleIndex);
 				const PxU64 particleMask = PxEncodeParticleIndex(particleSystemId, gridParticleIndex[particleIndex]);
 
-				if (!find(particleSystem, rigidId.getInd(), particleMask))
-				{
+				const bool found = find(particleSystem, rigidId.getInd(), particleMask);
+				if (!found)
 					intersect = particlePrimitiveCollision(currentPos, cVolumePos, cVolumeRadius, transform0, type0, scale0, shape0, enableCCD, normal, distance);
-				}
 			}
 		}
 
@@ -1220,6 +1263,52 @@ extern "C" __global__ void ps_primitivesCollisionLaunch(
 	__shared__ PxU32 shWorkIndices[PxgParticleSystemKernelBlockDim::PS_COLLISION];
 	__shared__ PxU32 shWarpSum[NumWarps];
 	PxU32 workCount = 0;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ PxU32 shDcuWorkCount;
+	if (totalComparision <= blockDim.x)
+	{
+		if (blockIdx.x != 0)
+			return;
+
+		if (threadIdx.x == 0)
+		{
+			PxU32 count = 0;
+			for (PxU32 workIndex = 0; workIndex < totalComparision; ++workIndex)
+			{
+				PxgCellData data;
+				data.update(workIndex, numTests, cmInputs, shapes, bounds, contactDistance, restDistances, startIndices, particleSystems);
+
+				const PxU32 cellStartIndex = data.particleSystem->mCellStart[data.gridHash];
+				if (cellStartIndex != EMPTY_CELL)
+				{
+					const PxU32 cellEndIndex = data.particleSystem->mCellEnd[data.gridHash];
+					const PxU32 range = cellEndIndex - cellStartIndex;
+					if (range)
+					{
+						shWorkIndices[count++] = workIndex;
+					}
+				}
+			}
+			shDcuWorkCount = count;
+		}
+
+		__syncthreads();
+		if (shDcuWorkCount == 0)
+			return;
+
+		const bool hasWork = threadIdx.x < shDcuWorkCount;
+		const PxU32 dataWorkIndex = shWorkIndices[hasWork ? threadIdx.x : 0];
+		const PxU32 workIndex = hasWork ? dataWorkIndex : 0xFFFFFFFF;
+		PxgCellData data;
+		data.update(dataWorkIndex, numTests, cmInputs, shapes, bounds, contactDistance, restDistances, startIndices, particleSystems);
+
+		psPrimitivesCollision(isTGS, data.gridHash, data.rigidShape, data.particleShape, data.rigidCacheRef, data.particleCacheRef, transformCache,
+			*data.particleSystem, data.particleSystemId, data.cDistance, data.restDistance, materials, workIndex,
+			totalComparision, shapeToRigidRemapTable, writer);
+		return;
+	}
+#endif
 
 	for (PxU32 i = 0; i < totalComparision; i += blockDim.x * gridDim.x)
 	{

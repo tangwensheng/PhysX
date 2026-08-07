@@ -37,7 +37,13 @@ namespace physx
 		enum
 		{
 			UPDATEBOUND = 1024, //can't change this. updateBound kernel is relied on numOfWarpPerBlock = 32
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			CLOTH = 256,
+			UPDATEGRID = 256,
+#else
+			CLOTH = 1024,
 			UPDATEGRID = 1024,
+#endif
 			BOUNDCELLUPDATE = 512,
 			PS_COLLISION = 256, //128,
 			PS_MESH_COLLISION = 512,

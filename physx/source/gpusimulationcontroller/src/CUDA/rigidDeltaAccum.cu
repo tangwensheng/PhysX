@@ -67,7 +67,7 @@ extern "C" __global__ void accumulateDeltaVRigidFirstLaunch(
 	__shared__ PxU64 sRigidId[PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA + 1];
 
 	//numWarpsPerBlock can't be larger than 32
-	const PxU32 numWarpsPerBlock = PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA / WARP_SIZE;
+	const PxU32 numWarpsPerBlock = blockDim.x / WARP_SIZE;
 
 	__shared__ float4 sLinWarpAccumulator[WARP_SIZE];
 	__shared__ float4 sAngWarpAccumulator[WARP_SIZE];
@@ -318,7 +318,7 @@ extern "C" __global__ void accumulateDeltaVRigidSecondLaunch(
 			{
 				sRigidId[threadIdx.x] = 0x8fffffffffffffff;
 			}
-			else if (threadIdx.x == PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA - 1)
+			else if (threadIdx.x == blockDim.x - 1)
 			{
 				// first thread in block must load neighbor particle 
 				sRigidId[threadIdx.x] = sortedRigidIds[workIndex + 1];
@@ -876,4 +876,3 @@ extern "C" __global__ void accumulateDeltaVRigidSecondLaunchMultiStage2(
 		}
 	}
 }
-

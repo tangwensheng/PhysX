@@ -1,9 +1,0 @@
-HIP Clang: /opt/dtk/dcc/bin/clang++
-Building PhysX DCU Examples...
-[ 33%] Building CXX object CMakeFiles/bench_pbd_cloth_smoke.dir/bench_pbd_cloth_smoke.cpp.o
-[ 66%] Building CXX object CMakeFiles/bench_pbd_cloth_smoke.dir/public/home/tangwsh/PhysX/physx/source/physxextensions/src/ExtParticleExt.cpp.o
-[100%] Linking CXX executable bench_pbd_cloth_smoke
-[100%] Built target bench_pbd_cloth_smoke
-
-=== Running bench_pbd_cloth_smoke ===
-./build.sh: line 44: syntax error near unexpected token `else'

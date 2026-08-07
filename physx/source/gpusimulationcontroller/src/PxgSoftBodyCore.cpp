@@ -472,7 +472,6 @@ namespace physx
 			CUresult resultR = mCudaContext->launchKernel(clampFunction, 1, 1, 1, 1, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU clampMaxValues fail to launch kernel!!\n");
-
 #if SB_GPU_DEBUG
 			resultR = mCudaContext->streamSynchronize(mStream);
 			if (resultR != CUDA_SUCCESS)
@@ -507,7 +506,6 @@ namespace physx
 		{
 			PxU32 startBit = 0;
 			const PxU32 numPass = 8;
-
 			for (PxU32 i = 0; i < numPass; ++i)
 			{
 				const PxU32 descIndex = i & 1;
@@ -523,7 +521,6 @@ namespace physx
 				CUresult resultR = mCudaContext->launchKernel(radixFunction, PxgRadixSortKernelGridDim::RADIX_SORT, 2, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, mStream, radixSortKernelParams, sizeof(radixSortKernelParams), 0, PX_FL);
 				if (resultR != CUDA_SUCCESS)
 					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sortSoftBodyContacts fail to launch kernel!!\n");
-
 				resultR = mCudaContext->launchKernel(calculateRanksFunction, PxgRadixSortKernelGridDim::RADIX_SORT, 2, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, mStream, radixSortKernelParams, sizeof(radixSortKernelParams), 0, PX_FL);
 				if (resultR != CUDA_SUCCESS)
 					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sortSoftBodyContacts fail to launch kernel!!\n");

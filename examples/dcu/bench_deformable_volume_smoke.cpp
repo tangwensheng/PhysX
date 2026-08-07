@@ -95,10 +95,16 @@ int main(int argc, char** argv)
     }
 
     PxMaterial* rigidMat = phy->createMaterial(0.5f, 0.5f, 0.0f);
+    PxRigidStatic* plane = nullptr;
     if (addPlane) {
         printf("Adding rigid plane at y=%.3f...\n", planeY);
         fflush(stdout);
-        scene->addActor(*PxCreatePlane(*phy, PxPlane(0, 1, 0, -planeY), *rigidMat));
+        plane = PxCreatePlane(*phy, PxPlane(0, 1, 0, -planeY), *rigidMat);
+        if (!plane) {
+            printf("FAIL: PxCreatePlane returned null\n");
+            return 4;
+        }
+        scene->addActor(*plane);
     } else {
         printf("Skipping rigid plane (--no-plane).\n");
         fflush(stdout);
@@ -168,9 +174,21 @@ int main(int argc, char** argv)
     printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");
     fflush(stdout);
 
+    printf("Releasing deformable volume...\n");
+    fflush(stdout);
+    volume->release();
+    if (plane) {
+        printf("Releasing rigid plane...\n");
+        fflush(stdout);
+        plane->release();
+    }
     printf("Releasing scene...\n");
     fflush(stdout);
     scene->release();
+    printf("Releasing materials...\n");
+    fflush(stdout);
+    volMat->release();
+    rigidMat->release();
     printf("Releasing dispatcher...\n");
     fflush(stdout);
     dsp->release();

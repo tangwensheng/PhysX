@@ -52,6 +52,8 @@
 
 #include "cudamanager/PxCudaContext.h"
 
+#include <cstdlib>
+
 #define PS_GPU_DEBUG 0
 #define PS_GPU_SPARSE_GRID_DEBUG 0
 #define PS_SUBGRIDS_DEBUG 0
@@ -1323,6 +1325,55 @@ namespace physx
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sortParticles fail to launch kernel!!\n");
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (std::getenv("PX_DCU_PARTICLE_SORT_DIAG"))
+			{
+				const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+				PxU32 numContacts = 0;
+				if (syncResult == CUDA_SUCCESS)
+					mCudaContext->memcpyDtoH(&numContacts, totalContactCountsd, sizeof(PxU32));
+
+				const PxU32 sampleCount = PxMin(numContacts, 32u);
+				PxArray<PxgParticlePrimitiveContact> originalContacts(sampleCount);
+				PxArray<PxgParticlePrimitiveContact> rigidContacts(sampleCount);
+				PxArray<PxgParticlePrimitiveContact> particleContacts(sampleCount);
+				PxArray<PxU32> remapByRigid(sampleCount);
+				PxArray<PxU32> remapByParticle(sampleCount);
+
+				if (sampleCount)
+				{
+					mCudaContext->memcpyDtoH(originalContacts.begin(), contactsd, sizeof(PxgParticlePrimitiveContact) * sampleCount);
+					mCudaContext->memcpyDtoH(rigidContacts.begin(), sortedContactsByRigidd, sizeof(PxgParticlePrimitiveContact) * sampleCount);
+					mCudaContext->memcpyDtoH(particleContacts.begin(), sortedContactsByParticled, sizeof(PxgParticlePrimitiveContact) * sampleCount);
+					mCudaContext->memcpyDtoH(remapByRigid.begin(), remapByRigidd, sizeof(PxU32) * sampleCount);
+					mCudaContext->memcpyDtoH(remapByParticle.begin(), remapByParticled, sizeof(PxU32) * sampleCount);
+				}
+
+				PxU32 badRigidRemaps = 0;
+				PxU32 badParticleRemaps = 0;
+				for (PxU32 i = 0; i < sampleCount; ++i)
+				{
+					badRigidRemaps += remapByRigid[i] >= numContacts;
+					badParticleRemaps += remapByParticle[i] >= numContacts;
+				}
+
+				printf("[DCU PARTICLE SORT] contacts=%u sampled=%u sync=%d badRemap=(rigid=%u,particle=%u)\n",
+					numContacts, sampleCount, int(syncResult), badRigidRemaps, badParticleRemaps);
+				for (PxU32 i = 0; i < sampleCount; ++i)
+				{
+					const PxgParticlePrimitiveContact& original = originalContacts[i];
+					const PxgParticlePrimitiveContact& byRigid = rigidContacts[i];
+					const PxgParticlePrimitiveContact& byParticle = particleContacts[i];
+					printf("[DCU PARTICLE SORT ITEM] i=%u remap=(%u,%u) orig=(p=%llu r=%llu n=(%.6g,%.6g,%.6g) pen=%.6g) rigid=(p=%llu r=%llu pen=%.6g) particle=(p=%llu r=%llu pen=%.6g)\n",
+						i, remapByRigid[i], remapByParticle[i],
+						static_cast<unsigned long long>(original.particleId), static_cast<unsigned long long>(original.rigidId),
+						double(original.normal_pen.x), double(original.normal_pen.y), double(original.normal_pen.z), double(original.normal_pen.w),
+						static_cast<unsigned long long>(byRigid.particleId), static_cast<unsigned long long>(byRigid.rigidId), double(byRigid.normal_pen.w),
+						static_cast<unsigned long long>(byParticle.particleId), static_cast<unsigned long long>(byParticle.rigidId), double(byParticle.normal_pen.w));
+				}
+			}
+#endif
+
 #if PS_GPU_DEBUG
 			CUresult result = mCudaContext->streamSynchronize(mStream);
 			if (result != CUDA_SUCCESS)
@@ -1729,6 +1780,67 @@ namespace physx
 				CUresult result = mCudaContext->launchKernel(findStartEndSecondKernelFunction, numBlocks, 1, 1, rangeBlockSize, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				PX_UNUSED(result);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				if (std::getenv("PX_DCU_PARTICLE_RANGE_DIAG"))
+				{
+					const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+					PxU32 numContacts = 0;
+					PxU32 pairCount = 0;
+					PxU32 blockOffsets[PxgParticleSystemKernelGridDim::ACCUMULATE_DELTA] = {};
+					if (syncResult == CUDA_SUCCESS)
+					{
+						mCudaContext->memcpyDtoH(&numContacts, totalContactCountsd, sizeof(PxU32));
+						mCudaContext->memcpyDtoH(&pairCount, pairCountd, sizeof(PxU32));
+						mCudaContext->memcpyDtoH(blockOffsets, blockOffsetd, sizeof(blockOffsets));
+					}
+
+					const PxU32 contactSampleCount = PxMin(numContacts, 32u);
+					const PxU32 pairSampleCount = PxMin(pairCount, 32u);
+					PxArray<PxU32> offsets(contactSampleCount);
+					PxArray<PxU32> rangeStart(pairSampleCount);
+					PxArray<PxU32> rangeEnd(pairSampleCount);
+					PxArray<PxgParticlePrimitiveContact> contacts(contactSampleCount);
+					if (contactSampleCount)
+					{
+						mCudaContext->memcpyDtoH(offsets.begin(), offsetd, sizeof(PxU32) * contactSampleCount);
+						mCudaContext->memcpyDtoH(contacts.begin(), contactsd, sizeof(PxgParticlePrimitiveContact) * contactSampleCount);
+					}
+					if (pairSampleCount)
+					{
+						mCudaContext->memcpyDtoH(rangeStart.begin(), startd, sizeof(PxU32) * pairSampleCount);
+						mCudaContext->memcpyDtoH(rangeEnd.begin(), endd, sizeof(PxU32) * pairSampleCount);
+					}
+
+					PxU32 invalidRanges = 0;
+					PxU32 discontinuities = 0;
+					PxU32 coveredContacts = 0;
+					for (PxU32 i = 0; i < pairSampleCount; ++i)
+					{
+						const PxU32 start = rangeStart[i];
+						const PxU32 end = rangeEnd[i];
+						const bool valid = start < end && end <= numContacts;
+						invalidRanges += !valid;
+						if (valid)
+							coveredContacts += end - start;
+						if (i > 0 && start != rangeEnd[i - 1])
+							++discontinuities;
+					}
+
+					printf("[DCU PARTICLE RANGE] contacts=%u pairs=%u sampled=(%u,%u) sync=%d blocks=(%u,%u,%u,%u) invalid=%u discontinuities=%u covered=%u\n",
+						numContacts, pairCount, contactSampleCount, pairSampleCount, int(syncResult),
+						blockOffsets[0], blockOffsets[1], blockOffsets[2], blockOffsets[3],
+						invalidRanges, discontinuities, coveredContacts);
+					for (PxU32 i = 0; i < pairSampleCount; ++i)
+					{
+						const PxU32 start = rangeStart[i];
+						const PxU32 end = rangeEnd[i];
+						const PxU64 particleId = start < contactSampleCount ? contacts[start].particleId : 0xffffffffffffffffull;
+						printf("[DCU PARTICLE RANGE ITEM] i=%u range=[%u,%u) particle=%llu offsetAtStart=%u\n",
+							i, start, end, static_cast<unsigned long long>(particleId),
+							start < contactSampleCount ? offsets[start] : 0xffffffffu);
+					}
+				}
+#endif
 #if PS_GPU_DEBUG
 				result = mCudaContext->streamSynchronize(mStream);
 				if (result != CUDA_SUCCESS)

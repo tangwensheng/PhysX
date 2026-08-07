@@ -262,6 +262,12 @@ void PxgFEMCore::accumulateRigidDeltas(PxgDevicePointer<PxgPrePrepDesc> prePrepD
 {
 	PX_UNUSED(rigidIdsd);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 accumulateDeltaBlockDim = 256;
+#else
+	const PxU32 accumulateDeltaBlockDim = PxgSoftBodyKernelBlockDim::SB_ACCUMULATE_DELTA;
+#endif
+
 	{
 		//CUdeviceptr contactInfosd = mRSSortedContactInfoBuffer.getDevicePtr();
 		PxgDevicePointer<float4> deltaVd = mRigidDeltaVelBuf.getTypedDevicePtr();
@@ -280,7 +286,7 @@ void PxgFEMCore::accumulateRigidDeltas(PxgDevicePointer<PxgPrePrepDesc> prePrepD
 			PX_CUDA_KERNEL_PARAM(blockRigidIdd)
 		};
 
-		CUresult result = mCudaContext->launchKernel(rigidFirstKernelFunction, PxgSoftBodyKernelGridDim::SB_ACCUMULATE_DELTA, 1, 1, PxgSoftBodyKernelBlockDim::SB_ACCUMULATE_DELTA, 1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+		CUresult result = mCudaContext->launchKernel(rigidFirstKernelFunction, PxgSoftBodyKernelGridDim::SB_ACCUMULATE_DELTA, 1, 1, accumulateDeltaBlockDim, 1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 		PX_ASSERT(result == CUDA_SUCCESS);
 		PX_UNUSED(result);
 
@@ -318,7 +324,7 @@ void PxgFEMCore::accumulateRigidDeltas(PxgDevicePointer<PxgPrePrepDesc> prePrepD
 			PX_CUDA_KERNEL_PARAM(isTGS)
 		};
 
-		CUresult result = mCudaContext->launchKernel(rigidSecondKernelFunction, PxgSoftBodyKernelGridDim::SB_ACCUMULATE_DELTA, 1, 1, PxgSoftBodyKernelBlockDim::SB_ACCUMULATE_DELTA, 1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+		CUresult result = mCudaContext->launchKernel(rigidSecondKernelFunction, PxgSoftBodyKernelGridDim::SB_ACCUMULATE_DELTA, 1, 1, accumulateDeltaBlockDim, 1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 		PX_ASSERT(result == CUDA_SUCCESS);
 		PX_UNUSED(result);
 

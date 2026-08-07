@@ -3380,6 +3380,12 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 	//Get the particle stream!
 	CUstream particleStream = particleCore->getStream();
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 primitiveBoundBlockSize = 256;
+#else
+	const PxU32 primitiveBoundBlockSize = PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE;
+#endif
+
 	// Simulation particles
 	{
 		CUresult result;
@@ -3398,7 +3404,7 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 				PX_CUDA_KERNEL_PARAM(tempCellsHistogramd)		// output
 			};
 
-			result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, primitiveBoundBlockSize, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
 
@@ -3432,7 +3438,7 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 				PX_CUDA_KERNEL_PARAM(totalPairsd)
 			};
 
-			result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, primitiveBoundBlockSize, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
 #if GPU_NP_DEBUG
@@ -4436,7 +4442,6 @@ void PxgGpuNarrowphaseCore::testSDKSoftbody(PxgGpuContactManagers& gpuManagers, 
 	stackAlloc.mMutex.lock();
 
 	CUstream softbodyStream = softBodyCore->getStream();
-
 	CUdeviceptr gpuMidphasePairsNumOnDevice = reinterpret_cast<CUdeviceptr>(stackAlloc.allocateAligned(sizeof(PxU32), sizeof(PxU32)));
 	
 	const PxU32 stackSizeBytes = mCollisionStackSizeBytes;
@@ -4478,7 +4483,6 @@ void PxgGpuNarrowphaseCore::testSDKSoftbody(PxgGpuContactManagers& gpuManagers, 
 
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_midphaseGeneratePairsLaunch fail to launch kernel!!\n");
-
 #if GPU_NP_DEBUG
 
 		result = mCudaContext->streamSynchronize(softbodyStream);
@@ -4548,7 +4552,6 @@ void PxgGpuNarrowphaseCore::testSDKSoftbody(PxgGpuContactManagers& gpuManagers, 
 
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_primitiveContactGenLaunch fail to launch kernel!!\n");
-
 #if GPU_NP_DEBUG
 
 		result = mCudaContext->streamSynchronize(softbodyStream);
@@ -6104,7 +6107,11 @@ void PxgGpuNarrowphaseCore::testSDKFemClothPlane(PxgGpuContactManagers& gpuManag
 		};
 
 		const PxU32 numVertBlocks = numTests;
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const PxU32 numWarpPerBlock = 8;
+	#else
 		const PxU32 numWarpPerBlock = 16;
+	#endif
 		const PxU32 numThreadsPerWarp = 32;
 
 		//each thread deal with a vert

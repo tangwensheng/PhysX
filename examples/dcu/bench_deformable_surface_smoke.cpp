@@ -2,7 +2,9 @@
 
 #include "PxPhysicsAPI.h"
 #include "cudamanager/PxCudaContextManager.h"
+#include "cudamanager/PxCudaContext.h"
 #include "gpu/PxGpu.h"
+#include "extensions/PxCudaHelpersExt.h"
 #include "extensions/PxDeformableSurfaceExt.h"
 #include <chrono>
 #include <cmath>
@@ -30,6 +32,11 @@ static PxReal triMass(const PxU32* tri, const PxVec3* verts, PxReal thickness, P
 static bool finiteVec(const PxVec3& v)
 {
     return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
+}
+
+static bool finiteVec4(const PxVec4& v)
+{
+    return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z) && std::isfinite(v.w);
 }
 
 static PxDeformableSurface* createClothSurface(PxPhysics* phy, PxScene* scene, const PxCookingParams& params,
@@ -193,12 +200,13 @@ int main(int argc, char** argv)
     sd.filterShader = PxDefaultSimulationFilterShader;
     sd.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
     sd.flags |= PxSceneFlag::eENABLE_PCM;
+    sd.broadPhaseType = PxBroadPhaseType::eGPU;
     sd.gpuMaxNumPartitions = 8;
     sd.gpuDynamicsConfig.heapCapacity = 512u * 1024u * 1024u;
     sd.gpuDynamicsConfig.tempBufferCapacity = 128u * 1024u * 1024u;
     sd.gpuDynamicsConfig.collisionStackSize = 256u * 1024u * 1024u;
 
-    printf("Creating GPU dynamics scene...\n");
+    printf("Creating GPU dynamics scene: broadPhase=eGPU...\n");
     fflush(stdout);
     PxScene* scene = phy->createScene(sd);
     if (!scene) {
@@ -247,12 +255,73 @@ int main(int argc, char** argv)
         scene->fetchResults(true);
     }
 
+    const PxU32 numVertices = grid * grid;
+    PxVec4* positionsPinned = Ext::PxCudaHelpersExt::allocPinnedHostBuffer<PxVec4>(*gpuMgr, numVertices);
+    PxVec4* velocitiesPinned = Ext::PxCudaHelpersExt::allocPinnedHostBuffer<PxVec4>(*gpuMgr, numVertices);
+    bool readbackOk = positionsPinned != nullptr && velocitiesPinned != nullptr;
+    PxI32 syncResult = -1;
+    PxI32 positionCopyResult = -1;
+    PxI32 velocityCopyResult = -1;
+    if (readbackOk) {
+        PxScopedCudaLock lock(*gpuMgr);
+        PxCudaContext* ctx = gpuMgr->getCudaContext();
+        syncResult = PxI32(ctx->streamSynchronize(0));
+        positionCopyResult = PxI32(ctx->memcpyDtoH(reinterpret_cast<void*>(positionsPinned),
+                                                   reinterpret_cast<CUdeviceptr>(surface->getPositionInvMassBufferD()),
+                                                   size_t(numVertices) * sizeof(PxVec4)));
+        velocityCopyResult = PxI32(ctx->memcpyDtoH(reinterpret_cast<void*>(velocitiesPinned),
+                                                   reinterpret_cast<CUdeviceptr>(surface->getVelocityBufferD()),
+                                                   size_t(numVertices) * sizeof(PxVec4)));
+        readbackOk = syncResult == 0 && positionCopyResult == 0 && velocityCopyResult == 0;
+    }
+
+    PxReal minVertexY = PX_MAX_F32;
+    PxReal maxVertexY = -PX_MAX_F32;
+    PxReal maxSpeed = 0.0f;
+    PxReal maxHeightChange = 0.0f;
+    PxU32 badVertices = 0;
+    if (readbackOk) {
+        for (PxU32 i = 0; i < numVertices; ++i) {
+            const PxVec4& p = positionsPinned[i];
+            const PxVec4& v = velocitiesPinned[i];
+            if (!finiteVec4(p) || !finiteVec4(v)) {
+                ++badVertices;
+                continue;
+            }
+            minVertexY = PxMin(minVertexY, p.y);
+            maxVertexY = PxMax(maxVertexY, p.y);
+            maxSpeed = PxMax(maxSpeed, PxVec3(v.x, v.y, v.z).magnitude());
+            maxHeightChange = PxMax(maxHeightChange, PxAbs(p.y - 2.0f));
+        }
+    }
+
+    printf("GPU readback sync=%d positionCopy=%d velocityCopy=%d\n",
+           syncResult, positionCopyResult, velocityCopyResult);
+    if (readbackOk && numVertices > 0) {
+        const PxVec4& p = positionsPinned[0];
+        const PxVec4& v = velocitiesPinned[0];
+        printf("GPU vertex[0] position=(%.6f %.6f %.6f invMass=%.6f) velocity=(%.6f %.6f %.6f %.6f)\n",
+               p.x, p.y, p.z, p.w, v.x, v.y, v.z, v.w);
+    }
+    printf("GPU vertexHeight=[%.6f, %.6f] maxSpeed=%.6f maxHeightChange=%.6f badVertices=%u/%u\n",
+           minVertexY, maxVertexY, maxSpeed, maxHeightChange, badVertices, numVertices);
+
     PxBounds3 bounds = surface->getWorldBounds(1.0f);
-    const bool pass = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum) && bounds.minimum.y > -5.0f && bounds.maximum.y < 5.0f;
+    const bool validBounds = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum);
+    const bool validVertices = readbackOk && badVertices == 0;
+    const bool realMotion = steps == 0 || addPlane || maxHeightChange > 0.001f || maxSpeed > 0.001f;
+    const bool planeContactResponse = !addPlane || steps < 33 || minVertexY > -0.1f;
+    const bool pass = validBounds && validVertices && realMotion && planeContactResponse;
     printf("Surface bounds min=(%.6f %.6f %.6f) max=(%.6f %.6f %.6f)\n",
            bounds.minimum.x, bounds.minimum.y, bounds.minimum.z, bounds.maximum.x, bounds.maximum.y, bounds.maximum.z);
+    printf("Checks validBounds=%s validVertices=%s realMotion=%s planeContactResponse=%s\n",
+           validBounds ? "yes" : "no", validVertices ? "yes" : "no", realMotion ? "yes" : "no",
+           planeContactResponse ? "yes" : "no");
     printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");
     fflush(stdout);
+
+    Ext::PxCudaHelpersExt::freePinnedHostBuffer(*gpuMgr, positionsPinned);
+    Ext::PxCudaHelpersExt::freePinnedHostBuffer(*gpuMgr, velocitiesPinned);
 
     printf("Releasing scene...\n");
     fflush(stdout);

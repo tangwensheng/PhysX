@@ -21,6 +21,11 @@ static bool finiteVec(const PxVec3& v)
     return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
 
+static bool finiteVec4(const PxVec4& v)
+{
+    return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z) && std::isfinite(v.w);
+}
+
 static bool copyParticlesToDevice(PxParticleBuffer* buffer, const ExtGpu::PxParticleBufferDesc& desc, PxCudaContextManager* gpuMgr)
 {
 #if PX_SUPPORT_GPU_PHYSX
@@ -66,6 +71,7 @@ int main(int argc, char** argv)
     bool forceGpuBroadphase = false;
     bool useTgs = false;
     bool skipBuffer = false;
+    bool addPlane = true;
     bool printAllSteps = false;
     bool cleanExit = false;
     int cleanExitWaitSeconds = 5;
@@ -79,6 +85,8 @@ int main(int argc, char** argv)
             useTgs = true;
         } else if (std::strcmp(argv[i], "--skip-buffer") == 0) {
             skipBuffer = true;
+        } else if (std::strcmp(argv[i], "--no-plane") == 0) {
+            addPlane = false;
         } else if (std::strcmp(argv[i], "--print-all-steps") == 0) {
             printAllSteps = true;
         } else if (std::strcmp(argv[i], "--cleanexit") == 0) {
@@ -97,7 +105,8 @@ int main(int argc, char** argv)
     if (dim < 2)
         dim = 2;
 
-    printf("PBD particle conservative smoke: steps=%d dim=%u forceGpuBp=%d tgs=%d skipBuffer=%d\n", steps, dim, forceGpuBroadphase ? 1 : 0, useTgs ? 1 : 0, skipBuffer ? 1 : 0);
+    printf("PBD particle conservative smoke: steps=%d dim=%u forceGpuBp=%d tgs=%d skipBuffer=%d plane=%d\n",
+           steps, dim, forceGpuBroadphase ? 1 : 0, useTgs ? 1 : 0, skipBuffer ? 1 : 0, addPlane ? 1 : 0);
     fflush(stdout);
 
     static PxDefaultErrorCallback gErr;
@@ -131,6 +140,21 @@ int main(int argc, char** argv)
     printf("Scene: %p\n", static_cast<void*>(scene));
     if (!scene)
         return 3;
+
+    PxMaterial* rigidMat = phy->createMaterial(0.5f, 0.5f, 0.0f);
+    PxRigidStatic* plane = nullptr;
+    if (addPlane && rigidMat) {
+        printf("Adding rigid plane at y=0.000...\n");
+        fflush(stdout);
+        plane = PxCreatePlane(*phy, PxPlane(0, 1, 0, 0), *rigidMat);
+        if (plane)
+            scene->addActor(*plane);
+    }
+    if (!rigidMat || (addPlane && !plane)) {
+        printf("FAIL: create rigid plane failed material=%p plane=%p\n",
+               static_cast<void*>(rigidMat), static_cast<void*>(plane));
+        return 4;
+    }
 
     const PxU32 numParticles = dim * dim;
     const PxReal spacing = 0.1f;
@@ -216,6 +240,12 @@ int main(int argc, char** argv)
     PX_EXT_PINNED_MEMORY_FREE(*gpuMgr, phases);
 
     bool pass = true;
+    bool readbackOk = skipBuffer || !particleBuffer;
+    PxReal minParticleY = PX_MAX_F32;
+    PxReal maxParticleY = -PX_MAX_F32;
+    PxReal maxSpeed = 0.0f;
+    PxReal maxHeightChange = 0.0f;
+    PxU32 badParticles = 0;
     if (!skipBuffer && particleBuffer) {
         printf("Starting simulation: steps=%d dim=%u\n", steps, dim);
         fflush(stdout);
@@ -232,16 +262,67 @@ int main(int argc, char** argv)
             scene->fetchResults(true);
         }
 
+        std::vector<PxVec4> positionsReadback(numParticles);
+        std::vector<PxVec4> velocitiesReadback(numParticles);
+        PxI32 syncResult = -1;
+        PxI32 positionCopyResult = -1;
+        PxI32 velocityCopyResult = -1;
+        {
+            PxScopedCudaLock lock(*gpuMgr);
+            PxCudaContext* ctx = gpuMgr->getCudaContext();
+            syncResult = PxI32(ctx->streamSynchronize(0));
+            positionCopyResult = PxI32(ctx->memcpyDtoH(positionsReadback.data(),
+                                                       CUdeviceptr(particleBuffer->getPositionInvMasses()),
+                                                       size_t(numParticles) * sizeof(PxVec4)));
+            velocityCopyResult = PxI32(ctx->memcpyDtoH(velocitiesReadback.data(),
+                                                       CUdeviceptr(particleBuffer->getVelocities()),
+                                                       size_t(numParticles) * sizeof(PxVec4)));
+        }
+        readbackOk = syncResult == 0 && positionCopyResult == 0 && velocityCopyResult == 0;
+        if (readbackOk) {
+            for (PxU32 i = 0; i < numParticles; ++i) {
+                const PxVec4& p = positionsReadback[i];
+                const PxVec4& v = velocitiesReadback[i];
+                if (!finiteVec4(p) || !finiteVec4(v)) {
+                    ++badParticles;
+                    continue;
+                }
+                minParticleY = PxMin(minParticleY, p.y);
+                maxParticleY = PxMax(maxParticleY, p.y);
+                maxSpeed = PxMax(maxSpeed, PxVec3(v.x, v.y, v.z).magnitude());
+                maxHeightChange = PxMax(maxHeightChange, PxAbs(p.y - 1.5f));
+            }
+        }
+        printf("GPU readback sync=%d positionCopy=%d velocityCopy=%d\n",
+               syncResult, positionCopyResult, velocityCopyResult);
+        printf("GPU particleHeight=[%.6f, %.6f] maxSpeed=%.6f maxHeightChange=%.6f badParticles=%u/%u\n",
+               minParticleY, maxParticleY, maxSpeed, maxHeightChange, badParticles, numParticles);
+
         PxBounds3 bounds = ps->getWorldBounds(1.0f);
-        pass = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum);
+        const bool validBounds = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum);
+        const bool validParticles = readbackOk && badParticles == 0;
+        const bool realMotion = steps == 0 || maxHeightChange > 0.001f || maxSpeed > 0.001f;
+        const bool reachedPlane = !addPlane || steps < 40 || maxParticleY < 0.25f;
+        const bool noPlanePenetration = !addPlane || steps == 0 || minParticleY > -0.02f;
+        const bool settledOnPlane = !addPlane || steps < 180 ||
+            (minParticleY > 0.02f && maxParticleY < 0.10f && maxSpeed < 0.02f);
+        pass = validBounds && validParticles && realMotion && reachedPlane && noPlanePenetration && settledOnPlane;
         printf("PBD particle system bounds min=(%.6f %.6f %.6f) max=(%.6f %.6f %.6f)\n",
                bounds.minimum.x, bounds.minimum.y, bounds.minimum.z, bounds.maximum.x, bounds.maximum.y, bounds.maximum.z);
+        printf("Checks validBounds=%s validParticles=%s realMotion=%s reachedPlane=%s noPlanePenetration=%s settledOnPlane=%s\n",
+               validBounds ? "yes" : "no", validParticles ? "yes" : "no", realMotion ? "yes" : "no",
+               reachedPlane ? "yes" : "no", noPlanePenetration ? "yes" : "no", settledOnPlane ? "yes" : "no");
     }
     if (!unsupportedParticleBuffer) {
         printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");
         fflush(stdout);
     }
 
+    if (particleBuffer) { printf("Releasing particle buffer...\n"); fflush(stdout); particleBuffer->release(); }
+    if (ps) { printf("Releasing particle system...\n"); fflush(stdout); ps->release(); }
+    if (mat) { printf("Releasing PBD material...\n"); fflush(stdout); mat->release(); }
+    if (plane) { printf("Releasing rigid plane...\n"); fflush(stdout); plane->release(); }
+    if (rigidMat) { printf("Releasing rigid material...\n"); fflush(stdout); rigidMat->release(); }
     printf("Releasing scene...\n"); fflush(stdout); scene->release();
     if (dsp) { printf("Releasing dispatcher...\n"); fflush(stdout); dsp->release(); }
     printf("Releasing GPU manager...\n"); fflush(stdout); gpuMgr->release();

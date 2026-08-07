@@ -1667,7 +1667,9 @@ void PxgSimulationCore::gpuMemDmaUpFEMCloths(PxPinnedArray<PxgFEMCloth>& newFEMC
 	const PxU32 nbTotalFEMCloths = bodySimManager.mTotalNumFEMCloths;
 
 	const PxU32 nbNewFEMCloths = newFEMClothPool.size();
-	CUstream bpStream = mGpuContext->mGpuBp->getBpStream();
+	CUstream bpStream = 0;
+	if(mGpuContext->mGpuBp)
+		bpStream = mGpuContext->mGpuBp->getBpStream();
 
 	// This will allocate/dma FEM-cloth data 
 	if (nbTotalFEMCloths > mNbTotalFEMCloths)

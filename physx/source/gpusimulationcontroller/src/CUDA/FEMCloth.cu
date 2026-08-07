@@ -1300,7 +1300,8 @@ void cloth_finalizeVelocitiesLaunch(
 
 	if(threadIdx.x < 32)
 	{
-		awake = isAwake[threadIdx.x];
+		const PxU32 numWarpsPerBlock = blockDim.x / 32;
+		awake = threadIdx.x < numWarpsPerBlock ? isAwake[threadIdx.x] : false;
 		awake = __any_sync(FULL_MASK, awake);
 
 		if(awake)
@@ -1319,38 +1320,38 @@ extern "C" __global__ void cloth_sleeping(
 	PxReal* wakeCounters,
 	PxU32* stateChangedMask)
 {
-	const PxU32 NumWarps = PxgFEMClothKernelBlockDim::CLOTH_STEP / 32;
-	__shared__ PxU32 shMasks[NumWarps];
+	const PxU32 MaxWarps = PxgFEMClothKernelBlockDim::CLOTH_STEP / 32;
+	__shared__ PxU32 shMasks[MaxWarps];
 	const PxU32 globalThreadIdx = threadIdx.x + blockIdx.x * blockDim.x;
 
-	if (globalThreadIdx >= numActiveCloths)
-		return;
-	
-	const PxU32 id = activeId[globalThreadIdx];
-	PxgFEMCloth& femCloth = femCloths[id];
+	bool stateChanged = false;
+	if (globalThreadIdx < numActiveCloths)
+	{
+		const PxU32 id = activeId[globalThreadIdx];
+		PxgFEMCloth& femCloth = femCloths[id];
 
-	bool reset = femCloth.mIsActive;
+		const bool reset = femCloth.mIsActive;
+		PxReal counter = wakeCounters[id];
+		const bool wasActive = counter > 0.f;
 
-	PxReal counter = wakeCounters[id];
-	bool wasActive = counter > 0.f;
+		if (reset)
+			counter = resetCounter;
+		else
+			counter = PxMax(0.f, counter - dt);
 
-	if (reset)
-		counter = resetCounter;
-	else
-		counter = PxMax(0.f, counter - dt);
+		stateChanged = (counter > 0.f) ^ wasActive;
+		wakeCounters[id] = counter;
+	}
 
-	bool isActive = counter > 0.f;
-
-	PxU32 mask = __ballot_sync(FULL_MASK, isActive^wasActive);
-
-	wakeCounters[id] = counter;
+	const PxU32 mask = __ballot_sync(FULL_MASK, stateChanged);
 	if ((threadIdx.x & 31) == 0)
 		shMasks[threadIdx.x / 32] = mask;
 
 	__syncthreads();
 
 	const PxU32 startIdx = (blockIdx.x*blockDim.x) / 32;
-	if (threadIdx.x < NumWarps)
+	const PxU32 numWarpsPerBlock = blockDim.x / 32;
+	const PxU32 numStateWords = (numActiveCloths + 31) / 32;
+	if (threadIdx.x < numWarpsPerBlock && startIdx + threadIdx.x < numStateWords)
 		stateChangedMask[startIdx + threadIdx.x] = shMasks[threadIdx.x];
 }
-

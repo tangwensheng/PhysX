@@ -52,14 +52,51 @@ extern "C" __global__
 __launch_bounds__(PxgRadixSortKernelBlockDim::RADIX_SORT, 1)
 void radixSortMultiCalculateRanksLaunch(PxgRadixSortBlockDesc* desc, const PxU32 gStartBit)
 {
-	const uint4* PX_RESTRICT gInputKeys = reinterpret_cast<uint4*>(desc[blockIdx.y].inputKeys);
-	const uint4* PX_RESTRICT gInputRanks = reinterpret_cast<uint4*>(desc[blockIdx.y].inputRanks);
+	uint4* PX_RESTRICT gInputKeys = reinterpret_cast<uint4*>(desc[blockIdx.y].inputKeys);
+	uint4* PX_RESTRICT gInputRanks = reinterpret_cast<uint4*>(desc[blockIdx.y].inputRanks);
 	PxU32* gOutputKeys = desc[blockIdx.y].outputKeys;
 	PxU32* gOutputRanks = desc[blockIdx.y].outputRanks;
 
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
 
 	const PxU32 numKeys = *desc[blockIdx.y].numKeys;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// The gfx936 multiblock rank gather is unstable for tiny contact sets.
+	// Sort them once on one thread to avoid the wave/LDS path entirely.
+	if(numKeys <= WARP_SIZE * 4)
+	{
+		if(gStartBit == 0 && numKeys > 0 && blockIdx.x == 0 && threadIdx.x == 0)
+		{
+			PxU32* keys = reinterpret_cast<PxU32*>(gInputKeys);
+			PxU32* ranks = reinterpret_cast<PxU32*>(gInputRanks);
+
+			for(PxU32 i = 1; i < numKeys; ++i)
+			{
+				const PxU32 key = keys[i];
+				const PxU32 rank = ranks[i];
+				PxU32 j = i;
+
+				while(j > 0 && keys[j - 1] > key)
+				{
+					keys[j] = keys[j - 1];
+					ranks[j] = ranks[j - 1];
+					--j;
+				}
+
+				keys[j] = key;
+				ranks[j] = rank;
+			}
+
+			for(PxU32 i = 0; i < numKeys; ++i)
+			{
+				gOutputKeys[i] = keys[i];
+				gOutputRanks[i] = ranks[i];
+			}
+		}
+		return;
+	}
+#endif
 
 	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, numKeys, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
 }
@@ -85,8 +122,46 @@ void radixSortMultiCalculateRanksLaunchWithoutCount(PxgRadixSortDesc* desc, cons
 	PxU32* gOutputKeys = desc[blockIdx.y].outputKeys;
 	PxU32* gOutputRanks = desc[blockIdx.y].outputRanks;
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
+	const PxU32 numKeys = desc[blockIdx.y].count;
 
-	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, desc[blockIdx.y].count, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// Small particle sets do not need the gfx936 1024-thread wave/LDS rank path.
+	// Write every pass so the alternating radix descriptors remain coherent.
+	if(numKeys <= WARP_SIZE * 4)
+	{
+		if(numKeys > 0 && blockIdx.x == 0 && threadIdx.x == 0)
+		{
+			const PxU32* keys = reinterpret_cast<const PxU32*>(gInputKeys);
+			const PxU32* ranks = reinterpret_cast<const PxU32*>(gInputRanks);
+
+			for(PxU32 i = 0; i < numKeys; ++i)
+			{
+				gOutputKeys[i] = keys[i];
+				gOutputRanks[i] = ranks[i];
+			}
+
+			for(PxU32 i = 1; i < numKeys; ++i)
+			{
+				const PxU32 key = gOutputKeys[i];
+				const PxU32 rank = gOutputRanks[i];
+				PxU32 j = i;
+
+				while(j > 0 && gOutputKeys[j - 1] > key)
+				{
+					gOutputKeys[j] = gOutputKeys[j - 1];
+					gOutputRanks[j] = gOutputRanks[j - 1];
+					--j;
+				}
+
+				gOutputKeys[j] = key;
+				gOutputRanks[j] = rank;
+			}
+		}
+		return;
+	}
+#endif
+
+	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, numKeys, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
 }
 
 
@@ -112,6 +187,43 @@ void radixSortMultiCalculateRanksLaunchWithCount(PxgRadixSortDesc* desc, const P
 	PxU32* gOutputKeys = desc[blockIdx.y].outputKeys;
 	PxU32* gOutputRanks = desc[blockIdx.y].outputRanks;
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// GPU broadphase commonly sorts only a few projection keys. Avoid the
+	// 1024-thread wave/LDS rank path for these tiny sets on gfx936.
+	if(numKeys <= WARP_SIZE * 4)
+	{
+		if(numKeys > 0 && blockIdx.x == 0 && threadIdx.x == 0)
+		{
+			const PxU32* keys = reinterpret_cast<const PxU32*>(gInputKeys);
+			const PxU32* ranks = reinterpret_cast<const PxU32*>(gInputRanks);
+
+			for(PxU32 i = 0; i < numKeys; ++i)
+			{
+				gOutputKeys[i] = keys[i];
+				gOutputRanks[i] = ranks[i];
+			}
+
+			for(PxU32 i = 1; i < numKeys; ++i)
+			{
+				const PxU32 key = gOutputKeys[i];
+				const PxU32 rank = gOutputRanks[i];
+				PxU32 j = i;
+
+				while(j > 0 && gOutputKeys[j - 1] > key)
+				{
+					gOutputKeys[j] = gOutputKeys[j - 1];
+					gOutputRanks[j] = gOutputRanks[j - 1];
+					--j;
+				}
+
+				gOutputKeys[j] = key;
+				gOutputRanks[j] = rank;
+			}
+		}
+		return;
+	}
+#endif
 
 	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, numKeys, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
 }
@@ -247,6 +359,3 @@ extern "C" __global__ void radixSortCopy2(const PxU64* inValue, PxU64* outValue,
 	}
 
 }
-
-
-

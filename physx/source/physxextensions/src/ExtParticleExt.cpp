@@ -58,7 +58,8 @@ void PxDmaDataToDevice(PxCudaContextManager* cudaContextManager, PxParticleBuffe
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(posInvMass), desc.positions, desc.numActiveParticles * sizeof(PxVec4), 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(velocities), desc.velocities, desc.numActiveParticles * sizeof(PxVec4), 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(phases), desc.phases, desc.numActiveParticles * sizeof(PxU32), 0);
-	cudaContext->memcpyHtoDAsync(CUdeviceptr(volumes), desc.volumes, desc.numVolumes * sizeof(PxParticleVolume), 0);
+	if(desc.numVolumes)
+		cudaContext->memcpyHtoDAsync(CUdeviceptr(volumes), desc.volumes, desc.numVolumes * sizeof(PxParticleVolume), 0);
 
 	particleBuffer->setNbActiveParticles(desc.numActiveParticles);
 	particleBuffer->setNbParticleVolumes(desc.numVolumes);
@@ -95,6 +96,11 @@ PxParticleClothBuffer* PxCreateAndPopulateParticleClothBuffer(const PxParticleBu
 	cudaContextManager->acquireContext();
 
 	PxParticleClothBuffer* clothBuffer = PxGetPhysics().createParticleClothBuffer(desc.maxParticles, desc.maxVolumes, clothDesc.nbCloths, clothDesc.nbTriangles, clothDesc.nbSprings, cudaContextManager);
+	if(!clothBuffer)
+	{
+		cudaContextManager->releaseContext();
+		return NULL;
+	}
 
 	PxVec4* posInvMass = clothBuffer->getPositionInvMasses();
 	PxVec4* velocities = clothBuffer->getVelocities();
@@ -108,7 +114,8 @@ PxParticleClothBuffer* PxCreateAndPopulateParticleClothBuffer(const PxParticleBu
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(posInvMass), desc.positions, desc.numActiveParticles * sizeof(PxVec4), 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(velocities), desc.velocities, desc.numActiveParticles * sizeof(PxVec4), 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(phases), desc.phases, desc.numActiveParticles * sizeof(PxU32), 0);
-	cudaContext->memcpyHtoDAsync(CUdeviceptr(volumes), desc.volumes, desc.numVolumes * sizeof(PxParticleVolume), 0);
+	if(desc.numVolumes)
+		cudaContext->memcpyHtoDAsync(CUdeviceptr(volumes), desc.volumes, desc.numVolumes * sizeof(PxParticleVolume), 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(triangles), clothDesc.triangles, clothDesc.nbTriangles * sizeof(PxU32) * 3, 0);
 	cudaContext->memcpyHtoDAsync(CUdeviceptr(restPositions), clothDesc.restPositions, desc.numActiveParticles * sizeof(PxVec4), 0);
 
