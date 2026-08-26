@@ -37,11 +37,3 @@ fi
 TARGET="${1:-bench_physx_scene}"
 cmake --build . -j1 --target "$TARGET"
 
-echo ""
-echo "=== Running $TARGET ==="
-if [ -f "$TARGET" ]; then
-    # ./"$TARGET"
-else
-    echo "ERROR: $TARGET not found"
-    exit 1
-fi

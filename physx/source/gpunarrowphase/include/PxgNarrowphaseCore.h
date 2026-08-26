@@ -446,7 +446,13 @@ namespace physx
 
 		PxU32									mCollisionStackSizeBytes;
 
-		PxU32*									mMaxConvexMeshTempMemory;
+		// The narrowphase core kernels atomicMax the collision stack requirement into this
+		// counter. It used to live in host mapped memory, which makes the GPU issue that
+		// atomic as a PCIe AtomicOp; the Hygon root complex rejects those with
+		// UR_ATOMIC_OPCODE and the driver kills the process. The atomic now targets device
+		// memory and the host reads a copy back after the stream sync.
+		PxgTypedCudaBuffer<PxU32>				mMaxConvexMeshTempMemoryOnDevice; //device memory
+		PxU32*									mMaxConvexMeshTempMemory;         //host readback
 
 		struct RefcountedRecord
 		{

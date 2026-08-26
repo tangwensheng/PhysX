@@ -47,6 +47,10 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels5() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuFinishContactsStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V41_SERIAL_FINISH_CONTACTS";
+#endif
+
 __device__ void writeCompressedContact(
 	PxContactPatch* PX_RESTRICT patches, PxU32 patchWriteIndex, PxU32 contactWriteIndex,
 	const PxU32 nbContacts,
@@ -144,20 +148,201 @@ void convexTrimeshFinishContacts(
 	if(globalWarpIndex >= numPairs)
 		return;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 threadIndexInWarp = threadIdx.x & (WARP_SIZE - 1);
+	if (threadIndexInWarp != 0)
+		return;
+
+	const PxgPersistentContactMultiManifold& multiManifold = cmMultiManifold[globalWarpIndex];
+	const PxU32 declaredNbManifolds = multiManifold.mNbManifolds;
+	PxU32 nbManifolds = PxMin(declaredNbManifolds, PxU32(PXG_MULTIMANIFOLD_MAX_SUBMANIFOLDS));
+	PxU32 realTotalNumContacts = 0;
+
+	bool validManifoldLayout = declaredNbManifolds == nbManifolds;
+	for (PxU32 manifoldIndex = 0; manifoldIndex < nbManifolds; ++manifoldIndex)
+	{
+		const PxU32 numContacts = multiManifold.mNbContacts[manifoldIndex];
+		if (numContacts == 0 || numContacts > PXG_SUBMANIFOLD_MAX_CONTACTS)
+		{
+			validManifoldLayout = false;
+			break;
+		}
+		realTotalNumContacts += numContacts;
+	}
+
+	if (!validManifoldLayout)
+	{
+		nbManifolds = 0;
+		realTotalNumContacts = 0;
+	}
+
+	PxU32 totalNumContacts = realTotalNumContacts;
+	PxU32 patchByteOffset = 0xFFFFFFFF;
+	PxU32 contactByteOffset = 0xFFFFFFFF;
+	PxU32 forceAndIndiceByteOffset = 0xFFFFFFFF;
+
+	PxsContactManagerOutput* output = cmOutputs + globalWarpIndex;
+	const PxU32 allflags = reinterpret_cast<PxU32*>(&output->allflagsStart)[0];
+	const PxU8 oldStatusFlags = u16Low(u32High(allflags));
+	PxU8 statusFlags = oldStatusFlags;
+	statusFlags &= (~PxsContactManagerStatusFlag::eTOUCH_KNOWN);
+	statusFlags |= realTotalNumContacts != 0 ? PxsContactManagerStatusFlag::eHAS_TOUCH : PxsContactManagerStatusFlag::eHAS_NO_TOUCH;
+
+	const PxU8 prevPatches = u16High(u32Low(allflags));
+	bool overflow = false;
+	const PxU32 nbInsertAveragePoint = insertAveragePoint && realTotalNumContacts != 0 ? nbManifolds : 0;
+	totalNumContacts += nbInsertAveragePoint;
+
+	if (totalNumContacts != 0)
+	{
+		const PxU32 patchBytes = sizeof(PxContactPatch) * nbManifolds;
+		const PxU32 contactBytes = sizeof(PxContact) * totalNumContacts;
+		const PxU32 forceAndIndiceBytes = sizeof(PxU32) * totalNumContacts * 2;
+
+		patchByteOffset = atomicAdd(&(patchAndContactCounters->patchesBytes), patchBytes);
+		contactByteOffset = atomicAdd(&(patchAndContactCounters->contactsBytes), contactBytes);
+		forceAndIndiceByteOffset = atomicAdd(&(patchAndContactCounters->forceAndIndiceBytes), forceAndIndiceBytes);
+
+		if (patchByteOffset > patchBytesLimit || patchBytes > patchBytesLimit - patchByteOffset)
+		{
+			patchAndContactCounters->setOverflowError(PxgPatchAndContactCounters::PATCH_BUFFER_OVERFLOW);
+			patchByteOffset = 0xFFFFFFFF;
+			overflow = true;
+		}
+		else if (contactByteOffset > contactBytesLimit || contactBytes > contactBytesLimit - contactByteOffset)
+		{
+			patchAndContactCounters->setOverflowError(PxgPatchAndContactCounters::CONTACT_BUFFER_OVERFLOW);
+			contactByteOffset = 0xFFFFFFFF;
+			overflow = true;
+		}
+		else if (forceAndIndiceByteOffset > forceBytesLimit || forceAndIndiceBytes > forceBytesLimit - forceAndIndiceByteOffset)
+		{
+			patchAndContactCounters->setOverflowError(PxgPatchAndContactCounters::FORCE_BUFFER_OVERFLOW);
+			forceAndIndiceByteOffset = 0xFFFFFFFF;
+			overflow = true;
+		}
+
+		if (overflow)
+		{
+			nbManifolds = 0;
+			totalNumContacts = 0;
+			statusFlags &= (~PxsContactManagerStatusFlag::eTOUCH_KNOWN);
+			statusFlags |= PxsContactManagerStatusFlag::eHAS_NO_TOUCH;
+		}
+	}
+
+	const bool previouslyHadTouch = oldStatusFlags & PxsContactManagerStatusFlag::eHAS_TOUCH;
+	const bool prevTouchKnown = oldStatusFlags & PxsContactManagerStatusFlag::eTOUCH_KNOWN;
+	const bool currentlyHasTouch = !overflow && realTotalNumContacts != 0;
+	touchChangeFlags[globalWarpIndex] = (previouslyHadTouch ^ currentlyHasTouch) || (!prevTouchKnown);
+	patchChangeFlags[globalWarpIndex] = prevPatches != nbManifolds;
+
+	assert(totalNumContacts < 100);
+	reinterpret_cast<PxU32*>(&output->allflagsStart)[0] = merge(merge(prevPatches, statusFlags), merge(nbManifolds, PxU8(0)));
+	output->nbContacts = totalNumContacts;
+
+	if (!overflow && totalNumContacts != 0)
+	{
+		output->contactForces = reinterpret_cast<PxReal*>(startContactForces + forceAndIndiceByteOffset);
+		output->contactPatches = startContactPatches + patchByteOffset;
+		output->contactPoints = startContactPoints + contactByteOffset;
+	}
+	else
+	{
+		output->contactForces = 0;
+		output->contactPatches = 0;
+		output->contactPoints = 0;
+	}
+
+	if (overflow || nbManifolds == 0)
+		return;
+
+	PxgContactManagerInput npWorkItem = cmInputs[globalWarpIndex];
+	PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	PxU32 shapeRef1 = npWorkItem.shapeRef1;
+	PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+
+	const bool flip = gpuShapes[shapeRef0].type == PxGeometryType::eTRIANGLEMESH;
+	if (flip)
+	{
+		PxSwap(shapeRef0, shapeRef1);
+		PxSwap(transformCacheRef0, transformCacheRef1);
+	}
+
+	const PxgShape shape0 = gpuShapes[shapeRef0];
+	const PxsCachedTransform trimeshTransformCached = transformCache[transformCacheRef1];
+	const PxsCachedTransform sphereTransformCached = transformCache[transformCacheRef0];
+	const uint2 materialIndices = pairs[globalWarpIndex].materialIndices;
+
+	PxContactPatch* patches = reinterpret_cast<PxContactPatch*>(patchStream + patchByteOffset);
+	float4* contacts = reinterpret_cast<float4*>(contactStream + contactByteOffset);
+	PxU32* faceIndex = reinterpret_cast<PxU32*>(forceAndIndiceStream + forceAndIndiceByteOffset + totalNumContacts * sizeof(PxU32));
+
+	PxU32 writeIndex = 0;
+	for (PxU32 manifoldIndex = 0; manifoldIndex < nbManifolds; ++manifoldIndex)
+	{
+		const PxU32 numContacts = multiManifold.mNbContacts[manifoldIndex];
+		const PxVec3 worldNormal = trimeshTransformCached.transform.rotate(multiManifold.mContacts[manifoldIndex][0].normal).getNormalized();
+		writeCompressedContact(patches, manifoldIndex, writeIndex, numContacts, flip ? -worldNormal : worldNormal,
+			materialIndices.x, materialIndices.y, materials);
+
+		for (PxU32 contactIndex = 0; contactIndex < numContacts; ++contactIndex)
+		{
+			const PxgContact& point = multiManifold.mContacts[manifoldIndex][contactIndex];
+			assert(point.pointB.isFinite());
+
+			PxReal pen = point.penetration;
+			PxVec3 worldPt;
+			if (shape0.type == PxGeometryType::eSPHERE)
+			{
+				const PxReal radius = shape0.scale.scale.y;
+				pen -= radius;
+				worldPt = sphereTransformCached.transform.p - worldNormal * radius;
+			}
+			else if (shape0.type == PxGeometryType::eCAPSULE)
+			{
+				const PxReal radius = shape0.scale.scale.y;
+				pen -= radius;
+				worldPt = sphereTransformCached.transform.transform(point.pointA) - worldNormal * radius;
+			}
+			else
+			{
+				worldPt = trimeshTransformCached.transform.transform(point.pointB);
+			}
+
+			contacts[writeIndex] = make_float4(worldPt.x, worldPt.y, worldPt.z, pen);
+			faceIndex[writeIndex] = point.triIndex;
+			++writeIndex;
+		}
+	}
+	return;
+#else
 	
 	const PxgPersistentContactMultiManifold& multiManifold = cmMultiManifold[globalWarpIndex];
-	PxU32 nbManifolds = multiManifold.mNbManifolds;
+	const PxU32 declaredNbManifolds = multiManifold.mNbManifolds;
+	PxU32 nbManifolds = PxMin(declaredNbManifolds, PxU32(PXG_MULTIMANIFOLD_MAX_SUBMANIFOLDS));
 
 	const PxU32 threadIndexInWarp = threadIdx.x & (WARP_SIZE - 1);
 	const PxU32 singleManifoldIndex = threadIndexInWarp / PXG_SUBMANIFOLD_MAX_CONTACTS;
 	const PxU32 threadIndexInManifold = threadIndexInWarp % PXG_SUBMANIFOLD_MAX_CONTACTS;
 
-	const PxU32 numContacts = (singleManifoldIndex >= nbManifolds) ? 0 : multiManifold.mNbContacts[singleManifoldIndex];
+	PxU32 numContacts = (singleManifoldIndex >= nbManifolds) ? 0 : multiManifold.mNbContacts[singleManifoldIndex];
+	const bool validManifold = singleManifoldIndex < nbManifolds && threadIndexInManifold == 0 &&
+		numContacts > 0 && numContacts <= PXG_SUBMANIFOLD_MAX_CONTACTS;
+	const PxU32 validManifoldCount = __popc(__ballot_sync(FULL_MASK, validManifold));
+	const bool validManifoldLayout = declaredNbManifolds == nbManifolds && validManifoldCount == nbManifolds;
+	if (!validManifoldLayout)
+	{
+		nbManifolds = 0;
+		numContacts = 0;
+	}
 
 	const bool hasContacts = threadIndexInManifold < numContacts;
 
 	PxU32 contactMask = __ballot_sync(FULL_MASK, (PxU32) hasContacts);
-	PxU32 totalNumContacts = __popc(contactMask);
+	const PxU32 realTotalNumContacts = __popc(contactMask);
+	PxU32 totalNumContacts = realTotalNumContacts;
 	
 	const PxU32 writeIndex = warpScanExclusive(contactMask, threadIndexInWarp); //tells me how many threads preceding me had contacts (i.e. what my write index will be)
 
@@ -175,7 +360,7 @@ void convexTrimeshFinishContacts(
 
 	statusFlags &= (~PxsContactManagerStatusFlag::eTOUCH_KNOWN);
 	
-	if (totalNumContacts != 0)
+	if (realTotalNumContacts != 0)
 		statusFlags |= PxsContactManagerStatusFlag::eHAS_TOUCH;
 	else
 		statusFlags |= PxsContactManagerStatusFlag::eHAS_NO_TOUCH;
@@ -187,7 +372,7 @@ void convexTrimeshFinishContacts(
 
 	if (threadIndexInWarp == 0 )
 	{
-		PxU32 nbInsertAveragePoint = insertAveragePoint ? nbManifolds : 0;
+		PxU32 nbInsertAveragePoint = insertAveragePoint && realTotalNumContacts != 0 ? nbManifolds : 0;
 		totalNumContacts = totalNumContacts + nbInsertAveragePoint;
 
 		if (totalNumContacts)
@@ -229,7 +414,7 @@ void convexTrimeshFinishContacts(
 
 		bool previouslyHadTouch = oldStatusFlags & PxsContactManagerStatusFlag::eHAS_TOUCH;
 		bool prevTouchKnown = oldStatusFlags & PxsContactManagerStatusFlag::eTOUCH_KNOWN;
-		bool currentlyHasTouch = nbManifolds != 0;
+		bool currentlyHasTouch = !overflow && realTotalNumContacts != 0;
 
 		const bool change = (previouslyHadTouch ^ currentlyHasTouch) || (!prevTouchKnown);
 		touchChangeFlags[globalWarpIndex] = change;
@@ -240,7 +425,7 @@ void convexTrimeshFinishContacts(
 													merge(nbManifolds, PxU8(0)));  
 		output->nbContacts = totalNumContacts;
 
-		if (!overflow)
+		if (!overflow && totalNumContacts != 0)
 		{
 			output->contactForces = reinterpret_cast<PxReal*>(startContactForces + forceAndIndiceByteOffset);
 			output->contactPatches = startContactPatches + patchByteOffset;
@@ -343,5 +528,5 @@ void convexTrimeshFinishContacts(
 		if(forceAndIndiceByteOffset != 0xFFFFFFFF)
 			faceIndex[writeIndex] = point.triIndex;
  	}
+#endif
 }
-

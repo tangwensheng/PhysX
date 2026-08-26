@@ -1446,6 +1446,52 @@ extern "C" __global__ void ps_primitivesDiffuseCollisionLaunch(
 	
 	PxU32 workCount = 0;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ PxU32 shDcuWorkCount;
+	if (totalComparision <= blockDim.x)
+	{
+		if (blockIdx.x != 0)
+			return;
+
+		if (threadIdx.x == 0)
+		{
+			PxU32 count = 0;
+			for (PxU32 workIndex = 0; workIndex < totalComparision; ++workIndex)
+			{
+				PxgCellData data;
+				data.update(workIndex, numTests, cmInputs, shapes, bounds, contactDistance, restDistances, startIndices, particleSystems);
+
+				if (data.particleSystem->mCommonData.mMaxDiffuseParticles != 0)
+				{
+					const PxU32 cellStartIndex = data.particleSystem->mDiffuseCellStart[data.gridHash];
+					if (cellStartIndex != EMPTY_CELL)
+					{
+						const PxU32 cellEndIndex = data.particleSystem->mDiffuseCellEnd[data.gridHash];
+						const PxU32 range = cellEndIndex - cellStartIndex;
+						if (range)
+							shWorkIndices[count++] = workIndex;
+					}
+				}
+			}
+			shDcuWorkCount = count;
+		}
+
+		__syncthreads();
+		if (shDcuWorkCount == 0)
+			return;
+
+		const bool hasWork = threadIdx.x < shDcuWorkCount;
+		const PxU32 dataWorkIndex = shWorkIndices[hasWork ? threadIdx.x : 0];
+		const PxU32 workIndex = hasWork ? dataWorkIndex : 0xFFFFFFFF;
+		PxgCellData data;
+		data.update(dataWorkIndex, numTests, cmInputs, shapes, bounds, contactDistance, restDistances, startIndices, particleSystems);
+
+		psDiffusePrimitivesCollision(isTGS, data.gridHash, data.rigidShape, data.particleShape, data.rigidCacheRef, data.particleCacheRef, transformCache,
+			*data.particleSystem, data.particleSystemId, data.cDistance, data.restDistance, materials, workIndex,
+			totalComparision, shapeToRigidRemapTable);
+		return;
+	}
+#endif
 
 	for (PxU32 i = 0; i < totalComparision; i += blockDim.x * gridDim.x)
 	{

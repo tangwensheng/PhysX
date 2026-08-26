@@ -67,6 +67,10 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels23() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuBoxBoxStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V34_SERIAL_BOXBOX_GROUP";
+#endif
+
 __device__ PxVec3 getIncidentPolygon4(PxVec3& faceNormal, const PxVec3& axis, const PxMat34& transf1To0,
 	const PxVec3& extents, const PxU32 threadIndexInGroup, const PxU32 groupStartThreadIndex, const PxU32 groupMask)
 {
@@ -81,8 +85,6 @@ __device__ PxVec3 getIncidentPolygon4(PxVec3& faceNormal, const PxVec3& axis, co
 		d = (&transf1To0.m.column0)[threadIndexInGroup].dot(axis);
 		absd = PxAbs(d);
 	}
-
-
 	PxReal s0 = (threadIndexInGroup == 0 || threadIndexInGroup == 3) ? -1.f : 1.f;
 	PxReal s1 = threadIndexInGroup & 2 ? 1.f : -1.f;
 
@@ -432,6 +434,443 @@ struct TempBoxBoxBuffer
 	// space for 3 contacts per thread for all threads in the block
 	PxVec4 tempBuff[NumWarps * 64 * 3]; // DCU: WARP_SIZE=64, 2x buffer for 128-thread block
 };
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+static __device__ bool dcuContains4(const PxVec4* verts, const PxVec3& p, const PxBounds3& bounds)
+{
+	if (p.x < bounds.minimum.x || p.x > bounds.maximum.x || p.y < bounds.minimum.y || p.y > bounds.maximum.y)
+		return false;
+
+	const PxReal tx = p.x;
+	const PxReal ty = p.y;
+	const PxReal eps = 1e-6f;
+	PxU32 intersectionPoints = 0;
+
+	PxU32 i = 0, j = 3;
+	for (; i < 4; j = i++)
+	{
+		const PxVec3 vj = verts[j].getXYZ();
+		const PxVec3 vi = verts[i].getXYZ();
+		if ((tx == vj.x && ty == vj.y) || (tx == vi.x && ty == vi.y))
+			return true;
+
+		if ((vj.y > ty) != (vi.y > ty))
+		{
+			const PxReal jix = vi.x - vj.x;
+			const PxReal jiy = vi.y - vj.y;
+			const PxReal tmp = (ty - vj.y) * jix + (vj.x + eps) * jiy;
+			const PxReal part3 = tx * jiy;
+			const PxReal comp1 = jiy > 0.f ? tmp : part3;
+			const PxReal comp2 = jiy > 0.f ? part3 : tmp;
+
+			if (comp1 >= comp2)
+			{
+				if (intersectionPoints == 1)
+					return false;
+				intersectionPoints++;
+			}
+		}
+	}
+	return intersectionPoints > 0;
+}
+
+static __device__ PxU32 dcuCalculateContacts(const PxReal extentX_, const PxReal extentY_, const PxVec4* points,
+	const PxVec3& incidentFaceNormalInNew, const PxReal contactDist, PxVec4* contacts, PxU32* counts)
+{
+	const PxReal extentX = 1.00001f * extentX_;
+	const PxReal extentY = 1.00001f * extentY_;
+	const PxVec3 ext(extentX, extentY, PX_MAX_F32);
+	const PxVec3 negExt(-extentX, -extentY, -contactDist - 1e-7f);
+	bool pPenetration[4];
+	bool pArea[4];
+	bool pArea2[4] = {false, false, false, false};
+	bool allArea = true;
+
+	for (PxU32 lane = 0; lane < 4; ++lane)
+	{
+		counts[lane] = 0;
+		const PxVec3 pt = points[lane].getXYZ();
+		const PxReal z = -pt.z;
+		pPenetration[lane] = contactDist > z;
+		pArea[lane] = pPenetration[lane] && ext.x >= PxAbs(pt.x) && ext.y >= PxAbs(pt.y);
+		allArea = allArea && pArea[lane];
+		if (pArea[lane])
+			contacts[lane * 3 + counts[lane]++] = PxVec4(pt, z);
+	}
+
+	if (allArea)
+		return 4;
+
+	PxBounds3 bounds;
+	bounds.minimum = bounds.maximum = points[0].getXYZ();
+	for (PxU32 lane = 1; lane < 4; ++lane)
+		bounds.include(points[lane].getXYZ());
+
+	const PxReal denom = incidentFaceNormalInNew.z;
+	bool allArea2 = true;
+	for (PxU32 lane = 0; lane < 4; ++lane)
+	{
+		const PxVec3 q0((lane == 0 || lane == 3) ? -extentX : extentX,
+			(lane & 2) ? -extentY : extentY, 0.f);
+		if (dcuContains4(points, q0, bounds))
+		{
+			const PxReal t = incidentFaceNormalInNew.dot(points[0].getXYZ() - q0) / denom;
+			if (contactDist > -t)
+			{
+				pArea2[lane] = true;
+				contacts[lane * 3 + counts[lane]++] = PxVec4(q0.x, q0.y, t, -t);
+			}
+		}
+		allArea2 = allArea2 && pArea2[lane];
+	}
+
+	if (!allArea2)
+	{
+		for (PxU32 lane = 0; lane < 4; ++lane)
+		{
+			const PxU32 next = (lane + 1) & 3;
+			if (pPenetration[lane] || pPenetration[next])
+			{
+				const bool con0 = pPenetration[lane] && pArea[lane];
+				const bool con1 = pPenetration[next] && pArea[next];
+				if (!(con0 && con1))
+				{
+					const PxVec3 p0 = points[lane].getXYZ();
+					const PxVec3 p0p1 = points[next].getXYZ() - p0;
+					PxReal tmin, tmax;
+					if (intersectSegmentAABB(p0, p0p1, ext, negExt, tmin, tmax))
+					{
+						if (!con0)
+						{
+							const PxVec3 intersectP = p0 + p0p1 * tmin;
+							contacts[lane * 3 + counts[lane]++] = PxVec4(intersectP, -intersectP.z);
+						}
+						if (!con1)
+						{
+							const PxVec3 intersectP = p0 + p0p1 * tmax;
+							contacts[lane * 3 + counts[lane]++] = PxVec4(intersectP, -intersectP.z);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	PxU32 totalContacts = 0;
+	for (PxU32 lane = 0; lane < 4; ++lane)
+		totalContacts += counts[lane];
+	return totalContacts;
+}
+
+template<PxU32 NumWarps>
+static __device__ PxU32 doBoxBoxGenerateContactsDcu(const PxVec3& box0Extent, const PxVec3& box1Extent,
+	const PxMat34& transform0, const PxMat34& transform1, const PxReal contactDist,
+	TempBoxBoxBuffer<NumWarps>& tempBuffer, PxVec3& normal)
+{
+	const PxU32 groupStartIndex = threadIdx.x & ~3;
+	PxVec4* localContacts = &tempBuffer.tempBuff[groupStartIndex * 3];
+	PxVec4* points = &tempBuffer.tempBuff[NumWarps * 32 * 3 + groupStartIndex];
+	const PxMat34 transform1To0 = transform0.transformTranspose(transform1);
+	const PxMat33& rot1To0 = transform1To0.m;
+	const PxMat33 rot0To1 = rot1To0.getTranspose();
+	const PxVec3 uEps(1e-6f);
+	PxMat33 abs0To1;
+
+	for (PxU32 axis = 0; axis < 3; ++axis)
+		abs0To1[axis] = rot0To1[axis].abs() + uEps;
+
+	PxReal selectedOverlap = PX_MAX_F32;
+	PxReal selectedSign = 0.f;
+	PxU32 selectedFeature = 0;
+	for (PxU32 axis = 0; axis < 3; ++axis)
+	{
+		const PxReal signA = transform1To0.p[axis];
+		const PxReal overlapA = box0Extent[axis] + abs0To1[axis].dot(box1Extent) - PxAbs(signA) + contactDist;
+		if (overlapA < 0.f)
+			return 0;
+
+		const PxVec3 col = (&rot1To0.column0)[axis];
+		const PxReal signB = transform1To0.p.dot(col);
+		const PxReal overlapB = (col.abs() + uEps).dot(box0Extent) + box1Extent[axis] - PxAbs(signB) + contactDist;
+		if (overlapB < 0.f)
+			return 0;
+
+		PxReal laneOverlap = overlapA;
+		PxReal laneSign = signA;
+		PxU32 laneFeature = axis;
+		if (laneOverlap > overlapB)
+		{
+			laneOverlap = overlapB;
+			laneSign = signB;
+			laneFeature += 3;
+		}
+
+		if (laneOverlap < selectedOverlap)
+		{
+			selectedOverlap = laneOverlap;
+			selectedSign = laneSign;
+			selectedFeature = laneFeature;
+		}
+	}
+
+	for (PxU32 axis = 0; axis < 3; ++axis)
+	{
+		const PxVec3 col = (&rot1To0.column0)[axis];
+		const PxVec3 absCol = col.abs() + uEps;
+		const PxU32 i0 = axis == 2 ? 1 : 2;
+		const PxU32 i1 = axis == 0 ? 1 : 0;
+		const PxU32 i2 = axis == 0 ? 1 : 0;
+		const PxU32 i3 = axis == 2 ? 1 : 2;
+
+		PxReal absSign = PxAbs(col.y * transform1To0.p.z - col.z * transform1To0.p.y);
+		PxReal radiusSum = absCol.z * box0Extent.y + absCol.y * box0Extent.z
+			+ abs0To1.column0[i0] * box1Extent[i1] + abs0To1.column0[i2] * box1Extent[i3] + contactDist;
+		if (absSign > radiusSum)
+			return 0;
+
+		absSign = PxAbs(col.z * transform1To0.p.x - col.x * transform1To0.p.z);
+		radiusSum = absCol.z * box0Extent.x + absCol.x * box0Extent.z
+			+ abs0To1.column1[i0] * box1Extent[i1] + abs0To1.column1[i2] * box1Extent[i3] + contactDist;
+		if (absSign > radiusSum)
+			return 0;
+
+		absSign = PxAbs(col.x * transform1To0.p.y - col.y * transform1To0.p.x);
+		radiusSum = absCol.y * box0Extent.x + absCol.x * box0Extent.y
+			+ abs0To1.column2[i0] * box1Extent[i1] + abs0To1.column2[i2] * box1Extent[i3] + contactDist;
+		if (absSign > radiusSum)
+			return 0;
+	}
+
+	const PxVec3& axis00 = transform0.m.column0;
+	const PxVec3& axis01 = transform0.m.column1;
+	const PxVec3& axis02 = transform0.m.column2;
+	const PxVec3& axis10 = transform1.m.column0;
+	const PxVec3& axis11 = transform1.m.column1;
+	const PxVec3& axis12 = transform1.m.column2;
+	PxMat34 newTransformV;
+	PxVec3 mtd;
+	PxReal e0, e1;
+
+	switch (selectedFeature)
+	{
+	case 0:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis00;
+			newTransformV.m.column0 = -axis02;
+			newTransformV.m.column1 = axis01;
+			newTransformV.m.column2 = axis00;
+		}
+		else
+		{
+			mtd = -axis00;
+			newTransformV.m.column0 = axis02;
+			newTransformV.m.column1 = axis01;
+			newTransformV.m.column2 = -axis00;
+		}
+		newTransformV.p = transform0.p - mtd * box0Extent.x;
+		e0 = box0Extent.z;
+		e1 = box0Extent.y;
+		break;
+	case 1:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis01;
+			newTransformV.m.column0 = axis00;
+			newTransformV.m.column1 = -axis02;
+			newTransformV.m.column2 = axis01;
+		}
+		else
+		{
+			mtd = -axis01;
+			newTransformV.m.column0 = axis00;
+			newTransformV.m.column1 = axis02;
+			newTransformV.m.column2 = -axis01;
+		}
+		newTransformV.p = transform0.p - mtd * box0Extent.y;
+		e0 = box0Extent.x;
+		e1 = box0Extent.z;
+		break;
+	case 2:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis02;
+			newTransformV.m.column0 = axis00;
+			newTransformV.m.column1 = axis01;
+			newTransformV.m.column2 = axis02;
+		}
+		else
+		{
+			mtd = -axis02;
+			newTransformV.m.column0 = axis00;
+			newTransformV.m.column1 = -axis01;
+			newTransformV.m.column2 = -axis02;
+		}
+		newTransformV.p = transform0.p - mtd * box0Extent.z;
+		e0 = box0Extent.x;
+		e1 = box0Extent.y;
+		break;
+	case 3:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis10;
+			newTransformV.m.column0 = axis12;
+			newTransformV.m.column1 = axis11;
+			newTransformV.m.column2 = -axis10;
+		}
+		else
+		{
+			mtd = -axis10;
+			newTransformV.m.column0 = -axis12;
+			newTransformV.m.column1 = axis11;
+			newTransformV.m.column2 = axis10;
+		}
+		newTransformV.p = transform1.p + mtd * box1Extent.x;
+		e0 = box1Extent.z;
+		e1 = box1Extent.y;
+		break;
+	case 4:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis11;
+			newTransformV.m.column0 = axis10;
+			newTransformV.m.column1 = axis12;
+			newTransformV.m.column2 = -axis11;
+		}
+		else
+		{
+			mtd = -axis11;
+			newTransformV.m.column0 = axis10;
+			newTransformV.m.column1 = -axis12;
+			newTransformV.m.column2 = axis11;
+		}
+		newTransformV.p = transform1.p + mtd * box1Extent.y;
+		e0 = box1Extent.x;
+		e1 = box1Extent.z;
+		break;
+	default:
+		if (selectedSign <= 0.f)
+		{
+			mtd = axis12;
+			newTransformV.m.column0 = axis10;
+			newTransformV.m.column1 = -axis11;
+			newTransformV.m.column2 = -axis12;
+		}
+		else
+		{
+			mtd = -axis12;
+			newTransformV.m.column0 = axis10;
+			newTransformV.m.column1 = axis11;
+			newTransformV.m.column2 = axis12;
+		}
+		newTransformV.p = transform1.p + mtd * box1Extent.z;
+		e0 = box1Extent.x;
+		e1 = box1Extent.y;
+		break;
+	}
+
+	const bool referenceIsBox0 = selectedFeature < 3;
+	const PxMat34 transform1ToNew = newTransformV.transformTranspose(referenceIsBox0 ? transform1 : transform0);
+	const PxVec3 localNormal = newTransformV.m.transformTranspose(mtd);
+	const PxVec3 incidentAxis = referenceIsBox0 ? -localNormal : localNormal;
+	const PxVec3 incidentExtents = referenceIsBox0 ? box1Extent : box0Extent;
+	const PxReal d0 = transform1ToNew.m.column0.dot(incidentAxis);
+	const PxReal d1 = transform1ToNew.m.column1.dot(incidentAxis);
+	const PxReal d2 = transform1ToNew.m.column2.dot(incidentAxis);
+	PxU32 incidentAxisIndex = 0;
+	if (!(PxAbs(d0) >= PxAbs(d1) && PxAbs(d0) >= PxAbs(d2)))
+		incidentAxisIndex = PxAbs(d1) >= PxAbs(d2) ? 1 : 2;
+	const PxReal incidentDot = incidentAxisIndex == 0 ? d0 : (incidentAxisIndex == 1 ? d1 : d2);
+	const PxReal incidentSign = incidentDot > 0.f ? -1.f : 1.f;
+	PxVec3 incidentFaceNormalInNew = (&transform1ToNew.m.column0)[incidentAxisIndex] * incidentSign;
+
+	for (PxU32 lane = 0; lane < 4; ++lane)
+	{
+		const PxReal s0 = (lane == 0 || lane == 3) ? -1.f : 1.f;
+		const PxReal s1 = (lane & 2) ? 1.f : -1.f;
+		PxVec3 vertexSign;
+		if (incidentAxisIndex == 0)
+			vertexSign = PxVec3(incidentSign, s0, s1);
+		else if (incidentAxisIndex == 1)
+			vertexSign = PxVec3(s0, incidentSign, s1);
+		else
+			vertexSign = PxVec3(s0, s1, incidentSign);
+		points[lane] = PxVec4(transform1ToNew.transform(incidentExtents.multiply(vertexSign)), 0.f);
+	}
+
+	PxU32 counts[4];
+	PxU32 totalContacts = dcuCalculateContacts(e0, e1, points, incidentFaceNormalInNew, contactDist, localContacts, counts);
+	if (totalContacts <= PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH)
+	{
+		PxU32 outputIndex = 0;
+		for (PxU32 lane = 0; lane < 4; ++lane)
+		{
+			for (PxU32 i = 0; i < counts[lane]; ++i)
+			{
+				const PxVec4 contact = localContacts[lane * 3 + i];
+				localContacts[outputIndex++] = PxVec4(newTransformV.transform(contact.getXYZ()), contact.w);
+			}
+		}
+	}
+	else
+	{
+		PxVec4 deepestContact;
+		PxReal deepestSeparation = PX_MAX_F32;
+		for (PxU32 lane = 0; lane < 4; ++lane)
+			for (PxU32 i = 0; i < counts[lane]; ++i)
+				if (localContacts[lane * 3 + i].w < deepestSeparation)
+				{
+					deepestContact = localContacts[lane * 3 + i];
+					deepestSeparation = deepestContact.w;
+				}
+
+		const PxVec3 deepestPt = deepestContact.getXYZ();
+		const PxVec3 deepestPtPlane = deepestPt - incidentFaceNormalInNew * deepestPt.dot(incidentFaceNormalInNew);
+		PxVec4 furthestContact;
+		PxReal furthestDistance = -PX_MAX_F32;
+		for (PxU32 lane = 0; lane < 4; ++lane)
+			for (PxU32 i = 0; i < counts[lane]; ++i)
+			{
+				const PxVec4 contact = localContacts[lane * 3 + i];
+				const PxReal distance = (deepestPtPlane - contact.getXYZ()).magnitudeSquared();
+				if (distance > furthestDistance)
+				{
+					furthestContact = contact;
+					furthestDistance = distance;
+				}
+			}
+
+		const PxVec3 dir = incidentFaceNormalInNew.cross(furthestContact.getXYZ() - deepestPt);
+		PxVec4 minContact, maxContact;
+		PxReal minDistance = PX_MAX_F32;
+		PxReal maxDistance = -PX_MAX_F32;
+		for (PxU32 lane = 0; lane < 4; ++lane)
+			for (PxU32 i = 0; i < counts[lane]; ++i)
+			{
+				const PxVec4 contact = localContacts[lane * 3 + i];
+				const PxReal distance = dir.dot(contact.getXYZ() - deepestPt);
+				if (distance < minDistance)
+				{
+					minContact = contact;
+					minDistance = distance;
+				}
+				if (distance > maxDistance)
+				{
+					maxContact = contact;
+					maxDistance = distance;
+				}
+			}
+
+		const PxVec4 reducedContacts[4] = {deepestContact, furthestContact, minContact, maxContact};
+		for (PxU32 i = 0; i < 4; ++i)
+			localContacts[i] = PxVec4(newTransformV.transform(reducedContacts[i].getXYZ()), reducedContacts[i].w);
+		totalContacts = 4;
+	}
+
+	normal = mtd;
+	return totalContacts;
+}
+#endif
 
 
 template<PxU32 NumWarps>
@@ -1000,13 +1439,21 @@ extern "C" __global__ void boxBoxNphase_Kernel(
 	const PxMat34 transform0(transformCache0.transform);
 	const PxMat34 transform1(transformCache1.transform);
 
-
 	//Box-box collision...
 
 	const PxU32 NumWarps = 2;
 	assert(blockDim.x == NumWarps * WARP_SIZE);
 
 	__shared__ __align__(16) char sContacts[sizeof(TempBoxBoxBuffer<NumWarps>)];
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (blockIdx.x == 0 && threadIdx.x == 0)
+	{
+		const volatile char* version = gPxgDcuBoxBoxStageVersion;
+		volatile char marker = version[0];
+		PX_UNUSED(marker);
+	}
+#endif
 
 	TempBoxBoxBuffer<NumWarps>& tempBuff = reinterpret_cast<TempBoxBoxBuffer<NumWarps>&>(*sContacts);
 
@@ -1018,6 +1465,27 @@ extern "C" __global__ void boxBoxNphase_Kernel(
 	const PxU32 threadGroupStartIndex = threadIdx.x&(~3);
 
 	PxVec3 normal;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (threadIndexInGroup != 0)
+		return;
+
+	const PxU32 nbContacts = doBoxBoxGenerateContactsDcu<NumWarps>(box0Extent, box1Extent,
+		transform0, transform1, cDistance, tempBuff, normal);
+	const PxU32 contactByteOffset = setContactPointAndForcePointers(cmOutputs, patchAndContactCounters,
+		startContactPoints, startContactForces, contactBytesLimit, forceBytesLimit, workIndex, nbContacts);
+	const PxU32 patchIndex = registerContactPatch(cmOutputs, patchAndContactCounters, touchChangeFlags,
+		patchChangeFlags, startContactPatches, patchBytesLimit, workIndex, nbContacts);
+
+	if (nbContacts)
+		insertIntoPatchStream(materials, patchStream, shape0, shape1, patchIndex, normal, nbContacts);
+
+	if (contactByteOffset != 0xFFFFFFFF)
+	{
+		float4* baseContactStream = reinterpret_cast<float4*>(contactStream + contactByteOffset);
+		for (PxU32 i = 0; i < nbContacts; ++i)
+			baseContactStream[i] = reinterpret_cast<float4&>(tempBuff.tempBuff[3 * threadGroupStartIndex + i]);
+	}
+#else
 	PxU32 nbContacts = doBoxBoxGenerateContacts<NumWarps>(box0Extent, box1Extent,
 		transform0, transform1, cDistance,
 		tempBuff, normal, threadIndexInGroup, groupMask);
@@ -1061,6 +1529,7 @@ extern "C" __global__ void boxBoxNphase_Kernel(
 			//printf("%i: point = (%f, %f, %f, %f)\n", i, point.x, point.y, point.z, point.w);
 		}
 	}
+#endif
 }
 
 

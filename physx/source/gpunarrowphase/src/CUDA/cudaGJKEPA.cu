@@ -72,6 +72,10 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels6() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuLostFoundCompactStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V54_SERIAL_LOST_FOUND_COMPACT";
+#endif
+
 __device__ __forceinline__ static
 int writeContacts(float4* manifoldNormalPen, float4* manifoldA, float4* manifoldB,
 				  int mask, PxVec3 pa, PxVec3 pb, PxVec3 n,  PxReal sep)
@@ -1545,33 +1549,30 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 															PxsContactManager** PX_RESTRICT contactManagerArray)
 {
 #if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
-	if (numPairs <= 256)
+	if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
 	{
-		if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+		PxU32 outputCount = 0;
+		lostAndTotalReportedPairsCount->x = 0;
+
+		for (PxU32 idx = 0; idx < 2 * numPairs; ++idx)
 		{
-			PxU32 outputCount = 0;
-			lostAndTotalReportedPairsCount->x = 0;
+			if (idx == numPairs)
+				lostAndTotalReportedPairsCount->x = outputCount;
 
-			for (PxU32 idx = 0; idx < 2 * numPairs; ++idx)
+			if (inputFlagsArray[idx])
 			{
-				if (idx == numPairs)
-					lostAndTotalReportedPairsCount->x = outputCount;
-
-				if (inputFlagsArray[idx])
-				{
-					const PxU32 index = idx % numPairs;
-					compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
-					compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
-					compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
-					outputManagersPtrs[outputCount] = contactManagerArray[index];
-					++outputCount;
-				}
+				const PxU32 index = idx % numPairs;
+				compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+				compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+				compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+				outputManagersPtrs[outputCount] = contactManagerArray[index];
+				++outputCount;
 			}
-
-			lostAndTotalReportedPairsCount->y = outputCount;
 		}
-		return;
+
+		lostAndTotalReportedPairsCount->y = outputCount;
 	}
+	return;
 #endif
 
 	ReadArrayFunctor<PxU32> readF(tempRunsumArray);

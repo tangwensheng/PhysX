@@ -445,26 +445,99 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		mCudaContext->memcpyDtoHAsync((void*)&desc, bpBuff, sizeof(PxgBroadPhaseDesc), mStream);
 		//resultR = mCudaContext->streamSynchronize(mStream);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// DCU: writing the completion flag through host-mapped memory issues a PCIe
+		// AtomicOp that this platform rejects (UR_ATOMIC_OPCODE), so skip the signal
+		// kernel entirely and rely on streamSynchronize below.
+		mCudaContext->streamFlush(mStream);
+#else
 		void* devicePtr = getMappedDevicePtr(mCudaContext, mPinnedEvent);
 		KERNEL_PARAM_TYPE kernelParams[] = { CUDA_KERNEL_PARAM(devicePtr) };
 
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_SIGNAL_COMPLETE, 1, 1, 1, 1, 1, 1, 0, EPILOG);
 
 		mCudaContext->streamFlush(mStream);
+#endif
 	}
 
 	{
 		PX_PROFILE_ZONE("PxgCudaBroadPhaseSap.Synchronize", mContextID);
 		//mCudaContext->streamSynchronize(mStream);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// DCU: no host-mapped completion flag is written (see above), so synchronize
+		// directly instead of spinning on it.
+		mCudaContext->streamSynchronize(mStream);
+#else
 		volatile PxU32* eventPtr = mPinnedEvent;
 
 		if (!spinWait(*eventPtr, 0.1f))
 			mCudaContext->streamSynchronize(mStream);
+#endif
 	}
 
 	mOverlapChecksTotalRegion = desc.overlapChecksTotalRegion;
 	mStartRegionAccumTotal = desc.startRegionAccumTotal;
 	mRegionAccumTotal = desc.regionAccumTotal;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	{
+		const PxU32 maxDiagnosticPairs = 64;
+		const PxU32 rawFoundPairCount = PxMin(PxMin(desc.sharedFoundPairIndex, mMaxFoundLostPairs), maxDiagnosticPairs);
+		const PxU32 actorFoundPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedFoundPairIndex) - desc.sharedFoundAggPairIndex;
+		const PxU32 actorFoundPairCount = PxMin(actorFoundPairTotal, maxDiagnosticPairs);
+		PxgBroadPhasePair rawFoundPairs[maxDiagnosticPairs];
+		PxgBroadPhasePair actorFoundPairs[maxDiagnosticPairs];
+
+		if(rawFoundPairCount)
+			mCudaContext->memcpyDtoH(rawFoundPairs, mFoundPairsBuf.getDevicePtr(), rawFoundPairCount * sizeof(PxgBroadPhasePair));
+		if(actorFoundPairCount)
+			mCudaContext->memcpyDtoH(actorFoundPairs, mFoundActorBuf.getDevicePtr(), actorFoundPairCount * sizeof(PxgBroadPhasePair));
+
+		PxU32 rawSelfPairs = 0;
+		PxU32 firstRawSelfPair = PX_INVALID_U32;
+		for(PxU32 i = 0; i < rawFoundPairCount; ++i)
+		{
+			if(rawFoundPairs[i].mVolA == rawFoundPairs[i].mVolB)
+			{
+				++rawSelfPairs;
+				if(firstRawSelfPair == PX_INVALID_U32)
+					firstRawSelfPair = i;
+			}
+		}
+
+		PxU32 actorSelfPairs = 0;
+		PxU32 firstActorSelfPair = PX_INVALID_U32;
+		for(PxU32 i = 0; i < actorFoundPairCount; ++i)
+		{
+			if(actorFoundPairs[i].mVolA == actorFoundPairs[i].mVolB)
+			{
+				++actorSelfPairs;
+				if(firstActorSelfPair == PX_INVALID_U32)
+					firstActorSelfPair = i;
+			}
+		}
+
+		PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
+			"DCU GPU broadphase report-stage diagnostic: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u\n",
+			desc.sharedFoundPairIndex, rawFoundPairCount, rawSelfPairs, firstRawSelfPair,
+			desc.sharedFoundAggPairIndex, actorFoundPairTotal, actorFoundPairCount, actorSelfPairs, firstActorSelfPair);
+
+		if(firstRawSelfPair != PX_INVALID_U32)
+		{
+			const PxgBroadPhasePair& pair = rawFoundPairs[firstRawSelfPair];
+			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
+				"DCU GPU broadphase first raw self pair[%u]: volA=%u volB=%u\n",
+				firstRawSelfPair, pair.mVolA, pair.mVolB);
+		}
+		if(firstActorSelfPair != PX_INVALID_U32)
+		{
+			const PxgBroadPhasePair& pair = actorFoundPairs[firstActorSelfPair];
+			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
+				"DCU GPU broadphase first actor self pair[%u]: volA=%u volB=%u\n",
+				firstActorSelfPair, pair.mVolA, pair.mVolB);
+		}
+	}
+#endif
 
 	// AD: some explanation about the counts here - just to reiterate:
 	//

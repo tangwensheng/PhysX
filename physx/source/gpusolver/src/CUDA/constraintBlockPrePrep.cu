@@ -62,6 +62,10 @@ using namespace Cm;
 
 extern "C" __host__ void initSolverKernels2() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuSolverPrePrepStageVersion[] = "PX_DCU_SOLVER_STAGE_V45_TARGETED_STATIC_BATCH_AGGREGATE";
+#endif
+
 struct MassModificationProps
 {
 	PxReal mInvMassScale0;
@@ -121,6 +125,97 @@ static __device__ PxU32 createSolverContactConstraintDescsFromPatchWithSharedMem
 	PxContactPatch* gContactPatch, PxContact* contactPoints, PxU32 endIndex,
 	PxU32 prevFrictionPatchCount, PxU32& contactStartIndex, PxU32 numActiveThreads)
 {  
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	PX_UNUSED(numActiveThreads);
+
+	if (threadIndex < endIndex)
+	{
+		PxgMaterialContactData data;
+		data.restDistance = workUnit.mRestDistance[threadIndex];
+		data.staticFriction = 0.f;
+		data.dynamicFriction = 0.f;
+		data.mNumContacts = 0;
+		data.mSolverFlags = 0;
+		data.prevFrictionPatchCount = PxU8(prevFrictionPatchCount);
+		data.pad = 0;
+
+		PxU32 numContacts = 0;
+		if (gContactPatch)
+		{
+			// The compressed patch stream is not guaranteed to preserve PxContactPatch's
+			// 16-byte alignment, so use the scalar-layout mirror for direct global reads.
+			const ContactPatch* contactPatch = reinterpret_cast<const ContactPatch*>(gContactPatch);
+			const PxU32 flags = workUnit.mFlags[threadIndex];
+			const PxU32 internalFlags = contactPatch->internalFlags;
+			const bool perPointFriction = (internalFlags & PxContactPatch::eHAS_TARGET_VELOCITY) ||
+				(flags & PxgNpWorkUnitFlag::eDISABLE_STRONG_FRICTION);
+			bool disableFriction = false;
+			bool isAccelerationSpring = false;
+
+			if ((internalFlags & PxContactPatch::eFORCE_NO_RESPONSE) == 0)
+			{
+				const bool isModifiable = (internalFlags & PxContactPatch::eCOMPRESSED_MODIFIED_CONTACT) != 0;
+				const PxU32 stride = isModifiable ? 2u : 1u;
+				const PxU32 startContactIndex = contactPatch->startContactIndex;
+				contactPoints += startContactIndex * stride;
+				numContacts = contactPatch->nbContacts;
+				contactStartIndex = startContactIndex;
+
+				float4 invMassScale = make_float4(contactPatch->mMassModification.mInvMassScale0,
+					contactPatch->mMassModification.mInvInertiaScale0,
+					contactPatch->mMassModification.mInvMassScale1,
+					contactPatch->mMassModification.mInvInertiaScale1);
+				if (flags & PxgNpWorkUnitFlag::eDOMINANCE_0)
+				{
+					invMassScale.x = 0.f;
+					invMassScale.y = 0.f;
+				}
+				if (flags & PxgNpWorkUnitFlag::eDOMINANCE_1)
+				{
+					invMassScale.z = 0.f;
+					invMassScale.w = 0.f;
+				}
+
+				prepData.mInvMassScale[threadIndex].lin0X_ang0Y_lin1Z_ang1W = invMassScale;
+				prepData.normal_restitutionW[threadIndex] = make_float4(contactPatch->normal.x,
+					contactPatch->normal.y, contactPatch->normal.z, contactPatch->restitution);
+				prepData.damping[threadIndex] = contactPatch->damping;
+
+				data.dynamicFriction = contactPatch->dynamicFriction;
+				data.staticFriction = contactPatch->staticFriction;
+				disableFriction = (contactPatch->materialFlags & PxMaterialFlag::eDISABLE_FRICTION) != 0;
+				isAccelerationSpring =
+					(contactPatch->materialFlags & PxMaterialFlag::eCOMPLIANT_ACCELERATION_SPRING) != 0;
+
+				const float4* sourceContacts = reinterpret_cast<const float4*>(contactPoints);
+				for (PxU32 contactIndex = 0; contactIndex < numContacts; ++contactIndex)
+				{
+					const PxU32 sourceIndex = contactIndex * stride;
+					PxgBlockContactPoint& point = blockContactPoints[contactIndex];
+					point.point_separationW[threadIndex] = sourceContacts[sourceIndex];
+					point.targetVel_maxImpulseW[threadIndex] = isModifiable ?
+						sourceContacts[sourceIndex + 1] : make_float4(0.f, 0.f, 0.f, PX_MAX_REAL);
+				}
+			}
+
+			PxU8 solverFlags = 0;
+			if (perPointFriction)
+				solverFlags |= PxgSolverContactFlags::ePER_POINT_FRICTION;
+			if (flags & PxgNpWorkUnitFlag::eFORCE_THRESHOLD)
+				solverFlags |= PxgSolverContactFlags::eHAS_FORCE_THRESHOLDS;
+			if (disableFriction)
+				solverFlags |= PxgSolverContactFlags::eDISABLE_FRICTION;
+			if (isAccelerationSpring)
+				solverFlags |= PxgSolverContactFlags::eCOMPLIANT_ACCELERATION_SPRING;
+			data.mSolverFlags = solverFlags;
+		}
+
+		data.mNumContacts = PxU8(numContacts);
+		reinterpret_cast<float4&>(prepData.contactData[threadIndex]) = reinterpret_cast<float4&>(data);
+	}
+
+	return 0;
+#else
 	__shared__ void* srcPatch[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK];
 	__shared__ PxU32 shPatchBuff[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK][16+1]; //+1 to avoid bank conflicts!
 	//if(threadIndex >= startIndex && threadIndex < endIndex)
@@ -323,6 +418,7 @@ static __device__ PxU32 createSolverContactConstraintDescsFromPatchWithSharedMem
 	}
 
 	return 0;
+#endif
 }
 
 //Ks - magic structs to try and take advantage of aligned loads...
@@ -740,6 +836,7 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 	PxgSolverSharedDesc<IterativeSolveData>* sharedDesc, const PxU32 diagnosticMode)
 {
 	__shared__ PxgBlockContactPoint* volatile blockContactPoints[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK/32];
+	__shared__ volatile PxU32 contactCounts[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK];
 
 	__shared__ PxgPrePrepDesc shDesc;
 
@@ -788,6 +885,14 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 	const PxU32 totalStaticPlusDynamic = dynamicBatchEnd + numArtiStaticBatches;
 	const PxU32 totalBatches = totalStaticPlusDynamic + numArtiSelfBatches + numStaticBatches;
 	const PxU32 firstStaticBatch = totalBatches - numStaticBatches;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if(totalBatches == 0 && blockIdx.x == 0 && threadIdx.x == 0)
+	{
+		const volatile char* version = gPxgDcuSolverPrePrepStageVersion;
+		contactCounts[0] = PxU32(version[0]);
+	}
+#endif
 
 	if(diagnosticMode && blockIdx.x == 0 && warpIndexInBlock == 0 && threadIndexInWarp == 0)
 	{
@@ -994,28 +1099,28 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 
 				const PxU32 totalContacts = cmOutput->nbContacts;
 
-				const bool hasContacts = totalContacts != 0;
-
-				PxU32 patchStartIndex = reinterpret_cast<PxContactPatch*>(cmOutput->contactPatches) - shDesc.cpuCompressedPatchesBase;
-				PxU32 contactIndex = reinterpret_cast<PxContact*>(cmOutput->contactPoints) - shDesc.cpuCompressedContactsBase;
+				const bool hasContactLayout = totalContacts != 0 && cmOutput->nbPatches != 0 &&
+					cmOutput->contactPatches != NULL && cmOutput->contactPoints != NULL;
 				if (cmOutput->contactForces)
 					forceIndex = reinterpret_cast<PxReal*>(cmOutput->contactForces) - shDesc.cpuForceBufferBase;
 
 				prevFrictionPatchCount = shDesc.prevFrictionPatchCount[edgeIndex];
 
-				shDesc.currFrictionPatchCount[edgeIndex] = cmOutput->nbPatches;
+				shDesc.currFrictionPatchCount[edgeIndex] = hasContactLayout ? cmOutput->nbPatches : 0;
 
-				if (hasContacts && patchIndex < cmOutput->nbPatches)
+				if (hasContactLayout && patchIndex < cmOutput->nbPatches)
 				{
-					if(cmOutput->contactPatches != NULL)
-						contactPatch = shDesc.compressedPatches + patchStartIndex + patchIndex;
+					const PxU32 patchStartIndex = reinterpret_cast<PxContactPatch*>(cmOutput->contactPatches) -
+						shDesc.cpuCompressedPatchesBase;
+					const PxU32 contactIndex = reinterpret_cast<PxContact*>(cmOutput->contactPoints) -
+						shDesc.cpuCompressedContactsBase;
+					contactPatch = shDesc.compressedPatches + patchStartIndex + patchIndex;
 
 					n.mFrictionPatchIndex[threadIndexInWarp] = patchStartIndex + patchIndex;
 
 					assert(contactPatch->nbContacts <= PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH);
 
-					if(cmOutput->contactPoints != NULL)
-						contacts = shDesc.compressedContacts + contactIndex;
+					contacts = shDesc.compressedContacts + contactIndex;
 
 					contactCount = contactPatch->nbContacts;
 
@@ -1027,7 +1132,19 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 			//accumulator[threadIdx.x] = contactCount;
 			//__syncwarp();
 
-			PxU32 maxCount = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, contactCount);
+			PxU32 maxCount = 0;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			contactCounts[threadIdx.x] = contactCount;
+			__syncwarp();
+			if(threadIndexInWarp == 0)
+			{
+				const PxU32 warpBase = warpIndexInBlock * WARP_SIZE;
+				for(PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+					maxCount = PxMax(maxCount, contactCounts[warpBase + lane]);
+			}
+#else
+			maxCount = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, contactCount);
+#endif
 
 			
 			if(threadIndexInWarp == 0)
@@ -1538,6 +1655,10 @@ void rigidSumInternalContactAndJointBatches1(
 	__shared__ PxU32 shJointUniqueIndicesWarpSum[warpPerBlock];
 	__shared__ PxU32 shContactHeaderWarpSum[warpPerBlock];
 	__shared__ PxU32 shJointHeaderWarpSum[warpPerBlock];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ PxU32 shContactCounts[numThreadsPerBlock];
+	__shared__ PxU32 shJointCounts[numThreadsPerBlock];
+#endif
 
 	__shared__ PxU32 sContactUniqueIndicesAccum;
 	__shared__ PxU32 sJointUniqueIndicesAccum;
@@ -1575,10 +1696,34 @@ void rigidSumInternalContactAndJointBatches1(
 		PxU32 maxContact = contactCount;
 		PxU32 maxJoint = jointCount;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		shContactCounts[threadIdx.x] = contactCount;
+		shJointCounts[threadIdx.x] = jointCount;
+		__syncthreads();
+
+		const PxU32 warpBase = warpIndex * WARP_SIZE;
+		if (threadIndexInWarp == (WARP_SIZE - 1))
+		{
+			contactCount = 0;
+			jointCount = 0;
+			maxContact = 0;
+			maxJoint = 0;
+			for (PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+			{
+				const PxU32 laneContactCount = shContactCounts[warpBase + lane];
+				const PxU32 laneJointCount = shJointCounts[warpBase + lane];
+				contactCount += laneContactCount;
+				jointCount += laneJointCount;
+				maxContact = PxMax(maxContact, laneContactCount);
+				maxJoint = PxMax(maxJoint, laneJointCount);
+			}
+		}
+#else
 		contactCount = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, contactCount);
 		jointCount = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, jointCount);
 		maxContact = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, maxContact);
 		maxJoint = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, maxJoint);
+#endif
 
 		if (threadIndexInWarp == (WARP_SIZE - 1))
 		{
@@ -1672,6 +1817,10 @@ void rigidSumInternalContactAndJointBatches2(
 	__shared__ PxU32 shJointUniqueIndicesWarpSum[warpPerBlock];
 	__shared__ PxU32 shContactHeaderWarpSum[warpPerBlock];
 	__shared__ PxU32 shJointHeaderWarpSum[warpPerBlock];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ PxU32 shContactCounts[numThreadsPerBlock];
+	__shared__ PxU32 shJointCounts[numThreadsPerBlock];
+#endif
 
 	__shared__ PxU32 sContactUniqueIndicesBlockHistogram[block_size];
 	__shared__ PxU32 sJointUniqueIndicesBlockHistogram[block_size];
@@ -1795,10 +1944,34 @@ void rigidSumInternalContactAndJointBatches2(
 		PxU32 maxContact = contactCount;
 		PxU32 maxJoint = jointCount;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		shContactCounts[threadIdx.x] = contactCount;
+		shJointCounts[threadIdx.x] = jointCount;
+		__syncthreads();
+
+		const PxU32 warpBase = warpIndex * WARP_SIZE;
+		if (threadIndexInWarp == (WARP_SIZE - 1))
+		{
+			sumContact = 0;
+			sumJoint = 0;
+			maxContact = 0;
+			maxJoint = 0;
+			for (PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+			{
+				const PxU32 laneContactCount = shContactCounts[warpBase + lane];
+				const PxU32 laneJointCount = shJointCounts[warpBase + lane];
+				sumContact += laneContactCount;
+				sumJoint += laneJointCount;
+				maxContact = PxMax(maxContact, laneContactCount);
+				maxJoint = PxMax(maxJoint, laneJointCount);
+			}
+		}
+#else
 		sumContact = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, sumContact);
 		sumJoint = warpReduction<AddOpPxU32, PxU32>(FULL_MASK, sumJoint);
 		maxContact = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, maxContact);
 		maxJoint = warpReduction<MaxOpPxU32, PxU32>(FULL_MASK, maxJoint);
+#endif
 
 
 		if (threadIndexInWarp == 31)
@@ -1810,6 +1983,13 @@ void rigidSumInternalContactAndJointBatches2(
 		}
 
 		__syncthreads();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		sumContact = shContactUniqueIndicesWarpSum[warpIndex];
+		sumJoint = shJointUniqueIndicesWarpSum[warpIndex];
+		maxContact = shContactHeaderWarpSum[warpIndex];
+		maxJoint = shJointHeaderWarpSum[warpIndex];
+#endif
 
 		PxU32 contactWarpOffset = 0;
 		PxU32 jointWarpOffset = 0;
@@ -1907,10 +2087,25 @@ void rigidSumInternalContactAndJointBatches2(
 
 		for (PxU32 i = 0; i < maxContact; ++i)
 		{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			PxU32 mask = 0;
+			PxU32 stride = 0;
+			PxU32 offset = 0;
+			for (PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+			{
+				if (shContactCounts[warpBase + lane] > i)
+				{
+					mask |= PxU32(1) << lane;
+					offset += PxU32(lane < threadIndexInWarp);
+					++stride;
+				}
+			}
+#else
 			PxU32 mask = __ballot_sync(FULL_MASK, contactCount > i);
 
 			const PxU32 stride = __popc(mask);
 			const PxU32 offset = warpScanExclusive(mask, threadIndexInWarp);
+#endif
 			const bool printFirstStaticHeader = diagnosticMode && blockOffset == batchOffset;
 			PxU32 firstLane = 0;
 			PxU32 firstWorkIndex = 0;
@@ -1918,8 +2113,13 @@ void rigidSumInternalContactAndJointBatches2(
 			if (printFirstStaticHeader)
 			{
 				firstLane = PxU32(__ffs(mask) - 1);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				firstWorkIndex = workIndex - threadIndexInWarp + firstLane;
+				firstContactCount = shContactCounts[warpBase + firstLane];
+#else
 				firstWorkIndex = __shfl_sync(FULL_MASK, workIndex, firstLane);
 				firstContactCount = __shfl_sync(FULL_MASK, contactCount, firstLane);
+#endif
 			}
 
 			if (contactCount > i)
@@ -1968,10 +2168,25 @@ void rigidSumInternalContactAndJointBatches2(
 
 		for (PxU32 i = 0; i < maxJoint; ++i)
 		{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			PxU32 mask = 0;
+			PxU32 stride = 0;
+			PxU32 offset = 0;
+			for (PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+			{
+				if (shJointCounts[warpBase + lane] > i)
+				{
+					mask |= PxU32(1) << lane;
+					offset += PxU32(lane < threadIndexInWarp);
+					++stride;
+				}
+			}
+#else
 			PxU32 mask = __ballot_sync(FULL_MASK, jointCount > i);
 
 			const PxU32 stride = __popc(mask);
 			const PxU32 offset = warpScanExclusive(mask, threadIndexInWarp);
+#endif
 
 			if (jointCount > i)
 			{
@@ -2001,4 +2216,86 @@ void rigidSumInternalContactAndJointBatches2(
 			blockOffset++;
 		}
 	}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__syncthreads();
+	if (diagnosticMode && blockIdx.x == 0 && threadIdx.x == 0 && nbBodies <= numThreadsPerBlock)
+	{
+		PxU32 activeBodies = 0;
+		PxU32 totalContactRefs = 0;
+		PxU32 maxContactsPerBody = 0;
+		PxU32 startRangeErrors = 0;
+		PxU32 headerTypeErrors = 0;
+		PxU32 headerMaskErrors = 0;
+		PxU32 headerStrideErrors = 0;
+		PxU32 headerContactRangeErrors = 0;
+		PxU32 headerBatchRangeErrors = 0;
+
+		for (PxU32 body = 0; body < nbBodies; ++body)
+		{
+			const PxU32 count = staticContactCount[body];
+			if (count == 0)
+				continue;
+			++activeBodies;
+			totalContactRefs += count;
+			maxContactsPerBody = PxMax(maxContactsPerBody, count);
+		}
+
+		const PxU32 staticBatchEnd = batchOffset + constraintPrepDesc->numStaticBatches;
+		const PxU32 staticContactBatchEnd = staticContactBatchOffset + constraintPrepDesc->numStaticContactBatches;
+		const PxU32 contactReferenceEnd = contactUniqueIndexOffset + totalContactRefs;
+		for (PxU32 body = 0; body < nbBodies; ++body)
+		{
+			const PxU32 count = staticContactCount[body];
+			if (count == 0)
+				continue;
+
+			const PxU32 start = contactStaticStartIndices[body];
+			if (start < batchOffset || start >= staticBatchEnd || count > staticBatchEnd - start)
+			{
+				++startRangeErrors;
+				continue;
+			}
+
+			const PxU32 laneBit = PxU32(1) << (body & (WARP_SIZE - 1));
+			for (PxU32 i = 0; i < count; ++i)
+			{
+				const PxgConstraintBatchHeader& header = batchHeaders[start + i];
+				if (header.constraintType != PxgSolverConstraintDesc::eCONTACT)
+					++headerTypeErrors;
+				if ((header.mask & laneBit) == 0)
+					++headerMaskErrors;
+				if (PxU32(header.mDescStride) != PxU32(__popc(header.mask)))
+					++headerStrideErrors;
+				if (header.mStartPartitionIndex < contactUniqueIndexOffset ||
+					header.mStartPartitionIndex > contactReferenceEnd ||
+					PxU32(header.mDescStride) > contactReferenceEnd - header.mStartPartitionIndex)
+					++headerContactRangeErrors;
+				if (header.mConstraintBatchIndex < staticContactBatchOffset ||
+					header.mConstraintBatchIndex >= staticContactBatchEnd)
+					++headerBatchRangeErrors;
+			}
+		}
+
+		printf("[DCU PREPREP STATIC AGG] bodies=%u active=%u refs=%u max_per_body=%u batches=%u/%u errors=%u/%u/%u/%u/%u/%u\n",
+			nbBodies, activeBodies, totalContactRefs, maxContactsPerBody,
+			constraintPrepDesc->numStaticContactBatches, constraintPrepDesc->numStaticBatches,
+			startRangeErrors, headerTypeErrors, headerMaskErrors, headerStrideErrors,
+			headerContactRangeErrors, headerBatchRangeErrors);
+		for (PxU32 chunk = 0; chunk < 8; ++chunk)
+		{
+			PxU32 chunkActive = 0;
+			PxU32 chunkRefs = 0;
+			const PxU32 begin = chunk * WARP_SIZE;
+			const PxU32 end = PxMin(begin + WARP_SIZE, nbBodies);
+			for (PxU32 body = begin; body < end; ++body)
+			{
+				const PxU32 count = staticContactCount[body];
+				chunkActive += PxU32(count != 0);
+				chunkRefs += count;
+			}
+			printf("[DCU PREPREP STATIC CHUNK] chunk=%u active=%u refs=%u\n", chunk, chunkActive, chunkRefs);
+		}
+	}
+#endif
 }

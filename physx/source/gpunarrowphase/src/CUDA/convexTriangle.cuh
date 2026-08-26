@@ -915,13 +915,12 @@ __device__ inline static bool convexMeshSAT(ConvexScratch* s_scratch, PxU32 & fe
 // the early outs are not actually an optimization, but have a functional purpose in an edge case: with two polys 
 // exactly on top of one another, we don't want to generate the points multiple times
 
-__device__ __forceinline__ void addContacts(int flags, PxVec3 pos, PxReal sep, PxReal maxSep, volatile float * s_contactsTransposed, int& nbContacts)
+__device__ __forceinline__ void addContacts(PxU32 flags, PxVec3 pos, PxReal sep, PxReal maxSep, volatile float * s_contactsTransposed, int& nbContacts)
 {
-	flags &= __ballot_sync(FULL_MASK, !(sep > maxSep)); //Inverting test covers us for nans
+	const PxU32 validMask = flags & PxU32(__ballot_sync(FULL_MASK, !(sep > maxSep))); //Inverting test covers us for nans
+	int index = warpScanExclusive(validMask, threadIdx.x) + nbContacts;
 
-	int index = warpScanExclusive(flags, threadIdx.x) + nbContacts;
-
-	bool add = flags & (1 << threadIdx.x) && index < NUM_TMP_CONTACTS_PER_PAIR;
+	bool add = (validMask & (PxU32(1) << threadIdx.x)) && index < NUM_TMP_CONTACTS_PER_PAIR;
 
 	if (add)
 	{
@@ -939,10 +938,388 @@ __device__ __forceinline__ void addContacts(int flags, PxVec3 pos, PxReal sep, P
 	nbContacts += __popc(__ballot_sync(FULL_MASK, add));
 }
 
-//plane0 is convex, plane1 is triangle
-__device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, const PxPlane plane1, PxVec3 v1, const PxVec3 axis, PxReal maxSep, PxU32 triEdgeMask,
-	volatile float * s_contactsTransposed, PxU32 initContacts)
+__device__ __forceinline__ PxU32 lowLaneMask(PxU32 laneCount)
 {
+	return laneCount >= WARP_SIZE ? FULL_MASK : ((PxU32(1) << laneCount) - 1u);
+}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+static const PxU32 DCU_SERIAL_INPUT_BASE = 4 * NUM_TMP_CONTACTS_PER_PAIR;
+static const PxU32 DCU_SERIAL_FACE1_OFFSET = DCU_SERIAL_INPUT_BASE;
+static const PxU32 DCU_SERIAL_FACE2_OFFSET = DCU_SERIAL_FACE1_OFFSET + 3 * WARP_SIZE;
+static const PxU32 DCU_SERIAL_TRIANGLE_OFFSET = DCU_SERIAL_FACE2_OFFSET + 3 * WARP_SIZE;
+static const PxU32 DCU_SERIAL_MASK_BASE = DCU_SERIAL_TRIANGLE_OFFSET + 9;
+
+__device__ __forceinline__ PxVec3 loadSerialContactPoint(volatile float* contacts, PxU32 index)
+{
+	return PxVec3(contacts[4 * index + 0], contacts[4 * index + 1], contacts[4 * index + 2]);
+}
+
+__device__ __attribute__((noinline)) static PxU32 reduceSerialContacts(volatile float* contacts, const PxVec3 normal, PxU32 contactCount)
+{
+	PxU32 candidateMask = lowLaneMask(contactCount);
+
+	// Match contactReduce's duplicate rule, including its deterministic tie break.
+	for (PxU32 candidate = 0; candidate < contactCount; ++candidate)
+	{
+		const PxVec3 point = loadSerialContactPoint(contacts, candidate);
+		const PxReal separation = contacts[4 * candidate + 3];
+		bool duplicate = false;
+		for (PxU32 other = 0; other < contactCount; ++other)
+		{
+			if (other == candidate)
+				continue;
+
+			const PxVec3 otherPoint = loadSerialContactPoint(contacts, other);
+			const PxReal otherSeparation = contacts[4 * other + 3];
+			if ((otherPoint - point).magnitudeSquared() < 1e-8f &&
+				(otherSeparation < separation || (otherSeparation == separation && other > candidate)))
+			{
+				duplicate = true;
+				break;
+			}
+		}
+
+		if (duplicate)
+			candidateMask &= ~(PxU32(1) << candidate);
+	}
+
+	if (__popc(candidateMask) <= CVX_TRI_MAX_CONTACTS)
+		return candidateMask;
+
+	PxU32 selectedMask = 0;
+	PxU32 selectedIndex = WARP_SIZE;
+	PxReal selectedValue = -PX_MAX_F32;
+
+	// contactReduce uses separation as the initial point criterion.
+	for (PxU32 scanMask = candidateMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = contacts[4 * index + 3];
+		if (selectedIndex == WARP_SIZE || value > selectedValue || (value == selectedValue && index < selectedIndex))
+		{
+			selectedValue = value;
+			selectedIndex = index;
+		}
+	}
+	selectedMask |= PxU32(1) << selectedIndex;
+
+	const PxVec3 point0Raw = loadSerialContactPoint(contacts, selectedIndex);
+	const PxVec3 point0 = point0Raw - normal * point0Raw.dot(normal);
+	PxU32 remainingMask = candidateMask & ~selectedMask;
+	selectedIndex = WARP_SIZE;
+	selectedValue = -PX_MAX_F32;
+	for (PxU32 scanMask = remainingMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxVec3 pointRaw = loadSerialContactPoint(contacts, index);
+		const PxVec3 point = pointRaw - normal * pointRaw.dot(normal);
+		const PxReal value = (point - point0).magnitude();
+		if (selectedIndex == WARP_SIZE || value > selectedValue || (value == selectedValue && index < selectedIndex))
+		{
+			selectedValue = value;
+			selectedIndex = index;
+		}
+	}
+	selectedMask |= PxU32(1) << selectedIndex;
+
+	const PxVec3 point1Raw = loadSerialContactPoint(contacts, selectedIndex);
+	const PxVec3 point1 = point1Raw - normal * point1Raw.dot(normal);
+	const PxVec3 direction = normal.cross(point1 - point0);
+	remainingMask = candidateMask & ~selectedMask;
+	selectedIndex = WARP_SIZE;
+	selectedValue = -PX_MAX_F32;
+	for (PxU32 scanMask = remainingMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxVec3 pointRaw = loadSerialContactPoint(contacts, index);
+		const PxVec3 point = pointRaw - normal * pointRaw.dot(normal);
+		const PxReal value = direction.dot(point - point0);
+		if (selectedIndex == WARP_SIZE || value > selectedValue || (value == selectedValue && index < selectedIndex))
+		{
+			selectedValue = value;
+			selectedIndex = index;
+		}
+	}
+	selectedMask |= PxU32(1) << selectedIndex;
+
+	remainingMask = candidateMask & ~selectedMask;
+	selectedIndex = WARP_SIZE;
+	selectedValue = PX_MAX_F32;
+	for (PxU32 scanMask = remainingMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxVec3 pointRaw = loadSerialContactPoint(contacts, index);
+		const PxVec3 point = pointRaw - normal * pointRaw.dot(normal);
+		const PxReal value = direction.dot(point - point0);
+		if (selectedIndex == WARP_SIZE || value < selectedValue || (value == selectedValue && index < selectedIndex))
+		{
+			selectedValue = value;
+			selectedIndex = index;
+		}
+	}
+	selectedMask |= PxU32(1) << selectedIndex;
+
+	remainingMask = candidateMask & ~selectedMask;
+	selectedIndex = WARP_SIZE;
+	selectedValue = PX_MAX_F32;
+	for (PxU32 scanMask = remainingMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = contacts[4 * index + 3];
+		if (selectedIndex == WARP_SIZE || value < selectedValue || (value == selectedValue && index < selectedIndex))
+		{
+			selectedValue = value;
+			selectedIndex = index;
+		}
+	}
+	selectedMask |= PxU32(1) << selectedIndex;
+
+	return selectedMask;
+}
+
+__device__ __attribute__((noinline)) static PxU32 storeSerialContacts(
+	volatile float* contacts, const PxVec3 normal, const PxU32 contactCount,
+	ConvexTriContacts* PX_RESTRICT cvxTriContacts, const PxU32 convexTriPairOffset,
+	ConvexTriContact* tempConvexTriContacts, const PxU32 tempContactSize,
+	PxU32* pTempContactIndex, volatile float* maxSeparationOut)
+{
+	PxU32 mask = lowLaneMask(contactCount);
+	if (contactCount > CVX_TRI_MAX_CONTACTS)
+		mask = reduceSerialContacts(contacts, normal, contactCount);
+
+	PxU32 nbOutputContacts = __popc(mask);
+	PxReal maxSeparation = PX_MAX_F32;
+	for (PxU32 scanMask = mask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 sourceIndex = lowestSetIndex(scanMask);
+		maxSeparation = fminf(maxSeparation, contacts[4 * sourceIndex + 3]);
+	}
+	*maxSeparationOut = maxSeparation;
+
+	const PxU32 startIndex = atomicAdd(pTempContactIndex, nbOutputContacts);
+	cvxTriContacts[convexTriPairOffset].index = startIndex;
+	const bool contactsFit = startIndex < tempContactSize
+		&& nbOutputContacts < tempContactSize - startIndex;
+	if (!contactsFit)
+		return 0;
+
+	PxU32 outputIndex = 0;
+	for (PxU32 scanMask = mask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 sourceIndex = lowestSetIndex(scanMask);
+		tempConvexTriContacts[startIndex + outputIndex].contact_sepW = make_float4(
+			contacts[4 * sourceIndex + 0],
+			contacts[4 * sourceIndex + 1],
+			contacts[4 * sourceIndex + 2],
+			contacts[4 * sourceIndex + 3]);
+		++outputIndex;
+	}
+
+	return nbOutputContacts;
+}
+
+#define PX_DCU_SERIAL_INLINE __forceinline__
+#else
+#define PX_DCU_SERIAL_INLINE
+#endif
+
+//plane0 is convex, plane1 is triangle
+__device__ PX_DCU_SERIAL_INLINE static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, const PxPlane plane1, PxVec3 v1, const PxVec3 axis, PxReal maxSep, PxU32 triEdgeMask,
+	volatile float * s_contactsTransposed, PxU32 initContacts, const PxU32 dcuCoreStage, const PxU32 dcuConvexVertexOffset)
+{
+	PX_UNUSED(dcuCoreStage);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	PX_UNUSED(v0);
+	PX_UNUSED(v1);
+	PX_UNUSED(triEdgeMask);
+
+	{
+		// Contacts, staged polygon inputs, and masks occupy disjoint ranges in the
+		// original per-warp scratch: [0,127], [128,328], and [329,424].
+		const PxU32 inMaskOffset = DCU_SERIAL_MASK_BASE;
+		const PxU32 outMaskOffset = inMaskOffset + WARP_SIZE;
+		const PxU32 triangleCrossOffset = outMaskOffset + WARP_SIZE;
+		volatile PxU32* serialWords = reinterpret_cast<volatile PxU32*>(s_contactsTransposed);
+		const PxU32 lane = PxU32(threadIdx.x);
+		int nbContacts = int(initContacts);
+
+		if (lane == 0)
+		{
+			const PxReal dnom0 = plane1.n.dot(axis);
+			const PxReal dnom1 = plane0.n.dot(axis);
+			PxU32 triangleInsideMask = 7u;
+			PxU32 anyTriangleOutside = 0u;
+
+			for (PxU32 convexIndex = 0; convexIndex < nbVerts0; ++convexIndex)
+			{
+				const PxU32 nextConvexIndex = convexIndex + 1 == nbVerts0 ? 0u : convexIndex + 1;
+				const PxVec3 convexVertex(
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 0],
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 1],
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 2]);
+				const PxVec3 nextConvexVertex(
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 0],
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 1],
+					s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 2]);
+				const PxVec3 edgePlaneN = (nextConvexVertex - convexVertex).cross(axis);
+				const PxReal edgePlaneD = edgePlaneN.dot(convexVertex);
+				PxU32 inMask = 0u;
+				PxU32 outMask = 0u;
+
+				for (PxU32 triangleIndex = 0; triangleIndex < 3; ++triangleIndex)
+				{
+					const PxVec3 triangleVertex(
+						s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 0],
+						s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 1],
+						s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 2]);
+					const PxReal t = edgePlaneN.dot(triangleVertex) - edgePlaneD;
+					const PxU32 bit = PxU32(1) << triangleIndex;
+					inMask |= t < 0 ? bit : 0u;
+					outMask |= t > 0 ? bit : 0u;
+				}
+
+				triangleInsideMask &= ~outMask;
+				anyTriangleOutside |= outMask;
+				const PxU32 expandedInMask = inMask | (inMask << 3);
+				const PxU32 expandedOutMask = outMask | (outMask << 3);
+				serialWords[triangleCrossOffset + convexIndex] =
+					((expandedInMask & (expandedOutMask >> 1)) |
+					((expandedInMask >> 1) & expandedOutMask)) & 7u;
+			}
+
+			for (PxU32 triangleIndex = 0; triangleIndex < 3 && nbContacts < NUM_TMP_CONTACTS_PER_PAIR; ++triangleIndex)
+			{
+				if ((triangleInsideMask & (PxU32(1) << triangleIndex)) == 0)
+					continue;
+
+				const PxVec3 triangleVertex(
+					s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 0],
+					s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 1],
+					s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 2]);
+				const PxReal t1 = plane0.distance(triangleVertex);
+				const PxReal separation = ((t1 > maxSep) || (dnom1 == 0.f)) ? PX_MAX_F32 : t1 / dnom1;
+				if (!(separation > maxSep))
+				{
+					const PxVec3 position = triangleVertex - separation * axis;
+					s_contactsTransposed[4 * nbContacts + 0] = position.x;
+					s_contactsTransposed[4 * nbContacts + 1] = position.y;
+					s_contactsTransposed[4 * nbContacts + 2] = position.z;
+					s_contactsTransposed[4 * nbContacts + 3] = separation;
+					++nbContacts;
+				}
+			}
+
+			if (anyTriangleOutside != 0u)
+			{
+				PxU32 anyConvexOutside = 0u;
+				for (PxU32 convexIndex = 0; convexIndex < nbVerts0; ++convexIndex)
+				{
+					const PxVec3 convexVertex(
+						s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 0],
+						s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 1],
+						s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 2]);
+					PxU32 inMask = 0u;
+					PxU32 outMask = 0u;
+
+					for (PxU32 triangleIndex = 0; triangleIndex < 3; ++triangleIndex)
+					{
+						const PxU32 nextTriangleIndex = triangleIndex == 2 ? 0u : triangleIndex + 1;
+						const PxVec3 edgeStart(
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 0],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 1],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 2]);
+						const PxVec3 edgeEnd(
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 0],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 1],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 2]);
+						const PxVec3 edgePlaneN = axis.cross(edgeEnd - edgeStart);
+						const PxReal edgePlaneD = edgePlaneN.dot(edgeStart);
+						const PxReal t = edgePlaneN.dot(convexVertex) - edgePlaneD;
+						const PxU32 bit = PxU32(1) << triangleIndex;
+						inMask |= t < 0 ? bit : 0u;
+						outMask |= t > 0 ? bit : 0u;
+					}
+
+					serialWords[inMaskOffset + convexIndex] = inMask;
+					serialWords[outMaskOffset + convexIndex] = outMask;
+					anyConvexOutside |= outMask;
+
+					if (outMask == 0u && nbContacts < NUM_TMP_CONTACTS_PER_PAIR)
+					{
+						const PxReal t0 = plane1.distance(convexVertex);
+						const PxReal separation = ((t0 > maxSep) || (dnom0 == 0.f)) ? PX_MAX_F32 : -t0 / dnom0;
+						if (!(separation > maxSep))
+						{
+							s_contactsTransposed[4 * nbContacts + 0] = convexVertex.x;
+							s_contactsTransposed[4 * nbContacts + 1] = convexVertex.y;
+							s_contactsTransposed[4 * nbContacts + 2] = convexVertex.z;
+							s_contactsTransposed[4 * nbContacts + 3] = separation;
+							++nbContacts;
+						}
+					}
+				}
+
+				if (anyConvexOutside != 0u)
+				{
+					for (PxU32 triangleIndex = 0; triangleIndex < 3 && nbContacts < NUM_TMP_CONTACTS_PER_PAIR; ++triangleIndex)
+					{
+						const PxU32 nextTriangleIndex = triangleIndex == 2 ? 0u : triangleIndex + 1;
+						const PxVec3 edgeStart(
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 0],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 1],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * triangleIndex + 2]);
+						const PxVec3 edgeEnd(
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 0],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 1],
+							s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * nextTriangleIndex + 2]);
+						const PxVec3 edgePlaneN = axis.cross(edgeEnd - edgeStart);
+
+						for (PxU32 convexIndex = 0; convexIndex < nbVerts0 && nbContacts < NUM_TMP_CONTACTS_PER_PAIR; ++convexIndex)
+						{
+							const PxU32 nextConvexIndex = convexIndex + 1 == nbVerts0 ? 0u : convexIndex + 1;
+							const PxU32 inMask = serialWords[inMaskOffset + convexIndex];
+							const PxU32 outMask = serialWords[outMaskOffset + convexIndex];
+							const PxU32 nextInMask = serialWords[inMaskOffset + nextConvexIndex];
+							const PxU32 nextOutMask = serialWords[outMaskOffset + nextConvexIndex];
+							const PxU32 convexCrossMask = (inMask & nextOutMask) | (nextInMask & outMask);
+							const PxU32 crossingMask = convexCrossMask & serialWords[triangleCrossOffset + convexIndex];
+							if ((crossingMask & (PxU32(1) << triangleIndex)) == 0)
+								continue;
+
+							const PxVec3 convexVertex(
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 0],
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 1],
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * convexIndex + 2]);
+							const PxVec3 nextConvexVertex(
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 0],
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 1],
+								s_contactsTransposed[dcuConvexVertexOffset + 3 * nextConvexIndex + 2]);
+							const PxVec3 convexEdge = nextConvexVertex - convexVertex;
+							const PxReal denom = edgePlaneN.dot(convexEdge);
+							if (denom == 0.f || dnom0 == 0.f)
+								continue;
+							const PxReal lambda = (edgeStart - convexVertex).dot(edgePlaneN) / denom;
+							const PxVec3 position = convexVertex + lambda * convexEdge;
+							const PxReal t = -(position - edgeStart).dot(plane1.n);
+							const PxReal separation = t / dnom0;
+							if (!(separation > maxSep))
+							{
+								s_contactsTransposed[4 * nbContacts + 0] = position.x;
+								s_contactsTransposed[4 * nbContacts + 1] = position.y;
+								s_contactsTransposed[4 * nbContacts + 2] = position.z;
+								s_contactsTransposed[4 * nbContacts + 3] = separation;
+								++nbContacts;
+							}
+						}
+					}
+				}
+			}
+		}
+		return nbContacts;
+	}
+#endif
+	PX_UNUSED(dcuConvexVertexOffset);
 	int tI = threadIdx.x;
 
 	//ML: cosTheta = plane1.n.dot(axis), projectionDist = -plane1.distance(0) / cosTheta;
@@ -965,7 +1342,8 @@ __device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, 
 
 	// points of poly1 against planes of poly 0
 
-	PxVec3 e0 = shuffle(FULL_MASK, v0, tI + 1 == nbVerts0 ? 0 : tI + 1) - v0;
+	const PxU32 nextConvexLane = PxU32(tI + 1) == nbVerts0 ? 0u : PxU32(tI + 1);
+	PxVec3 e0 = shuffle(FULL_MASK, v0, nextConvexLane) - v0;
 	PxVec3 e0planeN = e0.cross(axis);
 	PxReal e0planeD = e0planeN.dot(v0);
 
@@ -987,9 +1365,9 @@ __device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, 
 	b &= __shfl_xor_sync(FULL_MASK, b, 1);
 
 	//ML: if b is the bit map for the 3 verts from the triangles, We need to keep the last 3 bits in b for the 3 verts and clear all other bits
-	addContacts(b&7, v1 - s1*axis, s1, maxSep, s_contactsTransposed, nbContacts);
+	addContacts(PxU32(b) & 7u, v1 - s1*axis, s1, maxSep, s_contactsTransposed, nbContacts);
 
-	if (!__any_sync(FULL_MASK, out1))										// all poly1 points inside poly0, so done
+	if (!__any_sync(FULL_MASK, out1))
 		return nbContacts;
 
 	in1 |= in1 << 3, out1 |= out1 << 3;			// save poly1's edge crosses
@@ -1002,7 +1380,7 @@ __device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, 
 	PxVec3 e1planeN = axis.cross(e1);
 	PxReal e1planeD = e1planeN.dot(v1);
 
-	for (int j = 0; j<nbVerts0; j++)
+	for (int j = 0; j < nbVerts0; j++)
 	{
 		PxReal t = shuffleDot(FULL_MASK, v0, j, e1planeN) - e1planeD;
 		int in = __ballot_sync(FULL_MASK, t < 0), out = __ballot_sync(FULL_MASK, t > 0);
@@ -1011,20 +1389,23 @@ __device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, 
 	}
 
 	in0 &= (1 << 3) - 1, out0 &= (1 << 3) - 1;
-	addContacts(__ballot_sync(FULL_MASK, !out0) & ((1 << nbVerts0) - 1), v0, s0, maxSep, s_contactsTransposed, nbContacts);
 
-	if (!__any_sync(FULL_MASK, out0))										// all poly0 points inside poly1, so done
+	addContacts(PxU32(__ballot_sync(FULL_MASK, !out0)) & lowLaneMask(nbVerts0), v0, s0, maxSep, s_contactsTransposed, nbContacts);
+
+	if (!__any_sync(FULL_MASK, out0))
 		return nbContacts;
 
-	int in0p = __shfl_sync(FULL_MASK, in0, tI + 1 == nbVerts0 ? 0 : tI + 1);
-	int out0p = __shfl_sync(FULL_MASK, out0, tI + 1 == nbVerts0 ? 0 : tI + 1);
+	int in0p = __shfl_sync(FULL_MASK, in0, nextConvexLane);
+	int out0p = __shfl_sync(FULL_MASK, out0, nextConvexLane);
 	int e0cross = (in0 & out0p) | (in0p & out0);			// get poly0's edge crosses
+	if (tI >= int(nbVerts0))
+		e0cross = 0;
 
 	// edge-edge crossings
 	int c = e0cross & e1cross;
 	assert(c + 1 < 1 << 3);
 
-	PxReal s0d = __shfl_sync(FULL_MASK, s0, tI + 1 == nbVerts0 ? 0 : tI + 1) - s0;
+	PxReal s0d = __shfl_sync(FULL_MASK, s0, nextConvexLane) - s0;
 
 	int a = c | __shfl_xor_sync(FULL_MASK, c, 16);
 	a |= __shfl_xor_sync(FULL_MASK, a, 8);
@@ -1056,6 +1437,8 @@ __device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, 
 
 	return nbContacts;
 }
+
+#undef PX_DCU_SERIAL_INLINE
 
 ////plane0 is convex, plane1 is triangle
 //__device__ static int polyClip(const PxPlane plane0, PxVec3 v0, PxU32 nbVerts0, const PxPlane plane1, PxVec3 v1, const PxVec3 axis, PxReal maxSep, PxU32 triEdgeMask,
@@ -1641,7 +2024,7 @@ static __device__ void convexTriangleContactGen(
 	volatile PxU32* s_WarpSharedMemory, ConvexMeshScratch* s_scratch, const PxU32 convexTriPairOffset, const PxU32 convexTriPairOffsetPadded, const PxU32 remapCpuTriangleIdx, const PxU32 triangleIdx,
 	const PxU32 globalWarpIndex, ConvexTriNormalAndIndex** PX_RESTRICT cvxTriNIPtr, ConvexTriContacts** PX_RESTRICT cvxTriContactsPtr, PxReal** PX_RESTRICT cvxTriMaxDepthPtr,
 	ConvexTriIntermediateData** PX_RESTRICT cvxTriIntermPtr, PxU32** PX_RESTRICT orderedCvxTriIntermPtr, PxU32** PX_RESTRICT convTriSecondPairPassPtr, PxU32* nbSecondPassPairs,
-	ConvexTriContact* tempConvexTriContacts, const PxU32 tempContactSize, PxU32* pTempContactIndex)
+	ConvexTriContact* tempConvexTriContacts, const PxU32 tempContactSize, PxU32* pTempContactIndex, const PxU32 dcuCoreStage = 0)
 {
 	// this will collide the whole convex against 1 triangle.
 
@@ -1667,6 +2050,9 @@ static __device__ void convexTriangleContactGen(
 
 	__syncwarp();
 
+	if (dcuCoreStage == 15)
+		return;
+
 	bool isSATPassed = convexMeshSAT<true>(
 		s_scratch,
 		featureIndex,
@@ -1680,9 +2066,16 @@ static __device__ void convexTriangleContactGen(
 
 	__syncwarp(); //s_scratch->convexPlaneN/D is written in convexMeshSAT and read below
 
+	if (dcuCoreStage == 16)
+		return;
+
 	// WARNING! Contacts re-use same shared memory as intermediate buffers
 	volatile float * s_contactsTransposed = reinterpret_cast<volatile float*>(s_WarpSharedMemory);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	PxVec3 verts0(0.0f), verts1(0.0f);
+#else
 	PxVec3 verts0, verts1;
+#endif
 	//unsigned mask_isSATPassed = __ballot_sync(syncMask, isSATPassed);
 	if (isSATPassed)
 	{
@@ -1694,9 +2087,15 @@ static __device__ void convexTriangleContactGen(
 		//after some condition checks
 		delayContacts = delayGenerateContact(s_scratch, minNormal, featureIndex);
 
+		if (dcuCoreStage == 22)
+			return;
+
 		// Select best polygon face
 		PxU32 faceIndex2 = 0xFFFFFFFF;
 		const PxU32 faceIndex1 = selectPolygonFeatureIndex(s_scratch, minNormal, featureIndex, faceIndex2);
+
+		if (dcuCoreStage == 23)
+			return;
 
 		PxU32 numContactsGenerated = 0;
 
@@ -1709,9 +2108,6 @@ static __device__ void convexTriangleContactGen(
 		PxReal orthoEps = 1e-6;
 
 		PxPlane triPlane(s_scratch->triLocVerts[0], s_scratch->triangleLocNormal);
-
-		if (threadIdx.x < 3)
-			verts1 = s_scratch->triLocVerts[threadIdx.x];
 
 		const PxVec3* PX_RESTRICT vertices = s_scratch->convexScaledVerts;
 		const PxU8* PX_RESTRICT vertexData8 = s_scratch->getVertexData8();
@@ -1727,11 +2123,69 @@ static __device__ void convexTriangleContactGen(
 		if(faceIndex2 != 0xFFFFFFFF)
 			plane1 = PxPlane(planeNs[faceIndex2], planeDs[faceIndex2]);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// Read every source from ConvexMeshScratch into lane registers before any
+		// lane overwrites the high portion of that same scratch with serial inputs.
+		const PxU32 polyDesc1 = polyDescs[faceIndex1];
+		const PxU32 nbFaceVerts1 = getNbVerts(polyDesc1);
+		const PxU32 polyDesc2 = faceIndex2 != 0xFFFFFFFF ? polyDescs[faceIndex2] : 0u;
+		const PxU32 nbFaceVerts2 = faceIndex2 != 0xFFFFFFFF ? getNbVerts(polyDesc2) : 0u;
+		assert(nbFaceVerts1 <= WARP_SIZE);
+		assert(nbFaceVerts2 <= WARP_SIZE);
+		{
+			const PxU32 lane = PxU32(threadIdx.x);
+			PxVec3 stagedFace1(0.0f);
+			PxVec3 stagedFace2(0.0f);
+			PxVec3 stagedTriangle(0.0f);
+			if (lane < nbFaceVerts1)
+				stagedFace1 = vertices[vertexData8[getVRef8(polyDesc1) + lane]];
+			if (lane < nbFaceVerts2)
+				stagedFace2 = vertices[vertexData8[getVRef8(polyDesc2) + lane]];
+			if (lane < 3)
+				stagedTriangle = s_scratch->triLocVerts[lane];
+
+			__syncwarp();
+
+			if (lane < nbFaceVerts1)
+			{
+				s_contactsTransposed[DCU_SERIAL_FACE1_OFFSET + 3 * lane + 0] = stagedFace1.x;
+				s_contactsTransposed[DCU_SERIAL_FACE1_OFFSET + 3 * lane + 1] = stagedFace1.y;
+				s_contactsTransposed[DCU_SERIAL_FACE1_OFFSET + 3 * lane + 2] = stagedFace1.z;
+			}
+			if (lane < nbFaceVerts2)
+			{
+				s_contactsTransposed[DCU_SERIAL_FACE2_OFFSET + 3 * lane + 0] = stagedFace2.x;
+				s_contactsTransposed[DCU_SERIAL_FACE2_OFFSET + 3 * lane + 1] = stagedFace2.y;
+				s_contactsTransposed[DCU_SERIAL_FACE2_OFFSET + 3 * lane + 2] = stagedFace2.z;
+			}
+			if (lane < 3)
+			{
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * lane + 0] = stagedTriangle.x;
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * lane + 1] = stagedTriangle.y;
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3 * lane + 2] = stagedTriangle.z;
+			}
+		}
+#else
+		if (threadIdx.x < 3)
+			verts1 = s_scratch->triLocVerts[threadIdx.x];
+#endif
+
 		__syncwarp(); //s_scratch and s_contactsTransposed points to the same shared memory. s_scratch is read above and s_contactsTransposed is written below.
+
+		if (dcuCoreStage == 24)
+			return;
 
 		for (PxU32 faceIndex = faceIndex1; faceIndex != 0xFFFFFFFF;)
 		{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			const bool firstFace = faceIndex == faceIndex1;
+			const PxU32 polyDesc = firstFace ? polyDesc1 : polyDesc2;
+			const PxU32 nbFaceVerts = firstFace ? nbFaceVerts1 : nbFaceVerts2;
+			const PxU32 dcuConvexVertexOffset = firstFace ? DCU_SERIAL_FACE1_OFFSET : DCU_SERIAL_FACE2_OFFSET;
+#else
 			const PxU32 polyDesc = polyDescs[faceIndex];
+			const PxU32 nbFaceVerts = getNbVerts(polyDesc);
+#endif
 
 			//if (fabs(minNormal.dot(plane0.n)) >= orthoEps && fabs(minNormal.dot(triPlane.n)) >= orthoEps)
 			bool predicate = (fabs(minNormal.dot(plane0.n)) >= orthoEps && fabs(minNormal.dot(triPlane.n)) >= orthoEps);
@@ -1739,11 +2193,16 @@ static __device__ void convexTriangleContactGen(
 
 			if (predicate)
 			{
-				if (threadIdx.x < getNbVerts(polyDesc))
+#if !defined(PX_DCU_PORT) || !PX_DCU_PORT
+				if (threadIdx.x < nbFaceVerts)
 					verts0 = vertices[vertexData8[getVRef8(polyDesc) + threadIdx.x]];
+#endif
 
 				//what happen to thread 4 to 31? is verts1 garbage????
-				assert(getNbVerts(polyDesc) <= 32);
+				assert(nbFaceVerts <= 32);
+
+				if (dcuCoreStage == 25)
+					return;
 
 #if 0//EDGE_FILTERING
 				//Attention: s_scratch and s_contactsTransposed points to the same shared memory!
@@ -1752,8 +2211,17 @@ static __device__ void convexTriangleContactGen(
 #else
 				PxU32 triEdgeMask = 0xFFffFFff;
 #endif
-				numContactsGenerated = polyClip(plane0, verts0, getNbVerts(polyDesc), triPlane, verts1,
-					minNormal, contactDist, triEdgeMask, s_contactsTransposed, numContactsGenerated);
+				numContactsGenerated = polyClip(plane0, verts0, nbFaceVerts, triPlane, verts1,
+					minNormal, contactDist, triEdgeMask, s_contactsTransposed, numContactsGenerated, dcuCoreStage,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					dcuConvexVertexOffset);
+#else
+					0u);
+#endif
+
+				if ((dcuCoreStage >= 26 && dcuCoreStage <= 40) ||
+					(dcuCoreStage >= 44 && dcuCoreStage <= 53))
+					return;
 
 			}
 
@@ -1765,9 +2233,24 @@ static __device__ void convexTriangleContactGen(
 		//Make sure that shared memory writes are visible
 		__syncwarp();
 
+		if (dcuCoreStage == 17 || dcuCoreStage == 41)
+			return;
+
 		//unsigned mask_numContactsGenerated = __ballot_sync(mask_predicate, numContactsGenerated);
 		if (numContactsGenerated)
 		{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (threadIdx.x == 0)
+			{
+				volatile float* maxSeparationOut = s_contactsTransposed + WARP_SIZE * 16 - 1;
+				nbOutputContacts = storeSerialContacts(
+					s_contactsTransposed, minNormal, numContactsGenerated,
+					cvxTriContacts, convexTriPairOffset, tempConvexTriContacts,
+					tempContactSize, pTempContactIndex, maxSeparationOut);
+				maxSeparation = *maxSeparationOut;
+			}
+#else
+			{
 			PxVec3 pa;
 			PxReal sep;
 
@@ -1778,7 +2261,7 @@ static __device__ void convexTriangleContactGen(
 					sep = s_contactsTransposed[4 * threadIdx.x + 3];
 			}
 
-			int mask = (1 << numContactsGenerated) - 1;
+			PxU32 mask = lowLaneMask(PxU32(numContactsGenerated));
 
 			//unsigned mask_numContactsGeneratedReduce = __ballot_sync(mask_numContactsGenerated, numContactsGenerated > 4);
 			/*if (numContactsGenerated > CVX_TRI_MAX_CONTACTS)
@@ -1790,10 +2273,13 @@ static __device__ void convexTriangleContactGen(
 			/*if (threadIdx.x == 0)
 				printf("Contact mask = %i\n", mask);*/
 
-			maxSeparation = mask & (1 << threadIdx.x) ? sep : FLT_MAX;
+			maxSeparation = mask & (PxU32(1) << threadIdx.x) ? sep : FLT_MAX;
 			maxSeparation = warpReduction<MinOpFloat, PxReal>(FULL_MASK, maxSeparation);
 
 			nbOutputContacts = __popc(mask);
+
+			if (dcuCoreStage == 18)
+				return;
 
 			PxU32 startIndex;
 			
@@ -1807,7 +2293,7 @@ static __device__ void convexTriangleContactGen(
 
 			if ((startIndex + nbOutputContacts) < tempContactSize)
 			{
-				if (mask & (1 << threadIdx.x))
+				if (mask & (PxU32(1) << threadIdx.x))
 				{
 					int index = warpScanExclusive(mask, threadIdx.x);
 
@@ -1818,10 +2304,18 @@ static __device__ void convexTriangleContactGen(
 			}
 			else
 				nbOutputContacts = 0;
+			}
+#endif
 		}
 
 		delayContacts = delayContacts && numContactsGenerated;
 	}
+
+	if (dcuCoreStage == 17 || dcuCoreStage == 18 || (dcuCoreStage >= 22 && dcuCoreStage <= 41))
+		return;
+
+	if (dcuCoreStage == 19)
+		return;
 
 	ConvexTriNormalAndIndex* PX_RESTRICT cvxTriNI = *cvxTriNIPtr;
 	ConvexTriIntermediateData* PX_RESTRICT cvxTriInterm = *cvxTriIntermPtr;
@@ -1837,6 +2331,56 @@ static __device__ void convexTriangleContactGen(
 #endif
 
 	// Writing other intermediate outputs
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (threadIdx.x == 0)
+	{
+		PxReal* PX_RESTRICT cvxTriMaxDepth = *cvxTriMaxDepthPtr;
+		cvxTriMaxDepth[convexTriPairOffset] = maxSeparation;
+		assert((size_t)&cvxTriMaxDepth[convexTriPairOffset] < (size_t)&cvxTriInterm[0]);
+
+		if (delayContacts)
+		{
+			PxU32* PX_RESTRICT convTriSecondPairPass = *convTriSecondPairPassPtr;
+			const PxU32 startIndex = atomicAdd(nbSecondPassPairs, 1);
+			const PxVec3 pa(s_contactsTransposed[0], s_contactsTransposed[1], s_contactsTransposed[2]);
+			const PxVec3 triangle0(
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 0],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 1],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 2]);
+			const PxVec3 triangle1(
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 3],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 4],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 5]);
+			const PxVec3 triangle2(
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 6],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 7],
+				s_contactsTransposed[DCU_SERIAL_TRIANGLE_OFFSET + 8]);
+			const PxU32 mask = getTriangleActiveMask(pa, triangle0, triangle1, triangle2);
+
+			convTriSecondPairPass[startIndex] = globalWarpIndex | mask;
+			assert((size_t)&cvxTriInterm[convexTriPairOffset] < (size_t)&convTriSecondPairPass[0]);
+		}
+
+		cvxTriInterm[convexTriPairOffset].gpuTriIndex = triangleIdx;
+		const PxU32 orderedMask = (nbOutputContacts && !delayContacts) ? PxU32(1) << 31 : 0;
+		orderedCvxTriInterm[convexTriPairOffsetPadded] = orderedMask | triangleIdx;
+		assert((size_t)&orderedCvxTriInterm[convexTriPairOffsetPadded] < (size_t)&cvxTriMaxDepth[0]);
+	}
+
+	if (dcuCoreStage == 20)
+		return;
+
+	if (threadIdx.x == 0)
+	{
+		const PxU32 delayContactMask = delayContacts ? ConvexTriNormalAndIndex::DeferredContactMask : 0;
+		cvxTriNI[convexTriPairOffset].normal = minNormal;
+		cvxTriNI[convexTriPairOffset].index = delayContactMask
+			+ (nbOutputContacts << ConvexTriNormalAndIndex::NbContactsShift) + remapCpuTriangleIdx;
+	}
+
+	return;
+#endif
 
 	PxVec3 verts2 = shuffle(FULL_MASK, verts1, 1);
 	PxVec3 verts3 = shuffle(FULL_MASK, verts1, 2);
@@ -1873,12 +2417,18 @@ static __device__ void convexTriangleContactGen(
 		assert((size_t)&orderedCvxTriInterm[convexTriPairOffsetPadded] < (size_t)&cvxTriMaxDepth[0]);
 	}
 
+	if (dcuCoreStage == 20)
+		return;
+
 	const PxU32 delayContactMask = delayContacts ? ConvexTriNormalAndIndex::DeferredContactMask : 0;
 
 	ConvexTriNormalAndIndex normalIndex;
 	normalIndex.normal = minNormal;
 	normalIndex.index = delayContactMask + (nbOutputContacts << ConvexTriNormalAndIndex::NbContactsShift) + remapCpuTriangleIdx;
 	ConvexTriNormalAndIndex_WriteWarp(cvxTriNI + convexTriPairOffset, normalIndex);
+
+	if (dcuCoreStage == 21)
+		return;
 }
 
 #endif

@@ -46,6 +46,7 @@
 #include "DyConstraintPrep.h"
 #include "PxgIslandContext.h"
 
+#include <cstdio>
 #include <cstdlib>
 
 #define GPU_CORE_DEBUG 0
@@ -197,6 +198,15 @@ void PxgSolverCore::allocateFrictionCounts(PxU32 totalEdges)
 {
 	mFrictionPatchCounts[1 - mCurrentIndex].allocateCopyOldDataAsync(totalEdges * sizeof(PxU32), mCudaContext, mStream, PX_FL);
 	mFrictionPatchCounts[mCurrentIndex].allocate(totalEdges * sizeof(PxU32), PX_FL);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (totalEdges)
+	{
+		const CUresult result = mCudaContext->memsetD32Async(mFrictionPatchCounts[mCurrentIndex].getDevicePtr(), 0, totalEdges, mStream);
+		if (result != CUDA_SUCCESS)
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+				"PX_DCU_SOLVER_STAGE_V39_CLEAR_CURRENT_FRICTION_COUNTS failed to clear the current friction count buffer.\n");
+	}
+#endif
 }
 
 PxgBlockFrictionIndex* PxgSolverCore::allocateFrictionPatchIndexStream(PxU32 totalFrictionPatchCount)
@@ -516,7 +526,27 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 	PX_PROFILE_ZONE("GpuDynamics.ConstraintPrePrepParallel", 0);
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const PxU32 prePrepDiagnosticMode = std::getenv("PX_DCU_SOLVER_PREPREP_DIAG") ? 1u : 0u;
+	static PxU32 sPrePrepDiagnosticCall = 0;
+	static bool sPrePrepFirstActiveTriggered = false;
+	const PxU32 prePrepDiagnosticCall = ++sPrePrepDiagnosticCall;
+	const char* const prePrepDiagnosticEnv = std::getenv("PX_DCU_SOLVER_PREPREP_DIAG");
+	const char* const prePrepDiagnosticCallEnv = std::getenv("PX_DCU_SOLVER_PREPREP_DIAG_CALL");
+	const char* const prePrepDiagnosticFirstActiveEnv = std::getenv("PX_DCU_SOLVER_PREPREP_DIAG_FIRST_ACTIVE");
+	const PxU32 prePrepDiagnosticTargetCall = prePrepDiagnosticCallEnv ?
+		PxU32(std::strtoul(prePrepDiagnosticCallEnv, NULL, 10)) : 0u;
+	const bool prePrepDiagnosticFirstActive = prePrepDiagnosticFirstActiveEnv &&
+		std::strtoul(prePrepDiagnosticFirstActiveEnv, NULL, 10) != 0u;
+	const bool selectFirstActive = prePrepDiagnosticFirstActive && !sPrePrepFirstActiveTriggered && nbConstraintBatches > 0u;
+	const bool selectExplicitCall = !prePrepDiagnosticFirstActive &&
+		(prePrepDiagnosticTargetCall == 0u || prePrepDiagnosticTargetCall == prePrepDiagnosticCall);
+	const PxU32 prePrepDiagnosticMode = prePrepDiagnosticEnv && (selectFirstActive || selectExplicitCall) ? 1u : 0u;
+	if (prePrepDiagnosticMode && prePrepDiagnosticFirstActive)
+	{
+		sPrePrepFirstActiveTriggered = true;
+		std::printf("[DCU PREPREP TARGET V46] call=%u batches=%u joints=%u bodies=%u marker=PX_DCU_SOLVER_STAGE_V46_FIRST_ACTIVE_PREPREP_TARGET\n",
+			prePrepDiagnosticCall, nbConstraintBatches, nbD6Joints, numBodies);
+		std::fflush(stdout);
+	}
 #else
 	const PxU32 prePrepDiagnosticMode = 0u;
 #endif
@@ -569,7 +599,8 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 		{
 			const CUresult result = mCudaContext->streamSynchronize(mStream);
 			if (result != CUDA_SUCCESS)
-				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU rigidSumInternalContactAndJointBatches2 diagnostic synchronization failed!\n");
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+					"PX_DCU_SOLVER_STAGE_V46_FIRST_ACTIVE_PREPREP_TARGET rigidSumInternalContactAndJointBatches2 diagnostic synchronization failed!\n");
 		}
 
 #if GPU_CORE_DEBUG

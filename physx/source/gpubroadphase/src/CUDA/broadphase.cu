@@ -2473,6 +2473,36 @@ extern "C" __global__ void accumulateReportsStage_2(PxgBroadPhaseDesc* bpDesc)	/
 	
 	const Bp::VolumeData* volumeData = bpDesc->aabbMngr_volumeData;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// gfx936 wave64 loses the second logical 32-lane warp in this stage's
+	// ballot-based compaction for small report lists. Keep the existing stage 1
+	// counts, but compact these lists deterministically in the first block.
+	if(nbPairsSafe <= WARP_SIZE * 8)
+	{
+		if(blockIdx.x == 0 && idx == 0)
+		{
+			PxU32 outputIndex = 0;
+			for(PxU32 workIndex = 0; workIndex < nbPairsSafe; ++workIndex)
+			{
+				const PxgBroadPhasePair pair = pairs[workIndex];
+				const bool isSingleActorA = volumeData ? volumeData[pair.mVolA].isSingleActor() : true;
+				const bool isSingleActorB = volumeData ? volumeData[pair.mVolB].isSingleActor() : true;
+				const bool isAgg = !(isSingleActorA && isSingleActorB);
+				const bool selected = outputAggReport ? isAgg : !isAgg;
+
+				assert(pair.mVolA != pair.mVolB);
+				if(selected)
+				{
+					if(outputIndex < maxPairs)
+						aggOrActorPairs[outputIndex] = pair;
+					++outputIndex;
+				}
+			}
+		}
+		return;
+	}
+#endif
+
 	const PxU32 totalBlockRequired = (nbPairs + (blockDim.x - 1)) / blockDim.x;
 
 	const PxU32 numIterationPerBlock = (totalBlockRequired + (numBlocks - 1)) / numBlocks;

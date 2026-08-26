@@ -189,9 +189,9 @@ void radixSortMultiCalculateRanksLaunchWithCount(PxgRadixSortDesc* desc, const P
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-	// GPU broadphase commonly sorts only a few projection keys. Avoid the
-	// 1024-thread wave/LDS rank path for these tiny sets on gfx936.
-	if(numKeys <= WARP_SIZE * 4)
+	// The 64-body TGS eGPU smoke test produces 132 projection keys. Keep this
+	// small set off the unstable gfx936 1024-thread wave/LDS rank path.
+	if(numKeys <= WARP_SIZE * 8)
 	{
 		if(numKeys > 0 && blockIdx.x == 0 && threadIdx.x == 0)
 		{

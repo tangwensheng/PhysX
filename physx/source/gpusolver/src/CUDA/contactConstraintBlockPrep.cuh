@@ -233,11 +233,19 @@ static __device__ bool getFrictionPatches(PxgBlockFrictionPatch&  frictionPatch,
 						const PxU32 threadIndex,
 						const PxU32 totalNbEdges,
 						PxReal& patchExtents,
-						const PxU32 nbContacts)
+						const PxU32 nbContacts,
+						const PxU64 previousFrictionIndexCount = ~PxU64(0),
+						const PxU64 previousFrictionPatchCount = ~PxU64(0))
 {
 	//printf("prevFrictionStartIndex = %i, frictionPatchCount = %i\n", prevFrictionStartIndex, frictionPatchCount);
 	if(prevFrictionStartIndex == 0xFFFFFFFF || frictionPatchCount == 0 || !prevFrictionIndices)
 		return true;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU64 unboundedCount = ~PxU64(0);
+	const bool validateHistoryBounds = previousFrictionIndexCount != unboundedCount || previousFrictionPatchCount != unboundedCount;
+	if(validateHistoryBounds && (!previousPatches || !previousAnchors || totalNbEdges == 0 || prevFrictionStartIndex >= totalNbEdges))
+		return true;
+#endif
 
 	//const PxgBlockFrictionIndex* indices = &prevFrictionIndices[prevFrictionStartIndex];
 
@@ -247,9 +255,25 @@ static __device__ bool getFrictionPatches(PxgBlockFrictionPatch&  frictionPatch,
 	//while(frictionPatchCount--)
 	for(PxU32 a = 0; a < frictionPatchCount; ++a)
 	{
-		const PxgBlockFrictionIndex index = prevFrictionIndices[prevFrictionStartIndex + a*totalNbEdges];
+		PxU64 previousIndex;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if(validateHistoryBounds)
+		{
+			previousIndex = PxU64(prevFrictionStartIndex) + PxU64(a) * PxU64(totalNbEdges);
+			if(previousIndex >= previousFrictionIndexCount)
+				break;
+		}
+		else
+#endif
+			previousIndex = PxU32(prevFrictionStartIndex + a * totalNbEdges);
+
+		const PxgBlockFrictionIndex index = prevFrictionIndices[previousIndex];
 		const PxU32 oldThreadId = index.getThreadIdx();
 		const PxU64 patchIndex = index.getPatchIndex();
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if(validateHistoryBounds && (oldThreadId >= 32 || patchIndex >= previousFrictionPatchCount))
+			continue;
+#endif
 		//indices += totalNbEdges;
 		const PxgBlockFrictionPatch& oldPatch = previousPatches[patchIndex];
 		const PxgBlockFrictionAnchorPatch& oldAnchor = previousAnchors[patchIndex];
@@ -700,6 +724,8 @@ static __device__ void  createFinalizeSolverContactsBlockGPU(	PxgBlockContactDat
 												PxgBlockSolverContactFriction* PX_RESTRICT frictionConstraints,
 												PxU32 totalEdges,
 												PxU32 prevFrictionStartIndex,
+												PxU64 previousFrictionIndexCount,
+												PxU64 previousFrictionPatchCount,
 												PxReal ccdMaxSeparation,
 												PxReal solverOffsetSlop)
 {
@@ -722,7 +748,7 @@ static __device__ void  createFinalizeSolverContactsBlockGPU(	PxgBlockContactDat
 
 	//KS - ensure that the friction patch broken bit is set to 0
 	frictionPatch.broken[threadIndex] = 0;
-	PxReal patchExtents;
+	PxReal patchExtents = 0.0f;
 
 	//Mark the friction patch as not broken!
 	frictionPatch.broken[threadIndex] = 0;
@@ -732,7 +758,7 @@ static __device__ void  createFinalizeSolverContactsBlockGPU(	PxgBlockContactDat
 	if (!(perPointFriction || disableFriction))// || (solverBodyData0.islandNodeIndex & 2) || (solverBodyData1.islandNodeIndex & 2)))
 	{
 		getFrictionPatches(frictionPatch, fAnchor, prevFrictionIndices, prevFrictionStartIndex, prevFrictionPatches, prevFrictionAnchors, data.prevFrictionPatchCount, bodyFrame0, bodyFrame1, correlationDistance, threadIndex, totalEdges, patchExtents,
-			nbContacts);
+			nbContacts, previousFrictionIndexCount, previousFrictionPatchCount);
 	}
 
 	if(!disableFriction)

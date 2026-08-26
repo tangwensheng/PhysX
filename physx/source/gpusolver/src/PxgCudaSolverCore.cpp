@@ -67,12 +67,63 @@
 #include "cudamanager/PxCudaContext.h"
 
 #include <cstdlib>
+#include <cstdio>
+#include <vector>
 
 //Turn me on for errors when stuff goes wrong and also to be able to capture PVD captures that indicate timers for individual parts of the GPU solver
 //pipeline. This makes overall performance about 5% slower so leave me off if you're not profiling using PVD or trying to track down a crash bug.
 #define GPU_DEBUG 0
 
 using namespace physx;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+namespace
+{
+	static bool dcuSolverFlowRead(PxCudaContext* cudaContext, CUdeviceptr source, void* destination, size_t size)
+	{
+		return size == 0 || cudaContext->memcpyDtoH(destination, source, size) == CUDA_SUCCESS;
+	}
+
+	static PxU32 dcuSolverFlowCompactLane(PxU32 mask, PxU32 lane)
+	{
+		PxU32 count = 0;
+		for (PxU32 bit = 0; bit < lane; ++bit)
+			count += (mask >> bit) & 1u;
+		return count;
+	}
+
+	static bool dcuSolverFlowReadVelocity(PxCudaContext* cudaContext, CUdeviceptr source,
+		PxU32 linearIndex, PxU32 angularIndex, PxU32 elementCount, float4& linear, float4& angular)
+	{
+		if (linearIndex >= elementCount || angularIndex >= elementCount)
+			return false;
+		return dcuSolverFlowRead(cudaContext, source + linearIndex * sizeof(float4), &linear, sizeof(linear)) &&
+			dcuSolverFlowRead(cudaContext, source + angularIndex * sizeof(float4), &angular, sizeof(angular));
+	}
+
+	struct DcuSolverFlowSample
+	{
+		bool selected;
+		PxU32 chunk;
+		PxU32 island;
+		PxU32 body;
+		PxU32 globalBody;
+		PxU32 inputBody;
+		PxU32 angularStride;
+		PxU32 staticCount;
+	};
+
+	struct DcuSolverIntegrationFlowState
+	{
+		const void* owner;
+		bool ready;
+		PxU32 sampleCount;
+		DcuSolverFlowSample samples[8];
+	};
+
+	static DcuSolverIntegrationFlowState gDcuSolverIntegrationFlowState = {};
+}
+#endif
 
 PxgCudaSolverCore::PxgCudaSolverCore(PxgCudaKernelWranglerManager* gpuKernelWrangler, PxCudaContextManager* cudaContextManager, 
 	PxgGpuContext* dynamicContext, PxgHeapMemoryAllocatorManager* heapMemoryManager, const PxGpuDynamicsMemoryConfig& init, const bool frictionEveryIteration) :
@@ -213,6 +264,9 @@ void PxgCudaSolverCore::constructConstraitPrepareDesc(PxgConstraintPrepareDesc& 
 
 	prepareDesc.blockCurrentFrictionIndices = reinterpret_cast<PxgBlockFrictionIndex*>(mFrictionIndexStream[mCurrentIndex].getDevicePtr());
 	prepareDesc.blockPreviousFrictionIndices = reinterpret_cast<PxgBlockFrictionIndex*>(mFrictionIndexStream[1 - mCurrentIndex].getDevicePtr());
+	prepareDesc.blockCurrentFrictionIndexCount = mFrictionIndexStream[mCurrentIndex].getSize() / sizeof(PxgBlockFrictionIndex);
+	prepareDesc.blockPreviousFrictionIndexCount = mFrictionIndexStream[1 - mCurrentIndex].getSize() / sizeof(PxgBlockFrictionIndex);
+	prepareDesc.blockPreviousFrictionPatchCount = mFrictionPatchBlockStream[1 - mCurrentIndex].getSize() / sizeof(PxgBlockFrictionPatch);
 
 	prepareDesc.solverConstantData = reinterpret_cast<PxgSolverConstraintManagerConstants*>(mSolverConstantData.getDevicePtr());
 	prepareDesc.blockJointPrepPool = reinterpret_cast<PxgBlockConstraint1DData*>(mConstraint1DPrepBlockPool.getDevicePtr());
@@ -790,10 +844,17 @@ void PxgCudaSolverCore::syncDmaBack(PxU32& nbChangedThresholdElements)
 	/*CUresult result = mCudaContext->streamSynchronize(mStream);
 	PX_UNUSED(result);
 	PX_ASSERT(result == CUDA_SUCCESS);*/
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// DCU: mPinnedEvent lives in host-mapped memory and is never signalled from the
+	// GPU here, so the spin always times out. Synchronize directly and avoid the
+	// host-mapped access that trips PCIe AtomicOp support (UR_ATOMIC_OPCODE).
+	mCudaContext->streamSynchronize(mStream);
+#else
 		
 	volatile PxU32* pEvent = mPinnedEvent;
 	if (!spinWait(*pEvent, 0.1f))
 		mCudaContext->streamSynchronize(mStream);
+#endif
 
 	PX_ASSERT(PxU32(mSolverCoreDesc->sharedThresholdStreamIndex) >= mSolverCoreDesc->nbExceededThresholdElements);
 
@@ -966,6 +1027,11 @@ void PxgCudaSolverCore::jointConstraintPrepareParallel(PxU32 nbJointBatches)
 void PxgCudaSolverCore::contactConstraintPrepareParallel(PxU32 nbContactBatches)
 {
 	PX_PROFILE_ZONE("GpuDynamics.contactConstraintPrepareParallel", 0);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const bool contactPrepareSyncDiagnostic = std::getenv("PX_DCU_SOLVER_SYNC_DIAG") != NULL;
+	static PxU32 contactPrepareSyncSequence = 0;
+#endif
 		
 	const CUfunction kernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CONTACT_CONSTRAINT_PREPARE_BLOCK_PARALLEL);
 
@@ -981,9 +1047,35 @@ void PxgCudaSolverCore::contactConstraintPrepareParallel(PxU32 nbContactBatches)
 
 	if(nbBlocks > 0)
 	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		PxU32 syncSequence = 0;
+		if(contactPrepareSyncDiagnostic)
+		{
+			syncSequence = ++contactPrepareSyncSequence;
+			const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+			std::fprintf(stderr, "[DCU CONTACT PREP SYNC V40] seq=%u phase=pre batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
+				syncSequence, nbContactBatches, nbBlocks, int(syncResult));
+			std::fflush(stderr);
+			if(syncResult != CUDA_SUCCESS)
+				return;
+		}
+#endif
+
 		CUresult result = mCudaContext->launchKernel(kernelFunction, nbBlocks, 1, 1, PxgKernelBlockDim::CONSTRAINT_PREPARE_BLOCK_PARALLEL, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU contactConstraintBlockPrepareParallelLaunch fail to launch kernel!!\n");
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if(contactPrepareSyncDiagnostic)
+		{
+			const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+			std::fprintf(stderr, "[DCU CONTACT PREP SYNC V40] seq=%u phase=post batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
+				syncSequence, nbContactBatches, nbBlocks, int(syncResult));
+			std::fflush(stderr);
+			if(syncResult != CUDA_SUCCESS)
+				return;
+		}
+#endif
 	}
 
 #if GPU_DEBUG
@@ -1292,17 +1384,156 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 	};
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const PxU32 staticSolverDiagnosticMode = std::getenv("PX_DCU_SOLVER_STATIC_DIAG") ? 1u : 0u;
+	const PxU32 staticSolverSyncDiagnosticMode = std::getenv("PX_DCU_SOLVER_SYNC_DIAG") ? 1u : 0u;
+	const bool solverFlowDiagnosticEnabled = std::getenv("PX_DCU_SOLVER_FLOW_DIAG") != NULL;
+	static PxU32 solverFlowCapturedChunkMask = 0;
+	DcuSolverFlowSample solverFlowSamples[8] = {};
+	PxU32 solverFlowSampleCount = 0;
+	if (solverFlowDiagnosticEnabled)
+	{
+		gDcuSolverIntegrationFlowState.owner = this;
+		gDcuSolverIntegrationFlowState.ready = false;
+		gDcuSolverIntegrationFlowState.sampleCount = 0;
+	}
 #else
-	const PxU32 staticSolverDiagnosticMode = 0u;
+	const PxU32 staticSolverSyncDiagnosticMode = 0u;
 #endif
-	const PxU32 blockConstraintBatchCount = PxU32(mBlockConstraintBatches.getNbElements());
-	const PxU32 contactHeaderCount = PxU32(mContactHeaderBlockStream.getSize() / sizeof(PxgBlockSolverContactHeader));
-	const PxU32 frictionHeaderCount = PxU32(mFrictionHeaderBlockStream.getSize() / sizeof(PxgBlockSolverFrictionHeader));
-	const PxU32 contactPointCount = PxU32(mContactBlockStream.getSize() / sizeof(PxgBlockSolverContactPoint));
-	const PxU32 frictionPointCount = PxU32(mFrictionBlockStream.getSize() / sizeof(PxgBlockSolverContactFriction));
-	const PxU32 solverBodyVelocityCount = PxU32(mSolverBodyPool.getNbElements());
-	const PxU32 tempStaticBodyOutputCount = PxU32(mTempStaticBodyOutputPool.getNbElements());
+	PxU32 staticSolverSyncSequence = 0;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (solverFlowDiagnosticEnabled && solverFlowCapturedChunkMask != 0xFFu)
+	{
+		const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+		for (PxU32 islandIndex = 0; syncResult == CUDA_SUCCESS && islandIndex < numIslands && solverFlowCapturedChunkMask != 0xFFu; ++islandIndex)
+		{
+			const PxgIslandContext& diagnosticIsland = islandContexts[islandIndex];
+			const PxU32 availableCounts = PxMin(mRigidStaticContactCounts.getSize(), mRigidStaticContactStartIndices.getSize()) / sizeof(PxU32);
+			const PxU32 bodyCount = PxMin(diagnosticIsland.mBodyCount, availableCounts);
+			if (bodyCount == 0)
+				continue;
+
+			std::vector<PxU32> contactCounts(bodyCount);
+			std::vector<PxU32> contactStarts(bodyCount);
+			const bool countsRead = dcuSolverFlowRead(mCudaContext, mRigidStaticContactCounts.getDevicePtr(),
+				contactCounts.data(), bodyCount * sizeof(PxU32));
+			const bool startsRead = dcuSolverFlowRead(mCudaContext, mRigidStaticContactStartIndices.getDevicePtr(),
+				contactStarts.data(), bodyCount * sizeof(PxU32));
+			if (!countsRead || !startsRead)
+			{
+				std::fprintf(stderr, "[DCU SOLVER FLOW V49] phase=select island=%u result=READ_FAIL marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					islandIndex);
+				std::fflush(stderr);
+				continue;
+			}
+
+			const PxU32 batchCount = mBlockConstraintBatches.getSize() / sizeof(PxgBlockConstraintBatch);
+			const PxU32 headerCount = mContactHeaderBlockStream.getSize() / sizeof(PxgBlockSolverContactHeader);
+			const PxU32 pointCount = mContactBlockStream.getSize() / sizeof(PxgBlockSolverContactPoint);
+			const PxU32 solverBodyCount = mSolverBodyPool.getSize() / sizeof(float4);
+			const PxU32 staticOutputCount = mTempStaticBodyOutputPool.getSize() / sizeof(float4);
+			for (PxU32 chunk = 0; chunk < 8 && solverFlowCapturedChunkMask != 0xFFu; ++chunk)
+			{
+				const PxU32 chunkBit = PxU32(1) << chunk;
+				if (solverFlowCapturedChunkMask & chunkBit)
+					continue;
+
+				const PxU32 chunkBegin = chunk * 32u;
+				const PxU32 chunkEnd = PxMin(chunkBegin + 32u, bodyCount);
+				PxU32 firstActiveBody = 0xFFFFFFFFu;
+				bool selected = false;
+				for (PxU32 bodyIndex = chunkBegin; bodyIndex < chunkEnd && !selected; ++bodyIndex)
+				{
+					if (contactCounts[bodyIndex] == 0)
+						continue;
+
+					if (firstActiveBody == 0xFFFFFFFFu)
+						firstActiveBody = bodyIndex;
+
+					const PxU32 lane = bodyIndex & 31u;
+					for (PxU32 contactIndex = 0; contactIndex < contactCounts[bodyIndex]; ++contactIndex)
+					{
+						const PxU32 batchIndex = contactStarts[bodyIndex] + contactIndex;
+						if (batchIndex >= batchCount)
+							break;
+
+						PxgBlockConstraintBatch batch;
+						const CUdeviceptr batchAddress = mBlockConstraintBatches.getDevicePtr() + batchIndex * sizeof(PxgBlockConstraintBatch);
+						if (!dcuSolverFlowRead(mCudaContext, batchAddress, &batch, sizeof(batch)))
+							break;
+
+						const PxU32 laneBit = PxU32(1) << lane;
+						if (batch.constraintType != PxgSolverConstraintDesc::eCONTACT || (batch.mask & laneBit) == 0)
+							continue;
+
+						const PxU32 compactLane = dcuSolverFlowCompactLane(batch.mask, lane);
+						const PxU32 inputBody = mSolverBodyOutputVelocityOffset + bodyIndex + diagnosticIsland.mBodyStartIndex;
+						const PxU32 angularStride = diagnosticIsland.mBodyCount + diagnosticIsland.mBodyStartIndex;
+						if (compactLane >= 32u || batch.mConstraintBatchIndex >= headerCount || batch.startConstraintIndex >= pointCount ||
+							inputBody >= solverBodyCount || angularStride >= solverBodyCount - inputBody ||
+							bodyIndex >= staticOutputCount || angularStride >= staticOutputCount - bodyIndex)
+							continue;
+
+						PxgBlockSolverContactHeader header;
+						PxgBlockSolverContactPoint point;
+						const CUdeviceptr headerAddress = mContactHeaderBlockStream.getDevicePtr() +
+							batch.mConstraintBatchIndex * sizeof(PxgBlockSolverContactHeader);
+						const CUdeviceptr pointAddress = mContactBlockStream.getDevicePtr() +
+							batch.startConstraintIndex * sizeof(PxgBlockSolverContactPoint);
+						if (!dcuSolverFlowRead(mCudaContext, headerAddress, &header, sizeof(header)) ||
+							!dcuSolverFlowRead(mCudaContext, pointAddress, &point, sizeof(point)))
+							continue;
+
+						DcuSolverFlowSample& sample = solverFlowSamples[solverFlowSampleCount++];
+						sample.selected = true;
+						sample.chunk = chunk;
+						sample.island = islandIndex;
+						sample.body = bodyIndex;
+						sample.globalBody = bodyIndex + diagnosticIsland.mBodyStartIndex;
+						sample.inputBody = inputBody;
+						sample.angularStride = angularStride;
+						sample.staticCount = contactCounts[bodyIndex];
+						solverFlowCapturedChunkMask |= chunkBit;
+						selected = true;
+
+						const float4 invMass = header.invMass0_1_angDom0_1[compactLane];
+						const float4 normal = header.normal_staticFriction[compactLane];
+						const float4 raXn = point.raXn_targetVelocity[compactLane];
+						const float4 rbXn = point.rbXn_maxImpulse[compactLane];
+						std::fprintf(stderr,
+							"[DCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u global_body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u batch=%u mask=0x%08x lane=%u compact=%u stride=%u header=%u point=%u normal_count=%u normal=(%.9g,%.9g,%.9g) friction=%.9g inv_mass=(%.9g,%.9g,%.9g,%.9g) target=%.9g max_impulse=%.9g resp=(%.9g,%.9g) coeff=(%.9g,%.9g) applied=%.9g result=OK marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+							chunk, islandIndex, bodyIndex, sample.globalBody, diagnosticIsland.mBodyStartIndex, inputBody, angularStride,
+							contactCounts[bodyIndex], contactStarts[bodyIndex], batchIndex, batch.mask, lane,
+							compactLane, PxU32(batch.mDescStride), batch.mConstraintBatchIndex, batch.startConstraintIndex,
+							header.numNormalConstr[compactLane], normal.x, normal.y, normal.z, normal.w,
+							invMass.x, invMass.y, invMass.z, invMass.w, raXn.w, rbXn.w,
+							point.resp0[compactLane], point.resp1[compactLane], point.coeff0[compactLane],
+							point.coeff1[compactLane], point.appliedForce[compactLane]);
+						std::fflush(stderr);
+						break;
+					}
+				}
+
+				if (!selected && firstActiveBody != 0xFFFFFFFFu)
+				{
+					const PxU32 inputBody = mSolverBodyOutputVelocityOffset + firstActiveBody + diagnosticIsland.mBodyStartIndex;
+					const PxU32 angularStride = diagnosticIsland.mBodyCount + diagnosticIsland.mBodyStartIndex;
+					solverFlowCapturedChunkMask |= chunkBit;
+					std::fprintf(stderr,
+						"[DCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u result=NO_VALID_BATCH marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+						chunk, islandIndex, firstActiveBody, diagnosticIsland.mBodyStartIndex, inputBody, angularStride,
+						contactCounts[firstActiveBody], contactStarts[firstActiveBody]);
+					std::fflush(stderr);
+				}
+			}
+		}
+		if (solverFlowSampleCount != 0)
+		{
+			std::fprintf(stderr, "[DCU SOLVER FLOW V49] phase=progress new_samples=%u captured_mask=0x%02x marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+				solverFlowSampleCount, solverFlowCapturedChunkMask);
+			std::fflush(stderr);
+		}
+	}
+#endif
 
 	for(PxU32 a = 0; a < numIslands; ++a)
 	{
@@ -1389,6 +1620,31 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 
 				if (nbBlocksRequired)
 				{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					bool captureSolverFlow = false;
+					for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+						captureSolverFlow = captureSolverFlow || (solverFlowSamples[sampleIndex].selected && solverFlowSamples[sampleIndex].island == a && b == 0);
+					if (captureSolverFlow)
+					{
+						const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+						for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+						{
+							const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+							if (!sample.selected || sample.island != a)
+								continue;
+							float4 linear = {0.f, 0.f, 0.f, 0.f};
+							float4 angular = {0.f, 0.f, 0.f, 0.f};
+							const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+								mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
+								mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
+							std::fprintf(stderr,
+								"[DCU SOLVER FLOW V49] phase=pre_static_solve chunk=%u island=%u iteration=%d body=%u static_count=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								sample.chunk, a, b, sample.body, sample.staticCount, linear.x, linear.y, linear.z, linear.w,
+								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
+						}
+						std::fflush(stderr);
+					}
+#endif
 					PxCudaKernelParam staticSolveKernelParams[] =
 					{
 						PX_CUDA_KERNEL_PARAM(mSolverCoreDescd),
@@ -1396,15 +1652,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						PX_CUDA_KERNEL_PARAM(a),
 						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions),
-						PX_CUDA_KERNEL_PARAM(doFriction),
-						PX_CUDA_KERNEL_PARAM(staticSolverDiagnosticMode),
-						PX_CUDA_KERNEL_PARAM(blockConstraintBatchCount),
-						PX_CUDA_KERNEL_PARAM(contactHeaderCount),
-						PX_CUDA_KERNEL_PARAM(frictionHeaderCount),
-						PX_CUDA_KERNEL_PARAM(contactPointCount),
-						PX_CUDA_KERNEL_PARAM(frictionPointCount),
-						PX_CUDA_KERNEL_PARAM(solverBodyVelocityCount),
-						PX_CUDA_KERNEL_PARAM(tempStaticBodyOutputCount)
+						PX_CUDA_KERNEL_PARAM(doFriction)
 					};
 					PxCudaKernelParam staticPropagateKernelParams[] =
 					{
@@ -1415,16 +1663,51 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions)
 					};
 
+					const PxU32 syncSequence = staticSolverSyncDiagnosticMode ? ++staticSolverSyncSequence : 0;
+					if (staticSolverSyncDiagnosticMode)
+					{
+						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=pre path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+							syncSequence, a, b, nbBlocksRequired, int(syncResult));
+						std::fflush(stderr);
+						if (syncResult != CUDA_SUCCESS)
+							return;
+					}
+
 					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticSolveKernelParams, sizeof(staticSolveKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
-					if (staticSolverDiagnosticMode)
+					if (staticSolverSyncDiagnosticMode)
 					{
-						result = mCudaContext->streamSynchronize(mStream);
-						if (result != CUDA_SUCCESS)
-							PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock diagnostic synchronization failed!\n");
+						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=post path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+							syncSequence, a, b, nbBlocksRequired, int(syncResult));
+						std::fflush(stderr);
+						if (syncResult != CUDA_SUCCESS)
+							return;
 					}
-						
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					if (captureSolverFlow)
+					{
+						const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+						for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+						{
+							const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+							if (!sample.selected || sample.island != a)
+								continue;
+							float4 linear = {0.f, 0.f, 0.f, 0.f};
+							float4 angular = {0.f, 0.f, 0.f, 0.f};
+							const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+								mTempStaticBodyOutputPool.getDevicePtr(), sample.body, sample.body + sample.angularStride,
+								mTempStaticBodyOutputPool.getSize() / sizeof(float4), linear, angular);
+							std::fprintf(stderr,
+								"[DCU SOLVER FLOW V49] phase=post_static_solve chunk=%u island=%u iteration=%d body=%u temp_linear=(%.9g,%.9g,%.9g,%.9g) temp_angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								sample.chunk, a, b, sample.body, linear.x, linear.y, linear.z, linear.w,
+								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
+						}
+						std::fflush(stderr);
+					}
+#endif
 #if GPU_DEBUG
 					result = mCudaContext->streamSynchronize(mStream);
 					if (result != CUDA_SUCCESS)
@@ -1434,6 +1717,28 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					result = mCudaContext->launchKernel(solvePropagateStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticPropagateKernelParams, sizeof(staticPropagateKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					if (captureSolverFlow)
+					{
+						const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+						for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+						{
+							const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+							if (!sample.selected || sample.island != a)
+								continue;
+							float4 linear = {0.f, 0.f, 0.f, 0.f};
+							float4 angular = {0.f, 0.f, 0.f, 0.f};
+							const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+								mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
+								mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
+							std::fprintf(stderr,
+								"[DCU SOLVER FLOW V49] phase=post_static_propagate chunk=%u island=%u iteration=%d body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								sample.chunk, a, b, sample.body, linear.x, linear.y, linear.z, linear.w,
+								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
+						}
+						std::fflush(stderr);
+					}
+#endif
 				}
 			}
 
@@ -1451,6 +1756,29 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 			}
 
 		}//end of mNumPositionIterations
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (solverFlowDiagnosticEnabled && solverFlowSampleCount != 0)
+		{
+			const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+			for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+			{
+				const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+				if (!sample.selected || sample.island != a)
+					continue;
+				float4 linear = {0.f, 0.f, 0.f, 0.f};
+				float4 angular = {0.f, 0.f, 0.f, 0.f};
+				const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+					mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
+					mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
+				std::fprintf(stderr,
+					"[DCU SOLVER FLOW V49] phase=post_position_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					sample.chunk, a, sample.body, sample.globalBody, linear.x, linear.y, linear.z, linear.w,
+					angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
+			}
+			std::fflush(stderr);
+		}
+#endif
 
 		{
 			PxCudaKernelParam kernelParams[] =
@@ -1498,6 +1826,32 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveContactParallel kernel fail!\n");
 #endif
 			}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (solverFlowDiagnosticEnabled && solverFlowSampleCount != 0)
+			{
+				const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+				const PxU32 motionElementCount = mMotionVelocityArray.getSize() / sizeof(float4);
+				const PxU32 motionAngularStride = mSolverCoreDesc->numSolverBodies;
+				for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+				{
+					const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+					if (!sample.selected || sample.island != a)
+						continue;
+					float4 linear = {0.f, 0.f, 0.f, 0.f};
+					float4 angular = {0.f, 0.f, 0.f, 0.f};
+					const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+						mMotionVelocityArray.getDevicePtr(), sample.globalBody, sample.globalBody + motionAngularStride,
+						motionElementCount, linear, angular);
+					std::fprintf(stderr,
+						"[DCU SOLVER FLOW V49] phase=post_writeback_motion chunk=%u island=%u body=%u global_body=%u angular_stride=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+						sample.chunk, a, sample.body, sample.globalBody, motionAngularStride,
+						linear.x, linear.y, linear.z, linear.w, angular.x, angular.y, angular.z, angular.w,
+						readOk ? "OK" : "READ_FAIL");
+				}
+				std::fflush(stderr);
+			}
+#endif
 
 			mGpuContext->getArticulationCore()->saveVelocities();
 		}
@@ -1638,15 +1992,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						PX_CUDA_KERNEL_PARAM(a),
 						PX_CUDA_KERNEL_PARAM(mNbStaticRigidSlabs),
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions),
-						PX_CUDA_KERNEL_PARAM(doFriction),
-						PX_CUDA_KERNEL_PARAM(staticSolverDiagnosticMode),
-						PX_CUDA_KERNEL_PARAM(blockConstraintBatchCount),
-						PX_CUDA_KERNEL_PARAM(contactHeaderCount),
-						PX_CUDA_KERNEL_PARAM(frictionHeaderCount),
-						PX_CUDA_KERNEL_PARAM(contactPointCount),
-						PX_CUDA_KERNEL_PARAM(frictionPointCount),
-						PX_CUDA_KERNEL_PARAM(solverBodyVelocityCount),
-						PX_CUDA_KERNEL_PARAM(tempStaticBodyOutputCount)
+						PX_CUDA_KERNEL_PARAM(doFriction)
 					};
 					PxCudaKernelParam staticPropagateKernelParams[] =
 					{
@@ -1657,14 +2003,28 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						PX_CUDA_KERNEL_PARAM(mMaxNumStaticPartitions)
 					};
 
+					const PxU32 syncSequence = staticSolverSyncDiagnosticMode ? ++staticSolverSyncSequence : 0;
+					if (staticSolverSyncDiagnosticMode)
+					{
+						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=pre path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+							syncSequence, a, b, nbBlocksRequired, int(syncResult));
+						std::fflush(stderr);
+						if (syncResult != CUDA_SUCCESS)
+							return;
+					}
+
 					CUresult result = mCudaContext->launchKernel(solveRigidStaticconstraintsFunction, nbBlocksRequired, 1, 1, PxgKernelBlockDim::SOLVE_BLOCK_PARTITION, 1, 1, 0, mStream, staticSolveKernelParams, sizeof(staticSolveKernelParams), 0, PX_FL);
 					if (result != CUDA_SUCCESS)
 						PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock fail to launch kernel!!\n");
-					if (staticSolverDiagnosticMode)
+					if (staticSolverSyncDiagnosticMode)
 					{
-						result = mCudaContext->streamSynchronize(mStream);
-						if (result != CUDA_SUCCESS)
-							PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU solveStaticBlock diagnostic synchronization failed!\n");
+						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
+						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=post path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+							syncSequence, a, b, nbBlocksRequired, int(syncResult));
+						std::fflush(stderr);
+						if (syncResult != CUDA_SUCCESS)
+							return;
 					}
 #if GPU_DEBUG
 					result = mCudaContext->streamSynchronize(mStream);
@@ -1698,6 +2058,29 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 
 		}//end of mNumVelocityIterations
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (solverFlowDiagnosticEnabled && solverFlowSampleCount != 0)
+		{
+			const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+			for (PxU32 sampleIndex = 0; sampleIndex < solverFlowSampleCount; ++sampleIndex)
+			{
+				const DcuSolverFlowSample& sample = solverFlowSamples[sampleIndex];
+				if (!sample.selected || sample.island != a)
+					continue;
+				float4 linear = {0.f, 0.f, 0.f, 0.f};
+				float4 angular = {0.f, 0.f, 0.f, 0.f};
+				const bool readOk = captureSync == CUDA_SUCCESS && dcuSolverFlowReadVelocity(mCudaContext,
+					mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
+					mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
+				std::fprintf(stderr,
+					"[DCU SOLVER FLOW V49] phase=final_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					sample.chunk, a, sample.body, sample.globalBody, linear.x, linear.y, linear.z, linear.w,
+					angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
+			}
+			std::fflush(stderr);
+		}
+#endif
+
 		writeBackBlock(a, context);
 
 		if (softbodyCore)
@@ -1712,6 +2095,21 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 			femClothCore->finalizeVelocities(mSharedDesc->dt);
 		}
 	}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (solverFlowDiagnosticEnabled && solverFlowSampleCount != 0)
+	{
+		gDcuSolverIntegrationFlowState.owner = this;
+		gDcuSolverIntegrationFlowState.ready = true;
+		gDcuSolverIntegrationFlowState.sampleCount = PxMin(solverFlowSampleCount, PxU32(8));
+		for (PxU32 sampleIndex = 0; sampleIndex < gDcuSolverIntegrationFlowState.sampleCount; ++sampleIndex)
+			gDcuSolverIntegrationFlowState.samples[sampleIndex] = solverFlowSamples[sampleIndex];
+		std::fprintf(stderr,
+			"[DCU SOLVER FLOW V49] phase=integration_handoff samples=%u marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+			gDcuSolverIntegrationFlowState.sampleCount);
+		std::fflush(stderr);
+	}
+#endif
 
 #if GPU_DEBUG
 	CUresult result = mCudaContext->streamSynchronize(mStream);
@@ -1935,6 +2333,57 @@ void PxgCudaSolverCore::integrateCoreParallel(const PxU32 offset, const PxU32 nb
 		CUresult result = mCudaContext->launchKernel(kernelFunction, nbBlocks, 1, 1, PxgKernelBlockDim::INTEGRATE_CORE_PARALLEL, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU integrateCoreParallel fail to launch kernel!!\n");
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (std::getenv("PX_DCU_SOLVER_FLOW_DIAG") != NULL && gDcuSolverIntegrationFlowState.ready &&
+			gDcuSolverIntegrationFlowState.owner == this)
+		{
+			const CUresult captureSync = mCudaContext->streamSynchronize(mStream);
+			const PxU32 outputElementCount = mOutVelocityPool.getSize() / sizeof(float4);
+			const PxU32 outputAngularStride = nbSolverBodies;
+			const PxU32 poseCount = mOutBody2WorldPool.getSize() / sizeof(PxAlignedTransform);
+			const PxU32 bodyDataCount = mSolverBodyDataPool.getSize() / sizeof(PxgSolverBodyData);
+			const PxU32 islandNodeCount = mIslandNodeIndices2.getSize() / sizeof(PxNodeIndex);
+			for (PxU32 sampleIndex = 0; sampleIndex < gDcuSolverIntegrationFlowState.sampleCount; ++sampleIndex)
+			{
+				const DcuSolverFlowSample& sample = gDcuSolverIntegrationFlowState.samples[sampleIndex];
+				const bool integrated = sample.globalBody >= offset && sample.globalBody < nbSolverBodies;
+				float4 linear = {0.f, 0.f, 0.f, 0.f};
+				float4 angular = {0.f, 0.f, 0.f, 0.f};
+				PxAlignedTransform pose(PxIdentity);
+				PxgSolverBodyData bodyData = {};
+				PxNodeIndex gpuNode;
+				const bool velocityOk = captureSync == CUDA_SUCCESS && integrated && dcuSolverFlowReadVelocity(mCudaContext,
+					mOutVelocityPool.getDevicePtr(), sample.globalBody, sample.globalBody + outputAngularStride,
+					outputElementCount, linear, angular);
+				const bool poseOk = captureSync == CUDA_SUCCESS && integrated && sample.globalBody < poseCount &&
+					dcuSolverFlowRead(mCudaContext, mOutBody2WorldPool.getDevicePtr() + sample.globalBody * sizeof(PxAlignedTransform),
+						&pose, sizeof(pose));
+				const bool bodyDataOk = captureSync == CUDA_SUCCESS && integrated && sample.globalBody < bodyDataCount &&
+					dcuSolverFlowRead(mCudaContext, mSolverBodyDataPool.getDevicePtr() + sample.globalBody * sizeof(PxgSolverBodyData),
+						&bodyData, sizeof(bodyData));
+				const bool gpuNodeOk = captureSync == CUDA_SUCCESS && integrated && sample.globalBody < islandNodeCount &&
+					dcuSolverFlowRead(mCudaContext, mIslandNodeIndices2.getDevicePtr() + sample.globalBody * sizeof(PxNodeIndex),
+						&gpuNode, sizeof(gpuNode));
+				const bool cpuNodeOk = integrated && mCpuIslandNodeIndices != NULL && sample.globalBody < islandNodeCount;
+				const PxU64 bodyNode = bodyDataOk ? bodyData.islandNodeIndex.getInd() : PxU64(0xFFFFFFFFFFFFFFFFull);
+				const PxU64 gpuNodeValue = gpuNodeOk ? gpuNode.getInd() : PxU64(0xFFFFFFFFFFFFFFFFull);
+				const PxU64 cpuNodeValue = cpuNodeOk ? mCpuIslandNodeIndices[sample.globalBody].getInd() : PxU64(0xFFFFFFFFFFFFFFFFull);
+				std::fprintf(stderr,
+					"[DCU SOLVER FLOW V49] phase=post_integrate chunk=%u body=%u global_body=%u offset=%u nb_bodies=%u integrated=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) pose_p=(%.9g,%.9g,%.9g,%.9g) pose_q=(%.9g,%.9g,%.9g,%.9g) body_node=0x%016llx gpu_node=0x%016llx cpu_node=0x%016llx velocity=%s pose=%s body_data=%s gpu_node_read=%s cpu_node_read=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					sample.chunk, sample.body, sample.globalBody, offset, nbSolverBodies, integrated ? 1u : 0u,
+					linear.x, linear.y, linear.z, linear.w, angular.x, angular.y, angular.z, angular.w,
+					pose.p.x, pose.p.y, pose.p.z, pose.p.w, pose.q.q.x, pose.q.q.y, pose.q.q.z, pose.q.q.w,
+					static_cast<unsigned long long>(bodyNode), static_cast<unsigned long long>(gpuNodeValue),
+					static_cast<unsigned long long>(cpuNodeValue), velocityOk ? "OK" : "READ_FAIL",
+					poseOk ? "OK" : "READ_FAIL", bodyDataOk ? "OK" : "READ_FAIL",
+					gpuNodeOk ? "OK" : "READ_FAIL", cpuNodeOk ? "OK" : "READ_FAIL");
+			}
+			std::fflush(stderr);
+			gDcuSolverIntegrationFlowState.ready = false;
+			gDcuSolverIntegrationFlowState.sampleCount = 0;
+		}
+#endif
 
 #if GPU_DEBUG
 	result = mCudaContext->streamSynchronize(mStream);

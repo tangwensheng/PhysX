@@ -80,8 +80,10 @@ int main(int argc, char** argv)
     int steps = 720;
     int bodyCount = 256;
     int grid = 48;
+    float startHeight = 3.0f;
     bool cleanExit = false;
     bool printAllSteps = false;
+    bool syncBeforeRelease = false;
     int cleanExitWaitSeconds = 5;
 
     for (int i = 1; i < argc; ++i) {
@@ -94,10 +96,14 @@ int main(int argc, char** argv)
                 cleanExitWaitSeconds = 0;
         } else if (std::strcmp(argv[i], "--print-all-steps") == 0) {
             printAllSteps = true;
+        } else if (std::strcmp(argv[i], "--sync-before-release") == 0) {
+            syncBeforeRelease = true;
         } else if (std::strcmp(argv[i], "--bodies") == 0 && i + 1 < argc) {
             bodyCount = std::atoi(argv[++i]);
         } else if (std::strcmp(argv[i], "--grid") == 0 && i + 1 < argc) {
             grid = std::atoi(argv[++i]);
+        } else if (std::strcmp(argv[i], "--start-height") == 0 && i + 1 < argc) {
+            startHeight = std::strtof(argv[++i], nullptr);
         } else {
             steps = std::atoi(argv[i]);
         }
@@ -112,6 +118,7 @@ int main(int argc, char** argv)
     printf("========================================\n");
     printf(" PhysX DCU Smoke - Complex Triangle Mesh\n");
     printf("========================================\n\n");
+    printf("PX_DCU_COMPLEX_TRIMESH_STAGE_V50_SPECULATIVE_CCD\n");
 
     static PxDefaultErrorCallback gErr;
     static PxDefaultAllocator gAlloc;
@@ -182,9 +189,10 @@ int main(int argc, char** argv)
         const int iz = i / side;
         const float x = start + ix * spacing;
         const float z = start + iz * spacing;
-        const float y = 3.0f + 0.035f * float(i);
+        const float y = startHeight + 0.035f * float(i);
         PxRigidDynamic* box = phy->createRigidDynamic(PxTransform(PxVec3(x, y, z)));
         box->attachShape(*boxShape);
+        box->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_SPECULATIVE_CCD, true);
         box->setLinearDamping(0.05f);
         box->setAngularDamping(0.05f);
         PxRigidBodyExt::updateMassAndInertia(*box, 1.0f);
@@ -193,7 +201,7 @@ int main(int argc, char** argv)
         boxes.push_back(box);
     }
 
-    printf("Starting simulation: steps=%d bodies=%zu grid=%d\n", steps, boxes.size(), grid);
+    printf("Starting simulation: steps=%d bodies=%zu grid=%d startHeight=%.6f\n", steps, boxes.size(), grid, startHeight);
     fflush(stdout);
     for (int i = 0; i < steps; ++i) {
         if (printAllSteps || i < 10 || i == steps - 1) {
@@ -210,17 +218,26 @@ int main(int argc, char** argv)
 
     int bad = 0;
     int belowTerrain = 0;
+    int belowTerrainChunks[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    int firstBelowTerrain = -1;
+    int lastBelowTerrain = -1;
     float minY = 1e30f;
     float maxY = -1e30f;
     float maxSpeed = 0.0f;
-    for (PxRigidDynamic* b : boxes) {
+    for (size_t bodyIndex = 0; bodyIndex < boxes.size(); ++bodyIndex) {
+        PxRigidDynamic* b = boxes[bodyIndex];
         const PxVec3 p = b->getGlobalPose().p;
         const PxVec3 v = b->getLinearVelocity();
         if (!finiteVec(p) || !finiteVec(v))
             bad++;
         const float h = terrainHeight(p.x, p.z);
-        if (p.y < h - 0.4f)
+        if (p.y < h - 0.4f) {
             belowTerrain++;
+            belowTerrainChunks[bodyIndex < 256 ? bodyIndex / 32 : 7]++;
+            if (firstBelowTerrain < 0)
+                firstBelowTerrain = int(bodyIndex);
+            lastBelowTerrain = int(bodyIndex);
+        }
         if (p.y < minY)
             minY = p.y;
         if (p.y > maxY)
@@ -242,10 +259,31 @@ int main(int argc, char** argv)
     printf("Max speed: %.6f\n", maxSpeed);
     printf("Bad boxes: %d\n", bad);
     printf("Below terrain boxes: %d\n", belowTerrain);
+    printf("Below terrain chunks (32 bodies): %d,%d,%d,%d,%d,%d,%d,%d\n",
+           belowTerrainChunks[0], belowTerrainChunks[1], belowTerrainChunks[2], belowTerrainChunks[3],
+           belowTerrainChunks[4], belowTerrainChunks[5], belowTerrainChunks[6], belowTerrainChunks[7]);
+    printf("Below terrain index range: first=%d last=%d\n", firstBelowTerrain, lastBelowTerrain);
 
     const bool pass = bad == 0 && belowTerrain == 0 && (boxes.empty() || (minY > -2.0f && maxY < 40.0f && maxSpeed < 50.0f));
     printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");
     fflush(stdout);
+
+    if (syncBeforeRelease) {
+        printf("Device synchronize before release...\n");
+        fflush(stdout);
+        PxScopedCudaLock lock(*gpuMgr);
+        printf("Device context lock acquired; entering hipDeviceSynchronize...\n");
+        fflush(stdout);
+        const hipError_t syncResult = hipDeviceSynchronize();
+        printf("Device synchronize before release result: %s (%d)\n",
+               hipGetErrorString(syncResult), int(syncResult));
+        fflush(stdout);
+        if (syncResult != hipSuccess) {
+            printf("Skipping PhysX release after failed device synchronize.\n");
+            fflush(stdout);
+            std::_Exit(10);
+        }
+    }
 
     printf("Releasing scene...\n");
     fflush(stdout);

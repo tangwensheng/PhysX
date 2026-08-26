@@ -17,7 +17,7 @@ unsigned int g_DCU_ModuleCount = 0;
 
 namespace physx {
 
-static PxArray<hipModule_t> gModules;
+static PxArray<hipModule_t, PxRawAllocator> gModules;
 static bool gLoaded = false;
 
 #include <dirent.h>

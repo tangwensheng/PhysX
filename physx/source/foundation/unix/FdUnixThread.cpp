@@ -31,6 +31,7 @@
 #include "foundation/PxAtomic.h"
 #include "foundation/PxThread.h"
 
+#include <cerrno>
 #include <math.h>
 #if !PX_APPLE_FAMILY && !defined(__CYGWIN__) && !PX_EMSCRIPTEN
 #include <bits/local_lim.h> // PTHREAD_STACK_MIN
@@ -253,11 +254,12 @@ void PxThreadImpl::sleep(uint32_t ms)
 {
 	timespec sleepTime;
 	uint32_t remainder = ms % 1000;
-	sleepTime.tv_sec = ms - remainder;
+	sleepTime.tv_sec = (ms - remainder) / 1000;
 	sleepTime.tv_nsec = remainder * 1000000L;
 
-	while(nanosleep(&sleepTime, &sleepTime) == -1)
-		continue;
+	while(nanosleep(&sleepTime, &sleepTime) == -1 && errno == EINTR)
+	{
+	}
 }
 
 void PxThreadImpl::yield()

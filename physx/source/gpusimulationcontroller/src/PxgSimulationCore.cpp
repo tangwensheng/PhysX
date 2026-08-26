@@ -2270,6 +2270,11 @@ void PxgSimulationCore::gpuMemDmaBack(PxInt32ArrayPinned& frozenArray,
 	
 	*mPinnedEvent = 0;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// DCU: the completion flag lives in host-mapped memory; writing it from the GPU
+	// issues a PCIe AtomicOp this platform rejects (UR_ATOMIC_OPCODE). Skip the
+	// signal kernel and let syncDmaback() use streamSynchronize instead.
+#else
 	CUfunction signalFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::BP_SIGNAL_COMPLETE);
 
 	void* devicePtr = getMappedDevicePtr(mCudaContext, mPinnedEvent);
@@ -2281,6 +2286,7 @@ void PxgSimulationCore::gpuMemDmaBack(PxInt32ArrayPinned& frozenArray,
 	CUresult resultR = mCudaContext->launchKernel(signalFunction, 1, 1, 1, 1, 1, 1, 0, mStream, signalParams, sizeof(signalParams), 0, PX_FL);
 	PX_UNUSED(resultR);
 	PX_ASSERT(resultR == CUDA_SUCCESS);
+#endif
 
 #if SC_GPU_DEBUG
 	mCudaContext->streamSynchronize(mStream);
@@ -2299,10 +2305,15 @@ void PxgSimulationCore::syncDmaback(PxU32& nbFrozenShapesThisFrame, PxU32& nbUnf
 
 	if (didSimulate)
 	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// DCU: no host-mapped completion flag is written (see above).
+		mCudaContext->streamSynchronize(mStream);
+#else
 		volatile PxU32* pEvent = mPinnedEvent;
 			
 		if (!spinWait(*pEvent, 0.1f))
 			mCudaContext->streamSynchronize(mStream);
+#endif
 	}
 
 	nbFrozenShapesThisFrame = mUpdatedCacheAndBoundsDesc->mTotalFrozenShapes;

@@ -211,6 +211,9 @@ void PxgTGSCudaSolverCore::constructConstraitPrepareDesc(PxgConstraintPrepareDes
 
 	prepareDesc.blockCurrentFrictionIndices = reinterpret_cast<PxgBlockFrictionIndex*>(mFrictionIndexStream[mCurrentIndex].getDevicePtr());
 	prepareDesc.blockPreviousFrictionIndices = reinterpret_cast<PxgBlockFrictionIndex*>(mFrictionIndexStream[1 - mCurrentIndex].getDevicePtr());
+	prepareDesc.blockCurrentFrictionIndexCount = mFrictionIndexStream[mCurrentIndex].getSize() / sizeof(PxgBlockFrictionIndex);
+	prepareDesc.blockPreviousFrictionIndexCount = mFrictionIndexStream[1 - mCurrentIndex].getSize() / sizeof(PxgBlockFrictionIndex);
+	prepareDesc.blockPreviousFrictionPatchCount = mFrictionPatchBlockStream[1 - mCurrentIndex].getSize() / sizeof(PxgBlockFrictionPatch);
 
 	prepareDesc.solverConstantData = reinterpret_cast<PxgSolverConstraintManagerConstants*>(mSolverConstantData.getDevicePtr());
 	prepareDesc.blockJointPrepPool = reinterpret_cast<PxgBlockConstraint1DData*>(mConstraint1DPrepBlockPool.getDevicePtr());
@@ -778,9 +781,16 @@ void PxgTGSCudaSolverCore::syncDmaBack(PxU32& nbChangedThresholdElements)
 	//Wait for mStream to have completed
 	/*CUresult result = mCudaContext->streamSynchronize(mStream);
 	PX_UNUSED(result);*/
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// DCU: mPinnedEvent lives in host-mapped memory and is never signalled from the
+	// GPU here, so the spin always times out. Synchronize directly and avoid the
+	// host-mapped access that trips PCIe AtomicOp support (UR_ATOMIC_OPCODE).
+	mCudaContext->streamSynchronize(mStream);
+#else
 	volatile PxU32* pEvent = mPinnedEvent;
 	if (!spinWait(*pEvent, 0.1f))
 		mCudaContext->streamSynchronize(mStream);
+#endif
 
 	PX_ASSERT(PxU32(mSolverCoreDesc->sharedThresholdStreamIndex) >= mSolverCoreDesc->nbExceededThresholdElements);
 
@@ -2013,4 +2023,3 @@ void PxgTGSCudaSolverCore::getDataStreamBase(void*& contactStreamBase, void*& pa
 	patchStreamBase = reinterpret_cast<void*>(mCompressedPatches.getDevicePtr());
 	forceAndIndexStreamBase = reinterpret_cast<void*>(mForceBuffer.getDevicePtr());
 }
-

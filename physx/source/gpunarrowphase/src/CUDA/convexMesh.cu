@@ -73,8 +73,24 @@ __device__ void getShapeSpaceVerts(PxVec3& v0, PxVec3& v1, PxVec3& v2, const Mes
 	meshScale.getShapeSpaceVert(triV0, triV1, triV2, v0, v1, v2);
 }
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuCoreStageVersion[] = "PX_DCU_CORE_STAGE_V20_SINGLE_LDS_BASE";
+
+// Set to 1 at build time with -DPX_DCU_NO_HOST_ATOMIC to skip the host-memory
+// atomicMax in the trimesh core kernel (see the note at its call site).
+__device__ __forceinline__ bool pxgDcuSkipHostAtomic()
+{
+#if defined(PX_DCU_NO_HOST_ATOMIC) && PX_DCU_NO_HOST_ATOMIC
+	return true;
+#else
+	return false;
+#endif
+}
+#endif
+
 __device__ void convexTrimeshNarrowphaseCore(
 	PxU32 globalWarpIndex,
+	PxU32 dcuCoreStage,
 	PxgShape& convexShape,
 	PxgShape& trimeshShape,
 	PxU32 transformCacheRef0,
@@ -129,6 +145,18 @@ __device__ void convexTrimeshNarrowphaseCore(
 
 	__syncwarp();
 
+	if (dcuCoreStage == 5)
+	{
+		if (threadIdx.x == 0)
+		{
+			const PxU32* convexTransformWords = reinterpret_cast<const PxU32*>(&convexTransformCached[threadIdx.y]);
+			const PxU32* trimeshTransformWords = reinterpret_cast<const PxU32*>(&trimeshTransformCached[threadIdx.y]);
+			s_WarpSharedMemory[0] = convexTransformWords[0] ^ trimeshTransformWords[0]
+				^ convexTriPairOffset ^ convexTriPairOffsetPadded;
+		}
+		return;
+	}
+
 	if (threadIdx.x < 7)
 	{
 		reinterpret_cast<PxU32*>(&s_scratch->convexScale)[threadIdx.x] = reinterpret_cast<PxU32*>(&convexShape.scale)[threadIdx.x];
@@ -161,12 +189,27 @@ __device__ void convexTrimeshNarrowphaseCore(
 
 		convexPtrA += sizeof(uint4);
 
+	}
+
+	if (dcuCoreStage == 6)
+	{
+		__syncwarp();
+		if (threadIdx.x == 0)
+		{
+			s_WarpSharedMemory[0] = s_scratch->nbEdgesNbHullVerticesNbPolygons
+				^ reinterpret_cast<const PxU32*>(&s_scratch->contactDist)[0]
+				^ reinterpret_cast<const PxU32*>(&s_scratch->convexCenterOfMass)[0];
+		}
+		return;
+	}
+
+	if (threadIdx.x == 0)
+	{
 		// Geometries : Triangle Mesh
 		const PxU8 * trimeshGeomPtr = reinterpret_cast<const PxU8 *>(trimeshShape.hullOrMeshPtr);
 
 		const uint4* PX_RESTRICT trimeshTriAdjacencies;
 		readTriangleMesh(trimeshGeomPtr, s_scratch->trimeshVerts, s_scratch->trimeshTriIndices, trimeshTriAdjacencies, s_scratch->trimeshFaceRemap);
-		
 
 		// TODO: shuffle this across threads (reading uint4 seq)
 		// later shuffle adjacency work and shuffle back adjNormals
@@ -178,6 +221,13 @@ __device__ void convexTrimeshNarrowphaseCore(
 	}
 
 	__syncwarp();
+
+	if (dcuCoreStage == 7)
+	{
+		if (threadIdx.x == 0)
+			s_WarpSharedMemory[0] = s_scratch->triAdjTrisIdx[0] ^ s_scratch->triAdjTrisIdx[1] ^ s_scratch->triAdjTrisIdx[2];
+		return;
+	}
 
 	if (threadIdx.x < 3)
 	{
@@ -209,11 +259,28 @@ __device__ void convexTrimeshNarrowphaseCore(
 	}
 	__syncwarp();
 
+	if (dcuCoreStage == 8)
+	{
+		if (threadIdx.x == 0)
+			s_WarpSharedMemory[0] = reinterpret_cast<const PxU32*>(&s_scratch->triangleLocNormal)[0];
+		return;
+	}
+
 	const PxU32 remapCpuTriangleIdx = s_scratch->trimeshFaceRemap[triangleIdx];
+	if (dcuCoreStage == 9)
+	{
+		if (threadIdx.x == 0)
+			s_WarpSharedMemory[0] = remapCpuTriangleIdx;
+		return;
+	}
+
 	convexTriangleContactGen(
 		s_WarpSharedMemory, s_scratch, convexTriPairOffset, convexTriPairOffsetPadded, remapCpuTriangleIdx, triangleIdx, globalWarpIndex,
 		cvxTriNIPtr, cvxTriContactsPtr, cvxTriMaxDepthPtr, cvxTriIntermPtr, orderedCvxTriIntermPtr, cvxTriSecondPassPairPtr, nbSecondPassPairs,
-		tempConvexTriContacts, tempContactSizeBytes/sizeof(ConvexTriContact), pTempContactIndex);
+		tempConvexTriContacts, tempContactSizeBytes/sizeof(ConvexTriContact), pTempContactIndex, dcuCoreStage);
+
+	if (dcuCoreStage == 10 || dcuCoreStage == 42)
+		return;
 }
 
 
@@ -647,8 +714,16 @@ void convexTrimeshNarrowphase(
 	PxU32* maxTempMemRequirement,
 	PxU32* midPhasePairsNeeded,
 	const PxU32 nbContactManagers
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	, const PxU32 dcuCoreStage
+#endif
 )
 {
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (dcuCoreStage == 11)
+		return;
+#endif
+
 	__shared__ ConvexTriNormalAndIndex* sCvxTriNIPtr;
 	__shared__ ConvexTriContacts* sCvxTriContactsPtr;
 	__shared__ PxReal*  sCvxTriMaxDepthPtr;
@@ -666,16 +741,33 @@ void convexTrimeshNarrowphase(
 	const PxU32 nbPairs = *nbPairsGlobal;
 	const PxU32 nbPaddedPairs = *nbPaddedPairsGlobal;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (dcuCoreStage == 12)
+	{
+		if (threadIdx.x == 0 && threadIdx.y == 0)
+			s_WarpSharedMemory[0] = nbPairs ^ nbPaddedPairs;
+		return;
+	}
+#endif
+
 	//each block assign the corresponding ptr from the stack memory to sCvxTriNIPtr, sCvxTriContactPtr and sCvxTriMaxDepthPtr
 	if (threadIdx.x == 0 && threadIdx.y == 0)
 	{
 		midphaseAllocate(&sCvxTriNIPtr, &sCvxTriContactsPtr, &sCvxTriMaxDepthPtr, &sCvxTriIntermPtr, &sOrderedCvxTriIntermPtr, &sCvxTriSecondPassPairsPtr, &sPairsGPU, stackPtr, nbPairs, nbPaddedPairs);
 		if (blockIdx.x == 0)
 		{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (!pxgDcuSkipHostAtomic())
+#endif
 			atomicMax(maxTempMemRequirement, calculateConvexMeshPairMemRequirement() * (*midPhasePairsNeeded) + calculateAdditionalPadding(nbContactManagers));
 		}
 	}
 	__syncthreads();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (dcuCoreStage == 13)
+		return;
+#endif
 
 	// the first block writes back the pointers to global memory.
 	if (threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 0)
@@ -689,14 +781,45 @@ void convexTrimeshNarrowphase(
 		*cvxTriSecondPassPairsPtr = sCvxTriSecondPassPairsPtr;
 	}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (dcuCoreStage == 1 || dcuCoreStage == 14)
+	{
+		if (threadIdx.x == 0 && threadIdx.y == 0)
+		{
+			const volatile char* version = gPxgDcuCoreStageVersion;
+			s_WarpSharedMemory[0] = PxU32(version[0]);
+		}
+		return;
+	}
+#else
+	const PxU32 dcuCoreStage = 0;
+#endif
+
 	// 1 warp deals with 1 convexMeshPair - so 1 convex against 1 mesh triangle.
 	for (PxU32 globalWarpIndex = blockIdx.x * blockDim.y + threadIdx.y; globalWarpIndex < nbPairs; globalWarpIndex += gridDim.x * blockDim.y)
 	{
-		uint4 curPair = sPairsGPU[globalWarpIndex];
+		uint4 curPair;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (dcuCoreStage == 2)
+		{
+			const volatile PxU32* pairWords = reinterpret_cast<const volatile PxU32*>(sPairsGPU + globalWarpIndex);
+			curPair = make_uint4(pairWords[0], pairWords[1], pairWords[2], pairWords[3]);
+			return;
+		}
+#endif
+		curPair = sPairsGPU[globalWarpIndex];
 		const PxU32 cmIdx = curPair.x;
 
 		PxgContactManagerInput npWorkItem;
 		PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, cmIdx);
+
+		if (dcuCoreStage == 3)
+		{
+			if (threadIdx.x == 0)
+				s_WarpSharedMemory[0] = npWorkItem.shapeRef0 ^ npWorkItem.shapeRef1
+					^ npWorkItem.transformCacheRef0 ^ npWorkItem.transformCacheRef1;
+			return;
+		}
 
 		PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
 		PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
@@ -720,6 +843,14 @@ void convexTrimeshNarrowphase(
 
 		__syncwarp();
 
+		if (dcuCoreStage == 4)
+		{
+			if (threadIdx.x == 0)
+				s_WarpSharedMemory[0] = PxU32(shape0[threadIdx.y].type) ^ PxU32(shape1[threadIdx.y].type)
+					^ PxU32(shape0[threadIdx.y].hullOrMeshPtr) ^ PxU32(shape1[threadIdx.y].hullOrMeshPtr);
+			return;
+		}
+
 		bool flip = shape0[threadIdx.y].type == PxGeometryType::eTRIANGLEMESH;
 
 		if (flip)
@@ -733,6 +864,7 @@ void convexTrimeshNarrowphase(
 
 		convexTrimeshNarrowphaseCore(
 			globalWarpIndex,
+			dcuCoreStage,
 			*shape,
 			*trimeshShape,
 			transformCacheRef0,

@@ -644,6 +644,28 @@ void sortTriangleIndices(
 
 	assert((startIndex & 3) == 0);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (nbTriangles <= WARP_SIZE * 4)
+	{
+		if (threadIdx.x == 0)
+		{
+			PxU32* keys = *orderedCvxTriIntermPtr + startIndex;
+			for (PxU32 i = 1; i < nbTriangles; ++i)
+			{
+				const PxU32 key = keys[i];
+				PxU32 j = i;
+				while (j > 0 && keys[j - 1] > key)
+				{
+					keys[j] = keys[j - 1];
+					--j;
+				}
+				keys[j] = key;
+			}
+		}
+		return;
+	}
+#endif
+
 	const PxU32 nbUint4s = (nbTriangles + 3) / 4;
 
 	const PxU32 nbWarps = NP_TRIMESH_WARPS_PER_BLOCK;

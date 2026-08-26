@@ -53,9 +53,12 @@
 #include "PxgArticulationCore.h"
 
 #include "cudamanager/PxCudaContextManager.h"
+#include "foundation/PxThread.h"
 
+#include <chrono>
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 
 #include "GuConvexGeometry.h"
 #include "GuConvexSupport.h"
@@ -76,6 +79,112 @@ PX_IMPLEMENT_OUTPUT_ERROR
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+namespace
+{
+	PX_NOINLINE void dcuMaybeProbeCallerReturn(
+		PxgGpuNarrowphaseCore* narrowphaseCore, PxCudaContextManager* cudaContextManager,
+		PxU32 call, PxU32 numTests)
+	{
+		const char* site = std::getenv("PX_DCU_PROBE");
+		if (!site || std::strcmp(site, "post-convextrimesh-return") != 0)
+			return;
+
+		const char* callEnv = std::getenv("PX_DCU_PROBE_CALL");
+		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 5u;
+		if (call != targetCall)
+			return;
+
+		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
+		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
+
+		std::fprintf(stderr,
+			"[DCU CALLER RETURN ENTER] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"call=%u tests=%u\n", call, numTests);
+		std::fflush(stderr);
+
+		narrowphaseCore->acquireContext();
+		PxCudaContext* cudaContext = cudaContextManager->getCudaContext();
+		const int syncResult = int(cudaContext->streamSynchronize(narrowphaseCore->getStream()));
+		narrowphaseCore->releaseContext();
+
+		std::fprintf(stderr,
+			"[DCU CALLER RETURN] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"call=%u tests=%u sync=%d\n",
+			call, numTests, syncResult);
+		std::fprintf(stderr,
+			"[DCU PROBE] site=post-convextrimesh-return call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
+			call, numTests, holdMs, syncResult);
+		std::fflush(stderr);
+
+		const std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+		PxThread::sleep(holdMs);
+		const PxU64 actualMs = PxU64(std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - t0).count());
+
+		std::fprintf(stderr,
+			"[DCU PROBE] site=post-convextrimesh-return call=%u phase=end requestedMs=%u actualMs=%llu\n",
+			call, holdMs, static_cast<unsigned long long>(actualMs));
+		std::fflush(stderr);
+		std::_Exit(syncResult == int(CUDA_SUCCESS) ? 96 : 98);
+	}
+
+	PX_NOINLINE void dcuMaybeProbePostUpdateFriction(
+		PxgGpuNarrowphaseCore* narrowphaseCore, PxCudaContextManager* cudaContextManager,
+		PxU32 call, PxU32 numTests)
+	{
+		if (call == 0)
+			return;
+
+		const char* site = std::getenv("PX_DCU_PROBE");
+		if (!site || std::strcmp(site, "post-update-friction") != 0)
+			return;
+
+		const char* callEnv = std::getenv("PX_DCU_PROBE_CALL");
+		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 5u;
+		if (call != targetCall)
+			return;
+
+		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
+		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
+
+		std::fprintf(stderr,
+			"[DCU POST UPDATE FRICTION ENTER] "
+			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
+			"call=%u tests=%u\n", call, numTests);
+		std::fflush(stderr);
+
+		narrowphaseCore->acquireContext();
+		PxCudaContext* cudaContext = cudaContextManager->getCudaContext();
+		const int syncResult = int(cudaContext->streamSynchronize(narrowphaseCore->getStream()));
+		narrowphaseCore->releaseContext();
+
+		std::fprintf(stderr,
+			"[DCU POST UPDATE FRICTION] "
+			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
+			"call=%u tests=%u sync=%d\n",
+			call, numTests, syncResult);
+		std::fprintf(stderr,
+			"[DCU PROBE] site=post-update-friction call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
+			call, numTests, holdMs, syncResult);
+		std::fflush(stderr);
+
+		const std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+		PxThread::sleep(holdMs);
+		const PxU64 actualMs = PxU64(std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - t0).count());
+
+		std::fprintf(stderr,
+			"[DCU PROBE] site=post-update-friction call=%u phase=end requestedMs=%u actualMs=%llu\n",
+			call, holdMs, static_cast<unsigned long long>(actualMs));
+		std::fflush(stderr);
+		std::_Exit(syncResult == int(CUDA_SUCCESS) ? 96 : 98);
+	}
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
 void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& managers, PxgGpuContactManagers& managersGPU, GPU_BUCKET_ID::Enum type)
 {
 	PxRenderOutput renderOutput(mContext->mContext.getRenderBuffer());
@@ -87,6 +196,10 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 
 	if (numTests == 0)
 		return;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	PxU32 dcuConvexTrimeshCallerCall = 0;
+#endif
 
 	PxU32 maxPatches = 1;
 
@@ -114,12 +227,20 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 		break;
 	case GPU_BUCKET_ID::eConvexTrimesh:
 	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		static PxU32 s_dcuConvexTrimeshCallerCallCount = 0;
+		dcuConvexTrimeshCallerCall = ++s_dcuConvexTrimeshCallerCallCount;
+#endif
 		mContext->mGpuNarrowphaseCore->testSDKConvexTriMeshSATGpu(managersGPU,
 			mContext->mContext.getCreateAveragePoint(), managers.mCpuContactManagerMapping.size(),
 			mContext->mContext.mPatchStreamPool->mDataStream, mContext->mContext.mContactStreamPool->mDataStream,
 			mContext->mContext.mForceAndIndiceStreamPool->mDataStream,
 			mContext->mContext.mPatchStreamPool->mDataStreamSize, mContext->mContext.mContactStreamPool->mDataStreamSize,
 			mContext->mContext.mForceAndIndiceStreamPool->mDataStreamSize);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		dcuMaybeProbeCallerReturn(mContext->mGpuNarrowphaseCore,
+			mContext->mContext.getCudaContextManager(), dcuConvexTrimeshCallerCall, numTests);
+#endif
 		maxPatches = PXG_MULTIMANIFOLD_MAX_SUBMANIFOLDS;
 		break;
 	}
@@ -385,6 +506,11 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 
 	mContext->mGpuNarrowphaseCore->updateFrictionPatches(managersGPU, managers.mCpuContactManagerMapping.size(),
 		mContext->mContext.mPatchStreamPool->mDataStream, mContext->mContext.mFrictionPatchStreamPool->mDataStream);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	dcuMaybeProbePostUpdateFriction(mContext->mGpuNarrowphaseCore,
+		mContext->mContext.getCudaContextManager(), dcuConvexTrimeshCallerCall, numTests);
+#endif
 
 	mContext->mMaxPatches = PxMax(mContext->mMaxPatches, maxPatches);
 }

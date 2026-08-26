@@ -365,6 +365,13 @@ static __device__ void solveContactBlock(const PxgBlockConstraintBatch& batch, P
 		const uint numNormalConstr = Pxldcg(contactHeader->numNormalConstr[threadIndex]);
 		const uint	numFrictionConstr = Pxldcg(frictionHeader->numFrictionConstr[threadIndex]);
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// Contact prep explicitly emits an empty normal/friction pair for this lane.
+		// Avoid the pipelined contacts[0] prefetch when the batch owns no point.
+		if(numNormalConstr == 0 && numFrictionConstr == 0)
+			return;
+#endif
+
 		PxgBlockSolverContactPoint* PX_RESTRICT contacts = &contactPoints[batch.startConstraintIndex];
 		PxgBlockSolverContactFriction* PX_RESTRICT frictions = &frictionPoints[batch.startFrictionIndex];
 
@@ -574,6 +581,147 @@ static __device__ void solveContactBlock(const PxgBlockConstraintBatch& batch, P
 	b1LinVel = linVel1;
 	b1AngVel = angVel1;
 }
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+// The static DCU solver consumes a small contact set. Read each constraint only
+// when it is solved so no address from the next contact array is formed early.
+static __device__ void solveStaticContactBlockDcu(const PxgBlockConstraintBatch& batch,
+	PxVec3& b0LinVel, PxVec3& b0AngVel, PxVec3& b1LinVel, PxVec3& b1AngVel, bool doFriction,
+	const PxU32 threadIndex, PxgBlockSolverContactHeader* contactHeaders,
+	PxgBlockSolverFrictionHeader* frictionHeaders, PxgBlockSolverContactPoint* contactPoints,
+	PxgBlockSolverContactFriction* frictionPoints, PxgErrorAccumulator* error,
+	PxReal ref0 = 1.f, PxReal ref1 = 1.f)
+{
+	using namespace physx;
+
+	PxgBlockSolverContactHeader* PX_RESTRICT contactHeader = &contactHeaders[batch.mConstraintBatchIndex];
+	PxgBlockSolverFrictionHeader* PX_RESTRICT frictionHeader = &frictionHeaders[batch.mConstraintBatchIndex];
+	const uint numNormalConstr = Pxldcg(contactHeader->numNormalConstr[threadIndex]);
+	const uint numFrictionConstr = Pxldcg(frictionHeader->numFrictionConstr[threadIndex]);
+
+	if (numNormalConstr == 0 && (!doFriction || numFrictionConstr == 0))
+		return;
+
+	PxVec3 linVel0 = b0LinVel;
+	PxVec3 linVel1 = b1LinVel;
+	PxVec3 angVel0 = b0AngVel;
+	PxVec3 angVel1 = b1AngVel;
+
+	const float4 invMass0_1_angDom0_1 = Pxldcg(contactHeader->invMass0_1_angDom0_1[threadIndex]);
+	const float invMassA = ref0 * invMass0_1_angDom0_1.x;
+	const float invMassB = ref1 * invMass0_1_angDom0_1.y;
+	const float angDom0 = ref0 * invMass0_1_angDom0_1.z;
+	const float angDom1 = ref1 * invMass0_1_angDom0_1.w;
+
+	const float4 normal_staticFriction = Pxldcg(contactHeader->normal_staticFriction[threadIndex]);
+	const PxVec3 contactNormal(normal_staticFriction.x, normal_staticFriction.y, normal_staticFriction.z);
+	const float staticFrictionCof = normal_staticFriction.w;
+	const float restitution = contactHeader->restitution[threadIndex];
+	const PxU8 flags = contactHeader->flags[threadIndex];
+	const PxVec3 contactDelLinVel0 = contactNormal * invMassA;
+	const PxVec3 contactDelLinVel1 = contactNormal * invMassB;
+
+	float accumulatedNormalImpulse = 0.f;
+	for (uint i = 0; i < numNormalConstr; ++i)
+	{
+		PxgBlockSolverContactPoint& c = contactPoints[batch.startConstraintIndex + i];
+		const float4 raXn_extraCoeff = Pxldcg(c.raXn_targetVelocity[threadIndex]);
+		const float4 rbXn_maxImpulse = Pxldcg(c.rbXn_maxImpulse[threadIndex]);
+		const float appliedForce = Pxldcg(c.appliedForce[threadIndex]);
+		const float resp0 = Pxldcg(c.resp0[threadIndex]);
+		const float resp1 = Pxldcg(c.resp1[threadIndex]);
+		const float coeff0 = Pxldcg(c.coeff0[threadIndex]);
+		const float coeff1 = Pxldcg(c.coeff1[threadIndex]);
+
+		const PxVec3 raXn(raXn_extraCoeff.x, raXn_extraCoeff.y, raXn_extraCoeff.z);
+		const PxVec3 rbXn(rbXn_maxImpulse.x, rbXn_maxImpulse.y, rbXn_maxImpulse.z);
+		const float targetVelocity = raXn_extraCoeff.w;
+		const float maxImpulse = rbXn_maxImpulse.w;
+		const float unitResponse = ref0 * resp0 + ref1 * resp1;
+		const float recipResponse = unitResponse > 0.f ? 1.f / unitResponse : 0.f;
+
+		float velMultiplier = recipResponse;
+		float impulseMul = 1.f;
+		float unbiasedError = 0.f;
+		float biasedErr = 0.f;
+		computeContactCoefficients(flags, restitution, unitResponse, recipResponse, targetVelocity,
+			coeff0, coeff1, velMultiplier, impulseMul, unbiasedError, biasedErr);
+
+		const float v0 = linVel0.dot(contactNormal) + angVel0.dot(raXn);
+		const float v1 = linVel1.dot(contactNormal) + angVel1.dot(rbXn);
+		const float normalVel = v0 - v1;
+		const float tempDeltaF = biasedErr - normalVel * velMultiplier;
+		const float deltaFromOldForce = fmaxf(tempDeltaF, -appliedForce);
+		const float unclampedForce = appliedForce * impulseMul + deltaFromOldForce;
+		const float newForce = fminf(unclampedForce, maxImpulse);
+		const float deltaF = newForce - appliedForce;
+
+		linVel0 += contactDelLinVel0 * deltaF;
+		linVel1 -= contactDelLinVel1 * deltaF;
+		angVel0 += raXn * (deltaF * angDom0);
+		angVel1 -= rbXn * (deltaF * angDom1);
+		if (error)
+			error->accumulateErrorLocal(deltaF, velMultiplier);
+		Pxstcg(&c.appliedForce[threadIndex], newForce);
+		accumulatedNormalImpulse += newForce;
+	}
+
+	if (doFriction && numFrictionConstr > 0)
+	{
+		const float dynamicFrictionCof = Pxldcg(frictionHeader->dynamicFriction[threadIndex]);
+		const float maxFrictionImpulse = staticFrictionCof * accumulatedNormalImpulse;
+		const float maxDynFrictionImpulse = dynamicFrictionCof * accumulatedNormalImpulse;
+		PxU32 broken = 0;
+
+		for (uint i = 0; i < numFrictionConstr; ++i)
+		{
+			PxgBlockSolverContactFriction& f = frictionPoints[batch.startFrictionIndex + i];
+			const float4 frictionNormal = Pxldg(frictionHeader->frictionNormals[i & 1][threadIndex]);
+			const float4 raXn_bias = Pxldcg(f.raXn_bias[threadIndex]);
+			const float4 rbXn_targetVelW = Pxldcg(f.rbXn_targetVelW[threadIndex]);
+			const float appliedForce = Pxldcg(f.appliedForce[threadIndex]);
+			const float resp0 = Pxldcg(f.resp0[threadIndex]);
+			const float resp1 = Pxldcg(f.resp1[threadIndex]);
+
+			const PxVec3 normal(frictionNormal.x, frictionNormal.y, frictionNormal.z);
+			const PxVec3 raXn(raXn_bias.x, raXn_bias.y, raXn_bias.z);
+			const PxVec3 rbXn(rbXn_targetVelW.x, rbXn_targetVelW.y, rbXn_targetVelW.z);
+			const float resp = ref0 * resp0 + ref1 * resp1;
+			const float velMultiplier = resp > 0.f ? 0.8f / resp : 0.f;
+			const float bias = raXn_bias.w;
+			const float targetVel = rbXn_targetVelW.w;
+			const PxVec3 delLinVel0 = normal * invMassA;
+			const PxVec3 delLinVel1 = normal * invMassB;
+
+			const float v0 = angVel0.dot(raXn) + linVel0.dot(normal);
+			const float v1 = angVel1.dot(rbXn) + linVel1.dot(normal);
+			const float normalVel = v0 - v1;
+			const float tmp1 = appliedForce - (bias - targetVel) * velMultiplier;
+			const float totalImpulse = tmp1 - normalVel * velMultiplier;
+			const bool clamp = fabsf(totalImpulse) > maxFrictionImpulse;
+			const float totalClamped = fminf(maxDynFrictionImpulse,
+				fmaxf(-maxDynFrictionImpulse, totalImpulse));
+			const float newAppliedForce = clamp ? totalClamped : totalImpulse;
+			const float deltaF = newAppliedForce - appliedForce;
+
+			if (error)
+				error->accumulateErrorLocal(deltaF, velMultiplier);
+			linVel0 += delLinVel0 * deltaF;
+			linVel1 -= delLinVel1 * deltaF;
+			angVel0 += raXn * (deltaF * angDom0);
+			angVel1 -= rbXn * (deltaF * angDom1);
+			Pxstcg(&f.appliedForce[threadIndex], newAppliedForce);
+			broken |= PxU32(clamp);
+		}
+		Pxstcg(&frictionHeader->broken[threadIndex], broken);
+	}
+
+	b0LinVel = linVel0;
+	b0AngVel = angVel0;
+	b1LinVel = linVel1;
+	b1AngVel = angVel1;
+}
+#endif
 
 // A light version of the function "solveContactBlock" to quickly check if there is any active contact.
 // TODO: Make this even lighter.

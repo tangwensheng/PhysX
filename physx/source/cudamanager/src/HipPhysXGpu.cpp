@@ -238,9 +238,22 @@ struct HipPhysXGpu final : public PxPhysXGpu
 				maxNumTriangles, maxNumSprings, cudaContextManager));
 	}
 
-	// Diffuse and rigid particle buffers remain unsupported on DCU.
-	PxsParticleAndDiffuseBuffer*    createParticleAndDiffuseBuffer(PxU32, PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
-	PxsParticleRigidBuffer*         createParticleRigidBuffer(PxU32, PxU32, PxU32, PxCudaContextManager&) override { return nullptr; }
+	PxsParticleAndDiffuseBuffer* createParticleAndDiffuseBuffer(
+		PxU32 maxNumParticles, PxU32 maxVolumes, PxU32 maxNumDiffuseParticles,
+		PxCudaContextManager& cudaContextManager) override
+	{
+		return static_cast<PxsParticleAndDiffuseBuffer*>(
+			PX_NEW(PxgParticleAndDiffuseBuffer)(maxNumParticles, maxVolumes,
+				maxNumDiffuseParticles, cudaContextManager));
+	}
+	PxsParticleRigidBuffer* createParticleRigidBuffer(
+		PxU32 maxNumParticles, PxU32 maxVolumes, PxU32 maxNumRigids,
+		PxCudaContextManager& cudaContextManager) override
+	{
+		return static_cast<PxsParticleRigidBuffer*>(
+			PX_NEW(PxgParticleRigidBuffer)(maxNumParticles, maxVolumes, maxNumRigids,
+				cudaContextManager));
+	}
 
 private:
 	HipKernelWranglerMap mKernelWranglerInstances;

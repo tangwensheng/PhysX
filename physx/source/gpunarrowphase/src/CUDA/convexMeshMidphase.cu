@@ -55,14 +55,6 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels4() {}
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
-#define DCU_MESH_MIDPHASE_THREADS_PER_BLOCK 256
-#else
-#define DCU_MESH_MIDPHASE_THREADS_PER_BLOCK 1024
-#endif
-
-#define DCU_MESH_MIDPHASE_NUM_WARPS (DCU_MESH_MIDPHASE_THREADS_PER_BLOCK / 32)
-
 #include "manifold.cuh"
 #include "vector_functions.h"
 
@@ -565,7 +557,7 @@ PX_FORCE_INLINE __device__ PxgPatchWriter createPatchWriterFullThreadBlock(
 		{
 			patchByteOffsetS = atomicAdd(&(patchAndContactCounters->patchesBytes), sizeof(PxContactPatch)*numPatchesToKeep);
 			contactByteOffsetS = atomicAdd(&(patchAndContactCounters->contactsBytes), sizeof(PxContact) * totalNumContacts);
-			forceAndIndiceByteOffsetS = atomicAdd(&(patchAndContactCounters->forceAndIndiceBytes), sizeof(PxU32) * totalNumContacts * 2);
+			forceAndIndiceByteOffsetS = atomicAdd(&(patchAndContactCounters->forceAndIndiceBytes), sizeof(PxU32) * totalNumContacts);
 
 			if (patchByteOffsetS + sizeof(PxContactPatch) * numPatchesToKeep > patchBytesLimit)
 			{
@@ -614,7 +606,7 @@ PX_FORCE_INLINE __device__ PxgPatchWriter createPatchWriterFullThreadBlock(
 				merge(numPatchesToKeep, PxU8(0)));
 			output->nbContacts = totalNumContacts;
 
-			if (!overflow && totalNumContacts)
+			if (!overflow)
 			{
 				output->contactForces = reinterpret_cast<PxReal*>(startContactForces + forceAndIndiceByteOffsetS);
 				output->contactPatches = startContactPatches + patchByteOffsetS;
@@ -776,7 +768,6 @@ struct Contact
 };
 
 //Must be called by full warps
-template<PxU32 NbWarps>
 PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patchesS, PxU32 p, Contact& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxReal* shMinSepS, PxI32& remainingContacts, PxVec4* tempPointsS)
 {
@@ -828,7 +819,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 		PxU32 totalContacts;
 		bool threadEmitsElement = reduceMask & (1 << threadIndexInWarp);
 
-		PxU32 offset = threadBlockScanExclusive<NbWarps>(threadEmitsElement, totalContacts, countersS);
+		PxU32 offset = threadBlockScanExclusive<32>(threadEmitsElement, totalContacts, countersS);
 		// no sync for countersS reuse because we sync below after setting the tempPoints.
 
 		// AD: we should always have contacts because if the reduceMask of all warps is 0, we should never end up in here.
@@ -870,7 +861,6 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 }
 
 //Must be called by full warps
-template<PxU32 NbWarps>
 PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS, PxU32& numPatchesToKeep)
 {
@@ -945,7 +935,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 			//Now we have a mask of how many contacts match this patch...					
 			PxU32 totalContacts;
 			bool threadEmitsElement = reduceMask & (1 << threadIndexInWarp);
-			PxU32 offset = threadBlockScanExclusive<NbWarps>(threadEmitsElement, totalContacts, countersS);
+			PxU32 offset = threadBlockScanExclusive<32>(threadEmitsElement, totalContacts, countersS);
 			// sync for countersS reuse is covered by the end-of-loop barrier.
 
 			if (totalContacts != 0)
@@ -1016,7 +1006,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 	//Per-warp minSep value, used to select the warp with the deepest point. This chooses the patch we attempt
 	//to reduce to
 	__shared__ PxReal shMinSepS[32];
-	__shared__ uint2 triangleIndicesS[DCU_MESH_MIDPHASE_THREADS_PER_BLOCK];
+	__shared__ uint2 triangleIndicesS[1024];
 
 	//If a triangle is very big compared to the SDF object that collides against it, then schedule a second collision pass where the triangle gets subdivided
 	__shared__ uint2 trianglesToSubdivideS[256]; //This buffer can only hold up to one quarter of the elements as triangleIndicesS because each triangle can produce up to 4 sub-triangles during on-the-fly refinement
@@ -1027,11 +1017,6 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 
 	if (threadIdx.x == 0)
 		numTrianglesToSubdivideS = 0;
-	if (threadIdx.x < 32)
-	{
-		countersS[threadIdx.x] = 0;
-		shMinSepS[threadIdx.x] = PX_MAX_F32;
-	}
 
 	__shared__ bool anyKeepS;
 	PxU32 numPatchesToKeep = 0;
@@ -1086,12 +1071,12 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			
 			if (outer == 0)
 			{
-				nbFoundTriangles = findInterestingTrianglesA<DCU_MESH_MIDPHASE_NUM_WARPS, DCU_MESH_MIDPHASE_THREADS_PER_BLOCK>(mesh0.numTris, mesh0.indices, mesh0.trimeshVerts, shape0.scale, shape1.scale,
+				nbFoundTriangles = findInterestingTrianglesA<32, 1024>(mesh0.numTris, mesh0.indices, mesh0.trimeshVerts, shape0.scale, shape1.scale, 
 					cullScale, sdfTexture, aToB, i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
 			}
 			else
 			{
-				nbFoundTriangles = findInterestingTrianglesA<DCU_MESH_MIDPHASE_NUM_WARPS, DCU_MESH_MIDPHASE_THREADS_PER_BLOCK>(mesh1.numTris, mesh1.indices, mesh1.trimeshVerts, shape1.scale, shape0.scale,
+				nbFoundTriangles = findInterestingTrianglesA<32, 1024>(mesh1.numTris, mesh1.indices, mesh1.trimeshVerts, shape1.scale, shape0.scale,
 					cullScale, sdfTexture, aToB.getInverse(), i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
 			}
 			numTrianglesToSubdividePerThread = 0;
@@ -1212,7 +1197,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 				}
 			}
 			//needsRefinement = false;
-			PxU32 newBufferCount = addToRefinementBuffer<DCU_MESH_MIDPHASE_NUM_WARPS, 256>(needsRefinement, ind, subInd, 0, trianglesToSubdivideS, maxRefinementLevel);
+			PxU32 newBufferCount = addToRefinementBuffer<32, 256>(needsRefinement, ind, subInd, 0, trianglesToSubdivideS, maxRefinementLevel);
 			if (threadIdx.x == 0)
 				numTrianglesToSubdivideS = newBufferCount;
 
@@ -1229,11 +1214,11 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			//First, iterate through existing patches to see if we have any interesting contacts for those patches...
 			for (PxU32 p = 0; (p < numPatchesToKeep) && (remainingContacts > 0); ++p)
 			{
-				tryToAssignContactToExistingPatch<DCU_MESH_MIDPHASE_NUM_WARPS>(patchesS, p, contact, anyKeepS, clusterBias,
+				tryToAssignContactToExistingPatch(patchesS, p, contact, anyKeepS, clusterBias,
 					countersS, shMinSepS, remainingContacts, tempPointsS);
 			}
 
-			createNewPatches<DCU_MESH_MIDPHASE_NUM_WARPS>(patchesS, contact, anyKeepS, clusterBias,
+			createNewPatches(patchesS, contact, anyKeepS, clusterBias,
 				countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);			
 		}
 	}
@@ -1241,7 +1226,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 	assert(numPatchesToKeep <= MAX_MESH_MESH_PATCHES2);
 
 	//Final step - output the contact patches and contact points...
-	writePatchesAndContacts<DCU_MESH_MIDPHASE_NUM_WARPS>(transform0, transform1, shape0, shape1, isFlipped, pairIndex,
+	writePatchesAndContacts<32>(transform0, transform1, shape0, shape1, isFlipped, pairIndex,
 		cmOutputs, materials, contactStream,
 		patchStream, patchAndContactCounters, touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
 		patchBytesLimit, contactBytesLimit, forceBytesLimit, numPatchesToKeep, patchesS);
@@ -1305,7 +1290,7 @@ void evaluatePointDistancesSDFBatch(const PxgShape* PX_RESTRICT gpuShapes,
 
 
 extern "C" __global__
-__launch_bounds__(DCU_MESH_MIDPHASE_THREADS_PER_BLOCK, 1)
+__launch_bounds__(1024, 1)
 void triangleTriangleCollision(PxU32 numWorkItems,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
 	const PxsCachedTransform* PX_RESTRICT transformCache,

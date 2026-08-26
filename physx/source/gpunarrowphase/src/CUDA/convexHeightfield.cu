@@ -267,7 +267,7 @@ __device__ void convexHeightfieldNarrowphaseCore(
 	convexTriangleContactGen(
 		s_WarpSharedMemory, s_scratch, convexTriPairOffset, convexTriPairOffsetPadded, triangleIdx, triangleIdx, globalWarpIndex,
 		cvxTriNIPtr, cvxTriContactsPtr,cvxTriMaxDepthPtr, cvxTriIntermPtr, orderedCvxTriIntermPtr, cvxTriSecondPassPairPtr, nbSecondPassPairs,
-		tempConvexTriContacts, tempContactSizeBytes / sizeof(ConvexTriContact), pTempContactIndex);
+		tempConvexTriContacts, tempContactSizeBytes / sizeof(ConvexTriContact), pTempContactIndex, 0u);
 }
 
 extern "C" __global__

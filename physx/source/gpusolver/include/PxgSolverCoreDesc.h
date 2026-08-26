@@ -306,6 +306,9 @@ namespace physx
 
 		PxgBlockFrictionIndex*					blockCurrentFrictionIndices;
 		PxgBlockFrictionIndex*					blockPreviousFrictionIndices;
+		PxU64									blockCurrentFrictionIndexCount;
+		PxU64									blockPreviousFrictionIndexCount;
+		PxU64									blockPreviousFrictionPatchCount;
 
 		PxgBlockContactData*					blockContactCurrentPrepPool;
 		PxgBlockContactPoint*					blockContactPoints;

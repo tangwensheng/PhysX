@@ -54,6 +54,10 @@ using namespace physx;
 
 extern "C" __host__ void initSolverKernels1() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuContactPrepStageVersion[] = "PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS";
+#endif
+
 #define LOAD_BODY_DATA 0
 
 #if LOAD_BODY_DATA
@@ -231,6 +235,9 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 
 	const PxU32 totalPreviousEdges = constraintPrepDesc->totalPreviousEdges;
 	const PxU32 totalCurrentEdges = constraintPrepDesc->totalCurrentEdges;
+	const PxU64 currentFrictionIndexCount = constraintPrepDesc->blockCurrentFrictionIndexCount;
+	const PxU64 previousFrictionIndexCount = constraintPrepDesc->blockPreviousFrictionIndexCount;
+	const PxU64 previousFrictionPatchCount = constraintPrepDesc->blockPreviousFrictionPatchCount;
 	const PxU32 nbContactBatches = constraintPrepDesc->numContactBatches + constraintPrepDesc->numStaticContactBatches;
 
 
@@ -260,10 +267,12 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 	__shared__ PxAlignedTransform* bodyFrames;
 
 	
+#if !defined(PX_DCU_PORT) || !PX_DCU_PORT
 	volatile __shared__ char sInertias[sizeof(PxMat33) * (PxgKernelBlockDim::CONSTRAINT_PREPARE_BLOCK_PARALLEL / warpSize) * warpSize];
 	//volatile __shared__ PxMat33 inertias[PxgKernelBlockDim::CONSTRAINT_PREPARE_BLOCK_PARALLEL / warpSize][warpSize];
 
 	volatile PxMat33* inertias = reinterpret_cast<volatile PxMat33*>(sInertias);
+#endif
 
 	if(threadIdx.x == 0)
 	{
@@ -319,6 +328,18 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 			bodyData1.sqrtInvInertia, bodyData1.body2World);
 #endif
 
+		PxMat33 invInertia0;
+		PxMat33 invInertia1;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// Avoid reusing LDS between the A and B tensors. On DCU __syncwarp is a
+		// memory fence, so each active lane loads the two tensors it consumes.
+		if (threadIndexInWarp < descStride)
+		{
+			invInertia0 = solverTxIDatas[bodyAIndex].sqrtInvInertia;
+			invInertia1 = solverTxIDatas[bodyBIndex].sqrtInvInertia;
+		}
+#else
 		//Read in 16 bytes at a time, we take 3 threads to read in a single inertia tensor, and we have some spare bandwidth. We can read
 		//32 inertia tensors in 3 passes
 
@@ -355,7 +376,6 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 
 		__syncwarp();
 
-		PxMat33 invInertia0;
 		const PxU32 index = (threadIdx.x / warpSize) * warpSize + threadIndexInWarp;
 		if (threadIndexInWarp < descStride)
 		{	
@@ -404,8 +424,6 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 
 		__syncwarp();
 
-		PxMat33 invInertia1;
-
 		if (threadIndexInWarp < descStride)
 		{
 			invInertia1.column0.x = inertias[index].column0.x;
@@ -418,6 +436,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 			invInertia1.column2.y = inertias[index].column2.y;
 			invInertia1.column2.z = inertias[index].column2.z;
 		}
+#endif
 
 		//mDescStride might less than 32, we need to guard against it
 		if(threadIndexInWarp < descStride)
@@ -437,10 +456,18 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 
 			//PxU32 frictionIndex = unit.mFrictionIndex[threadIndexInWarp];
 			PxU32 edgeIndex = unit.mEdgeIndex[threadIndexInWarp];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			const PxU64 frictionIndex = PxU64(edgeIndex) + PxU64(totalCurrentEdges) * PxU64(unit.mPatchIndex[threadIndexInWarp]);
+			if(edgeIndex < totalCurrentEdges && frictionIndex < currentFrictionIndexCount)
+			{
+				PxgBlockFrictionIndex* targetIndex = &frictionIndices[frictionIndex];
+				*reinterpret_cast<uint2*>(targetIndex) = reinterpret_cast<uint2&>(index);
+			}
+#else
 			PxU32 frictionIndex = edgeIndex + totalCurrentEdges * unit.mPatchIndex[threadIndexInWarp];
 			PxgBlockFrictionIndex* targetIndex = &frictionIndices[frictionIndex];
-				
 			*reinterpret_cast<uint2*>(targetIndex) = reinterpret_cast<uint2&>(index);
+#endif
 
 			//KS - todo - get some of this in shared memory/registers as quickly as possible...
 			PxgSolverBodyData* bodyData0 = &solverBodyDatas[bodyAIndex];
@@ -476,11 +503,18 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 			}*/
 
 			PxU32 offset = unit.mWriteback[threadIndexInWarp];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			// New edges have no row in the previous frame's friction tables.
+			const PxU32 previousEdgeIndex = edgeIndex < totalPreviousEdges ? edgeIndex : 0xFFFFFFFFu;
+#else
+			const PxU32 previousEdgeIndex = edgeIndex;
+#endif
 			createFinalizeSolverContactsBlockGPU(&contactData, baseContact, frictionPatch, prevFrictionPatches, fAnchor, prevFrictionAnchors, prevFrictionIndices, *bodyData0, *bodyData1, 
 				invInertia0, invInertia1, bodyFrame0, bodyFrame1, linVel_invMass0, angVelXYZ_penBiasClamp0, linVel_invMass1, angVelXYZ_penBiasClamp1,
 				sharedDesc->invDtF32, sharedDesc->dt, constraintPrepDesc->bounceThresholdF32, constraintPrepDesc->frictionOffsetThreshold, constraintPrepDesc->correlationDistance,
 				threadIndexInWarp, offset, &contactHeaders[descIndexBatch], &frictionHeaders[descIndexBatch], &contactPoints[batch.startConstraintIndex], 
-				&frictions[batch.startFrictionIndex], totalPreviousEdges, edgeIndex, constraintPrepDesc->ccdMaxSeparation, solverOffsetSlop);
+				&frictions[batch.startFrictionIndex], totalPreviousEdges, previousEdgeIndex, previousFrictionIndexCount,
+				previousFrictionPatchCount, constraintPrepDesc->ccdMaxSeparation, solverOffsetSlop);
 
 			frictionPatch.patchIndex[threadIndexInWarp] = unit.mFrictionPatchIndex[threadIndexInWarp];
 

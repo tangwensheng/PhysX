@@ -45,6 +45,10 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels3() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuCorrelateStageVersion[] = "PX_DCU_CORE_STAGE_V25_FINITE_SERIAL_CORRELATE";
+#endif
+
 #include "manifold.cuh"
 #include "nputils.cuh"
 
@@ -67,11 +71,12 @@ int purgeEmptyTriangles(const PxU32 syncMask, PxReal* depthBuffer, ConvexTriNorm
 	{
 		int nbToLoad = PxMin(count - loaded, 32);
 
-		PxReal d = tI < nbToLoad ? depthBuffer[loaded + tI] : FLT_MAX;
-		PxU32 nbContacts = nbToLoad ? ConvexTriNormalAndIndex::getNbContacts(nicBuffer[loaded + tI].index) : 0;
+		const bool inRange = tI < nbToLoad;
+		PxReal d = inRange ? depthBuffer[loaded + tI] : FLT_MAX;
+		PxU32 nbContacts = inRange ? ConvexTriNormalAndIndex::getNbContacts(nicBuffer[loaded + tI].index) : 0;
 		int valid = d != FLT_MAX && nbContacts > 0;
 		int validBits = __ballot_sync(syncMask, valid);
-		int dest = __popc(validBits & ((1 << tI) - 1)) + nbTriangles;
+		int dest = __popc(validBits & ((PxU32(1) << tI) - 1)) + nbTriangles;
 
 		if (valid)
 		{
@@ -92,6 +97,302 @@ struct Scratch
 	int pairIndex;
 };
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+struct DcuCorrelateContact
+{
+	float4 pointSeparation;
+	PxU32 triangleIndex;
+};
+
+__device__ PX_FORCE_INLINE bool isValidDcuCorrelateNormal(const PxVec3& normal)
+{
+	const PxReal magnitudeSquared = normal.magnitudeSquared();
+	return normal.isFinite() && PxIsFinite(magnitudeSquared) && magnitudeSquared >= PX_NORMALIZATION_EPSILON;
+}
+
+__device__ PX_FORCE_INLINE bool isValidDcuCorrelateContact(const float4& pointSeparation)
+{
+	return PxIsFinite(pointSeparation.x) && PxIsFinite(pointSeparation.y) &&
+		PxIsFinite(pointSeparation.z) && PxIsFinite(pointSeparation.w);
+}
+
+__device__ PX_FORCE_INLINE PxVec3 projectDcuCorrelatePoint(const DcuCorrelateContact& contact, const PxVec3& normal)
+{
+	const PxVec3 point(contact.pointSeparation.x, contact.pointSeparation.y, contact.pointSeparation.z);
+	return point - normal * point.dot(normal);
+}
+
+__device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMax(
+	const DcuCorrelateContact* contacts, const PxU32 mask, const PxVec3& normal,
+	const PxU32 referenceIndex, const PxU32 metric)
+{
+	PxU32 selected = WARP_SIZE;
+	PxReal selectedValue = -PX_MAX_F32;
+	const PxVec3 referencePoint = referenceIndex < WARP_SIZE
+		? projectDcuCorrelatePoint(contacts[referenceIndex], normal) : PxVec3(0.f);
+
+	for (PxU32 scanMask = mask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = metric == 0 ? contacts[index].pointSeparation.w
+			: (projectDcuCorrelatePoint(contacts[index], normal) - referencePoint).magnitude();
+
+		if (selected == WARP_SIZE || value > selectedValue || (value == selectedValue && index < selected))
+		{
+			selected = index;
+			selectedValue = value;
+		}
+	}
+	return selected;
+}
+
+__device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMinSeparation(
+	const DcuCorrelateContact* contacts, const PxU32 mask, const PxU32 anchorMask, const PxReal clusterBias)
+{
+	PxU32 selected = WARP_SIZE;
+	PxReal selectedValue = PX_MAX_F32;
+	for (PxU32 scanMask = mask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = contacts[index].pointSeparation.w - ((anchorMask & (PxU32(1) << index)) ? clusterBias : 0.f);
+		if (selected == WARP_SIZE || value < selectedValue || (value == selectedValue && index < selected))
+		{
+			selected = index;
+			selectedValue = value;
+		}
+	}
+	return selected;
+}
+
+__device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
+	DcuCorrelateContact* contacts, const PxU32 allMask, const PxVec3& normal, const PxReal clusterBias)
+{
+	if (__popc(allMask) <= SUBMANIFOLD_MAX_CONTACTS)
+		return allMask;
+
+	const PxU32 i0 = selectDcuCorrelateMax(contacts, allMask, normal, WARP_SIZE, 0);
+	PxU32 anchorMask = PxU32(1) << i0;
+	const PxU32 i1 = selectDcuCorrelateMax(contacts, allMask & ~anchorMask, normal, i0, 1);
+	anchorMask |= PxU32(1) << i1;
+
+	const PxVec3 point0 = projectDcuCorrelatePoint(contacts[i0], normal);
+	const PxVec3 direction = normal.cross(projectDcuCorrelatePoint(contacts[i1], normal) - point0);
+	PxU32 maxIndex = WARP_SIZE;
+	PxU32 minIndex = WARP_SIZE;
+	PxReal maxValue = -PX_MAX_F32;
+	PxReal minValue = PX_MAX_F32;
+	for (PxU32 scanMask = allMask & ~anchorMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = direction.dot(projectDcuCorrelatePoint(contacts[index], normal) - point0);
+		if (maxIndex == WARP_SIZE || value > maxValue || (value == maxValue && index < maxIndex))
+		{
+			maxIndex = index;
+			maxValue = value;
+		}
+	}
+	anchorMask |= PxU32(1) << maxIndex;
+	for (PxU32 scanMask = allMask & ~anchorMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+	{
+		const PxU32 index = lowestSetIndex(scanMask);
+		const PxReal value = direction.dot(projectDcuCorrelatePoint(contacts[index], normal) - point0);
+		if (minIndex == WARP_SIZE || value < minValue || (value == minValue && index < minIndex))
+		{
+			minIndex = index;
+			minValue = value;
+		}
+	}
+	anchorMask |= PxU32(1) << minIndex;
+
+	PxU32 selectedMask = 0;
+	PxU32 remainingAnchors = anchorMask;
+	PxU32 clusterIndex = 0;
+	while (remainingAnchors)
+	{
+		PxU32 clusterMask = 0;
+		for (PxU32 scanMask = allMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+		{
+			const PxU32 index = lowestSetIndex(scanMask);
+			const PxVec3 point = projectDcuCorrelatePoint(contacts[index], normal);
+			PxReal closestDistance = PX_MAX_F32;
+			PxU32 closestCluster = 0;
+			PxU32 candidateAnchors = anchorMask;
+			PxU32 candidateCluster = 0;
+			while (candidateAnchors)
+			{
+				const PxU32 candidateAnchor = lowestSetIndex(candidateAnchors);
+				const PxReal distance = (point - projectDcuCorrelatePoint(contacts[candidateAnchor], normal)).magnitudeSquared();
+				if (distance < closestDistance)
+				{
+					closestDistance = distance;
+					closestCluster = candidateCluster;
+				}
+				candidateAnchors = clearLowestSetBit(candidateAnchors);
+				++candidateCluster;
+			}
+			if (closestCluster == clusterIndex)
+				clusterMask |= PxU32(1) << index;
+		}
+		if (clusterMask)
+			selectedMask |= PxU32(1) << selectDcuCorrelateMinSeparation(contacts, clusterMask, anchorMask, clusterBias);
+		remainingAnchors = clearLowestSetBit(remainingAnchors);
+		++clusterIndex;
+	}
+
+	for (PxU32 fillIndex = __popc(anchorMask); fillIndex < SUBMANIFOLD_MAX_CONTACTS; ++fillIndex)
+	{
+		const PxU32 remainingMask = allMask & ~selectedMask;
+		if (!remainingMask)
+			break;
+		selectedMask |= PxU32(1) << selectDcuCorrelateMinSeparation(contacts, remainingMask, anchorMask, clusterBias);
+	}
+	return selectedMask;
+}
+
+__device__ void correlateDcuSerial(
+	const ConvexMeshPair& pair,
+	ConvexTriNormalAndIndex* PX_RESTRICT nicBuffer,
+	const ConvexTriContacts* PX_RESTRICT contactBuffer,
+	PxReal* PX_RESTRICT depthBuffer,
+	PxU32* PX_RESTRICT tempCounts,
+	PxgPersistentContactMultiManifold* PX_RESTRICT outBuffer,
+	const PxReal clusterBias,
+	ConvexTriContact* PX_RESTRICT tempConvexTriContacts,
+	DcuCorrelateContact* candidates)
+{
+	const PxU32 start = PxU32(pair.startIndex);
+	const PxU32 count = PxU32(pair.count);
+	PxU32 nbTriangles = 0;
+	for (PxU32 index = 0; index < count; ++index)
+	{
+		const PxReal depth = depthBuffer[start + index];
+		const ConvexTriNormalAndIndex nic = nicBuffer[start + index];
+		const PxU32 nbContacts = ConvexTriNormalAndIndex::getNbContacts(nic.index);
+		if (depth != FLT_MAX && PxIsFinite(depth) && nbContacts > 0 && isValidDcuCorrelateNormal(nic.normal))
+		{
+			depthBuffer[start + nbTriangles] = depth;
+			tempCounts[start + nbTriangles] = (index << 4) | nbContacts;
+			nicBuffer[start + nbTriangles] = nic;
+			++nbTriangles;
+		}
+	}
+
+	PxgPersistentContactMultiManifold& output = outBuffer[pair.cmIndex];
+	if (nbTriangles == 0)
+	{
+		output.mNbManifolds = 0;
+		return;
+	}
+
+	PxU32 nbPatches = 0;
+	PxU32 remainingTriangles = nbTriangles;
+	while (nbPatches < MULTIMANIFOLD_MAX_MANIFOLDS && remainingTriangles != 0)
+	{
+		PxU32 bestIndex = start;
+		PxReal bestDepth = PX_MAX_F32;
+		PxU32 winningLane = WARP_SIZE;
+		for (PxU32 lane = 0; lane < WARP_SIZE; ++lane)
+		{
+			PxU32 laneBestIndex = start;
+			PxReal laneBestDepth = PX_MAX_F32;
+			for (PxU32 triangle = lane; triangle < nbTriangles; triangle += WARP_SIZE)
+			{
+				if (tempCounts[start + triangle] && depthBuffer[start + triangle] < laneBestDepth)
+				{
+					laneBestDepth = depthBuffer[start + triangle];
+					laneBestIndex = start + triangle;
+				}
+			}
+			if (laneBestDepth < bestDepth || (laneBestDepth == bestDepth && lane < winningLane))
+			{
+				bestDepth = laneBestDepth;
+				bestIndex = laneBestIndex;
+				winningLane = lane;
+			}
+		}
+
+		const PxVec3 bestNormal = nicBuffer[bestIndex].normal;
+		PxU32 currentContactMask = 0;
+		for (PxU32 chunk = 0; chunk < nbTriangles; chunk += WARP_SIZE)
+		{
+			for (PxU32 lane = 0; lane < WARP_SIZE && chunk + lane < nbTriangles; ++lane)
+			{
+				const PxU32 compactIndex = start + chunk + lane;
+				const PxU32 packed = tempCounts[compactIndex];
+				if (!packed)
+					continue;
+
+				const ConvexTriNormalAndIndex nic = nicBuffer[compactIndex];
+				if (nic.normal.dot(bestNormal) <= PATCH_ACCEPTANCE_EPS)
+					continue;
+
+				--remainingTriangles;
+				const PxU32 nbContacts = packed & 7;
+				const PxU32 originalTriangleOffset = packed >> 4;
+				const PxU32 contactStart = contactBuffer[start + originalTriangleOffset].index;
+				const PxU32 triangleIndex = ConvexTriNormalAndIndex::getTriangleIndex(nic.index);
+				for (PxU32 contact = 0; contact < nbContacts; ++contact)
+				{
+					const float4 pointSeparation = tempConvexTriContacts[contactStart + contact].contact_sepW;
+					if (!isValidDcuCorrelateContact(pointSeparation))
+						continue;
+
+					const PxU32 freeMask = ~currentContactMask;
+					const PxU32 candidateIndex = lowestSetIndex(freeMask);
+					candidates[candidateIndex].pointSeparation = pointSeparation;
+					candidates[candidateIndex].triangleIndex = triangleIndex;
+					currentContactMask |= PxU32(1) << candidateIndex;
+					if (currentContactMask == FULL_MASK)
+						currentContactMask = reduceDcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
+				}
+				tempCounts[compactIndex] = 0;
+			}
+			if (__popc(currentContactMask) > SUBMANIFOLD_MAX_CONTACTS)
+				currentContactMask = reduceDcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
+		}
+
+		const PxU32 nbContacts = __popc(currentContactMask);
+		if (nbContacts)
+		{
+			const PxTransform aToB = pair.aToB;
+			const PxVec3 normalInB = aToB.rotate(bestNormal);
+			if (!isValidDcuCorrelateNormal(normalInB))
+				continue;
+
+			PxU32 outputContact = 0;
+			for (PxU32 scanMask = currentContactMask; scanMask; scanMask = clearLowestSetBit(scanMask))
+			{
+				const PxU32 candidateIndex = lowestSetIndex(scanMask);
+				const float4 pointSeparation = candidates[candidateIndex].pointSeparation;
+				const PxVec3 pointA(pointSeparation.x, pointSeparation.y, pointSeparation.z);
+				const PxVec3 pointB = aToB.transform(pointA) + normalInB * pointSeparation.w;
+				if (!pointB.isFinite())
+					continue;
+
+				PxgContact& contact = output.mContacts[nbPatches][outputContact++];
+				contact.normal = -normalInB;
+				contact.pointA = pointA;
+				contact.pointB = pointB;
+				contact.penetration = pointSeparation.w;
+				contact.triIndex = candidates[candidateIndex].triangleIndex;
+			}
+			if (outputContact)
+			{
+				output.mNbContacts[nbPatches] = outputContact;
+				++nbPatches;
+			}
+		}
+	}
+
+	if (nbPatches)
+	{
+		output.mRelativeTransform.q = PxAlignedQuat(pair.aToB.q);
+		output.mRelativeTransform.p = make_float4(pair.aToB.p.x, pair.aToB.p.y, pair.aToB.p.z, 0.f);
+	}
+	output.mNbManifolds = nbPatches;
+}
+#endif
+
 __device__
 void correlate(
 	const ConvexMeshPair* PX_RESTRICT				meshPairBuffer,
@@ -111,6 +412,9 @@ void correlate(
 	__shared__ PxU32 triangleRunSums[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
 	__shared__ PxU32 startIndices[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
 	__shared__ PxU32 triIndices[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	__shared__ DcuCorrelateContact dcuCandidates[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
+#endif
 
 	PxU32* triRunSums = triangleRunSums[threadIdx.y];
 	PxU32* triStartIndex = startIndices[threadIdx.y];
@@ -120,6 +424,23 @@ void correlate(
 
 	if (pairIndex >= numPairs)
 		return;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const int dcuCount = meshPairBuffer[pairIndex].count;
+	if (dcuCount == CONVEX_TRIMESH_CACHED)
+		return;
+	if (dcuCount >= 0 && dcuCount <= WARP_SIZE * 4)
+	{
+		if (threadIdx.x == 0)
+		{
+			const ConvexMeshPair pair = meshPairBuffer[pairIndex];
+			correlateDcuSerial(
+				pair, *nicBufferPtr, *contactBufferPtr, *depthBufferPtr,
+				tempCounts, outBuffer, clusterBias, tempConvexTriContacts, dcuCandidates[threadIdx.y]);
+		}
+		return;
+	}
+#endif
 
 	s->pairIndex = pairIndex;
 	const int tI = threadIdx.x;
@@ -161,7 +482,7 @@ void correlate(
 
 
 
-	for (; nbPatches < MULTIMANIFOLD_MAX_MANIFOLDS && remainingTriangles != 0; nbPatches++)
+	for (; nbPatches < MULTIMANIFOLD_MAX_MANIFOLDS && remainingTriangles != 0;)
 	{
 		//We loop through all triangles, load contacts, compress etc...
 		//(1) Find deepest triangle...
@@ -245,8 +566,8 @@ void correlate(
 			for (PxU32 c = 0; c < totalContacts;)
 			{
 				//calculate my read index (where I'm offset from...)
-				PxU32 readMask = ~currentContactMask;
-				bool needsContact = readMask & (1 << threadIdx.x);
+				const PxU32 readMask = ~currentContactMask;
+				bool needsContact = readMask & (PxU32(1) << threadIdx.x);
 				PxU32 readIndex = c + warpScanExclusive(readMask, threadIdx.x);
 
 				if (needsContact && readIndex < totalContacts)
@@ -277,7 +598,7 @@ void correlate(
 				{
 					currentContactMask = contactReduce<true, false, SUBMANIFOLD_MAX_CONTACTS, false>(pA, separation, bestNormal, currentContactMask, clusterBias);
 				}
-				hasContact = currentContactMask & (1 << threadIdx.x);
+				hasContact = currentContactMask & (PxU32(1) << threadIdx.x);
 			}
 
 			__syncwarp(); //triRunSums is read and written in the same loop - separate read and write with syncs
@@ -292,36 +613,38 @@ void correlate(
 		__syncwarp();
 		PxU32 nbContacts = __popc(currentContactMask);
 
-		//When we reach here, we have handled all the triangles, so we should output this patch...
-		PxgContact * cp = outBuffer[s->pair.cmIndex].mContacts[nbPatches] + warpScanExclusive(currentContactMask, tI);
-
-		if (threadIdx.x == 0)
-			outBuffer[s->pair.cmIndex].mNbContacts[nbPatches] = nbContacts;
-
-		numContactsTotal += nbContacts;
-		if (currentContactMask & (1 << tI))
+		if (currentContactMask != 0)
 		{
-			PxVec3 nor = ldS(s->pair.aToB).rotate(bestNormal);
+			PxgContact * cp = outBuffer[s->pair.cmIndex].mContacts[nbPatches] + warpScanExclusive(currentContactMask, tI);
 
-			cp->normal = -nor;
-			cp->pointA = pA;
-			// TODO: PxTransform::transform is incredibly profligate with registers (i.e. the write-out phase uses 
-			// more regs than the contact culling phase). Better would be to stash the transform in matrix form 
-			// when not under register pressure (i.e. when initially loading it) then use a custom shmem
-			//  matrix multiply, which requires essentially no tmps
+			if (threadIdx.x == 0)
+				outBuffer[s->pair.cmIndex].mNbContacts[nbPatches] = nbContacts;
 
-			PxVec3 pointB = ldS(s->pair.aToB).transform(pA) + nor * separation;
+			numContactsTotal += nbContacts;
+			if (currentContactMask & (PxU32(1) << tI))
+			{
+				PxVec3 nor = ldS(s->pair.aToB).rotate(bestNormal);
 
-			cp->pointB = pointB;
-			cp->penetration = separation;
-			cp->triIndex = contactTriangleIndex;
+				cp->normal = -nor;
+				cp->pointA = pA;
+				// TODO: PxTransform::transform is incredibly profligate with registers (i.e. the write-out phase uses
+				// more regs than the contact culling phase). Better would be to stash the transform in matrix form
+				// when not under register pressure (i.e. when initially loading it) then use a custom shmem
+				//  matrix multiply, which requires essentially no tmps
 
-			/*printf("cp normal(%f, %f, %f)\n", cp->normal.x, cp->normal.y, cp->normal.z);
-			printf("cp pointA(%f, %f, %f)\n", pA.x, pA.y, pA.z);
-			printf("cp pointB(%f, %f, %f)\n", pointB.x, pointB.y, pointB.z);*/
+				PxVec3 pointB = ldS(s->pair.aToB).transform(pA) + nor * separation;
 
+				cp->pointB = pointB;
+				cp->penetration = separation;
+				cp->triIndex = contactTriangleIndex;
+
+				/*printf("cp normal(%f, %f, %f)\n", cp->normal.x, cp->normal.y, cp->normal.z);
+				printf("cp pointA(%f, %f, %f)\n", pA.x, pA.y, pA.z);
+				printf("cp pointB(%f, %f, %f)\n", pointB.x, pointB.y, pointB.z);*/
+			}
+
+			nbPatches++;
 		}
-
 	}
 
 	if (nbPatches > 0)
@@ -362,6 +685,18 @@ void convexTrimeshCorrelate(
 {
 	const int warpIndex = threadIdx.y;
 	__shared__ char scratch[sizeof(Scratch) *  CORRELATE_WARPS_PER_BLOCK];
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (numPairs == 0)
+	{
+		if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+		{
+			const volatile char* version = gPxgDcuCorrelateStageVersion;
+			volatile char* markerScratch = scratch;
+			markerScratch[0] = version[0];
+		}
+		return;
+	}
+#endif
 	correlate(
 		pairs,
 		normalAndIndexPtr,

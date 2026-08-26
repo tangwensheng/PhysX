@@ -13,19 +13,24 @@
 
 using namespace physx;
 
-static bool isFinitePose(const PxRigidDynamic* body)
+static bool isFiniteBodyState(const PxRigidDynamic* body)
 {
     const PxTransform pose = body->getGlobalPose();
     const PxVec3 p = pose.p;
-    const PxVec3 v = body->getLinearVelocity();
+    const PxQuat q = pose.q;
+    const PxVec3 linearVelocity = body->getLinearVelocity();
+    const PxVec3 angularVelocity = body->getAngularVelocity();
     return std::isfinite(p.x) && std::isfinite(p.y) && std::isfinite(p.z) &&
-           std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
+           std::isfinite(q.x) && std::isfinite(q.y) && std::isfinite(q.z) && std::isfinite(q.w) &&
+           std::isfinite(linearVelocity.x) && std::isfinite(linearVelocity.y) && std::isfinite(linearVelocity.z) &&
+           std::isfinite(angularVelocity.x) && std::isfinite(angularVelocity.y) && std::isfinite(angularVelocity.z);
 }
 
 int main(int argc, char** argv)
 {
     int steps = 180;
     bool useTgs = true;
+    bool forceGpuBroadphase = false;
     bool printAllSteps = false;
     bool cleanExit = false;
     int cleanExitWaitSeconds = 5;
@@ -34,6 +39,8 @@ int main(int argc, char** argv)
             useTgs = false;
         } else if (std::strcmp(argv[i], "tgs") == 0 || std::strcmp(argv[i], "TGS") == 0) {
             useTgs = true;
+        } else if (std::strcmp(argv[i], "--force-gpu-bp") == 0) {
+            forceGpuBroadphase = true;
         } else if (std::strcmp(argv[i], "--print-all-steps") == 0) {
             printAllSteps = true;
         } else if (std::strcmp(argv[i], "cleanexit") == 0 || std::strcmp(argv[i], "--cleanexit") == 0) {
@@ -55,6 +62,9 @@ int main(int argc, char** argv)
     printf("========================================\n");
     printf(" PhysX DCU Smoke - %s Solver\n", useTgs ? "TGS" : "PGS");
     printf("========================================\n\n");
+    printf("Configuration: steps=%d solver=%s broadphase=%s exit=%s\n",
+           steps, useTgs ? "TGS" : "PGS", forceGpuBroadphase ? "eGPU" : "default",
+           cleanExit ? "_Exit" : "normal-return");
 
     static PxDefaultErrorCallback gErr;
     static PxDefaultAllocator gAlloc;
@@ -76,9 +86,8 @@ int main(int argc, char** argv)
     sd.cpuDispatcher = dsp;
     sd.filterShader = PxDefaultSimulationFilterShader;
     sd.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
-    // Match the stable tower benchmark first: GPU dynamics on, broadphase left
-    // at the scene default. Forcing eGPU currently hits a DCU launch-bound
-    // issue in computeStartAndActiveRegionHistogram.
+    if (forceGpuBroadphase)
+        sd.broadPhaseType = PxBroadPhaseType::eGPU;
     sd.solverType = useTgs ? PxSolverType::eTGS : PxSolverType::ePGS;
     sd.gpuMaxNumPartitions = 8;
     sd.gpuDynamicsConfig.maxRigidContactCount = 1024u * 1024u * 8u;
@@ -88,7 +97,8 @@ int main(int argc, char** argv)
     sd.gpuDynamicsConfig.collisionStackSize = 256u * 1024u * 1024u;
     sd.gpuDynamicsConfig.tempBufferCapacity = 128u * 1024u * 1024u;
 
-    printf("Creating scene with solver=%s...\n", useTgs ? "TGS" : "PGS");
+    printf("Creating scene with solver=%s broadphase=%s...\n",
+           useTgs ? "TGS" : "PGS", forceGpuBroadphase ? "eGPU" : "default");
     fflush(stdout);
     PxScene* scene = phy->createScene(sd);
     if (!scene) {
@@ -100,9 +110,12 @@ int main(int argc, char** argv)
         return 3;
     }
     printf("Scene solver type: %s\n", scene->getSolverType() == PxSolverType::eTGS ? "TGS" : "PGS");
+    const PxBroadPhaseType::Enum actualBroadphase = scene->getBroadPhaseType();
+    printf("Scene broadphase type: %s\n", actualBroadphase == PxBroadPhaseType::eGPU ? "eGPU" : "non-GPU");
 
     PxMaterial* mat = phy->createMaterial(0.5f, 0.5f, 0.2f);
-    scene->addActor(*PxCreatePlane(*phy, PxPlane(0, 1, 0, 0), *mat));
+    PxRigidStatic* ground = PxCreatePlane(*phy, PxPlane(0, 1, 0, 0), *mat);
+    scene->addActor(*ground);
 
     PxShape* boxShape = phy->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f), *mat);
     std::vector<PxRigidDynamic*> bodies;
@@ -120,6 +133,8 @@ int main(int argc, char** argv)
     float minY = 1e30f;
     float maxY = -1e30f;
     int bad = 0;
+    int fetchFailures = 0;
+    int firstBadStep = 0;
     for (int i = 0; i < steps; ++i) {
         if (printAllSteps || i < 10 || i == steps - 1) {
             printf("Simulate step %d/%d...\n", i + 1, steps);
@@ -130,12 +145,21 @@ int main(int argc, char** argv)
             printf("Fetch step %d/%d...\n", i + 1, steps);
             fflush(stdout);
         }
-        scene->fetchResults(true);
+        if (!scene->fetchResults(true))
+            fetchFailures++;
+        if (firstBadStep == 0) {
+            for (PxRigidDynamic* b : bodies) {
+                if (!isFiniteBodyState(b)) {
+                    firstBadStep = i + 1;
+                    break;
+                }
+            }
+        }
     }
 
     for (PxRigidDynamic* b : bodies) {
         const PxVec3 p = b->getGlobalPose().p;
-        if (!isFinitePose(b))
+        if (!isFiniteBodyState(b))
             bad++;
         if (p.y < minY)
             minY = p.y;
@@ -147,10 +171,23 @@ int main(int argc, char** argv)
     printf("Bodies: %zu\n", bodies.size());
     printf("Height range: [%.6f, %.6f]\n", minY, maxY);
     printf("Bad bodies: %d\n", bad);
+    printf("Fetch failures: %d\n", fetchFailures);
+    printf("First bad step: %d\n", firstBadStep);
 
-    const bool pass = bad == 0 && minY > -0.25f && maxY < 20.0f;
+    const bool solverMatches = scene->getSolverType() == (useTgs ? PxSolverType::eTGS : PxSolverType::ePGS);
+    const bool broadphaseMatches = !forceGpuBroadphase || actualBroadphase == PxBroadPhaseType::eGPU;
+    printf("Solver selection: %s\n", solverMatches ? "PASS" : "FAIL");
+    printf("Broadphase selection: %s\n", broadphaseMatches ? "PASS" : "FAIL");
+
+    const bool pass = solverMatches && broadphaseMatches && fetchFailures == 0 && firstBadStep == 0 &&
+                      bad == 0 && minY > -0.25f && maxY < 20.0f;
     printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");
 
+    for (PxRigidDynamic* b : bodies)
+        b->release();
+    ground->release();
+    boxShape->release();
+    mat->release();
     printf("Releasing scene...\n"); fflush(stdout); scene->release();
     printf("Releasing dispatcher...\n"); fflush(stdout); dsp->release();
     printf("Releasing GPU manager...\n"); fflush(stdout); gpuMgr->release();

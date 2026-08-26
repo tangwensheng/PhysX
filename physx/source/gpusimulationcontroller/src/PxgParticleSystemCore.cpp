@@ -788,7 +788,12 @@ namespace physx
 		{
 			const CUfunction copyToDiffuseUnsortedFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::PS_UPDATE_DIFFUSE_UNSORTED_ARRAY);
 
-			const PxU32 numBlocks = (mMaxDiffusePerBuffer + PxgParticleSystemKernelBlockDim::UPDATEBOUND - 1) / PxgParticleSystemKernelBlockDim::UPDATEBOUND;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::PS_SOLVE;
+#else
+			const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
+#endif
+			const PxU32 numBlocks = (mMaxDiffusePerBuffer + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
 
 			{
@@ -799,7 +804,7 @@ namespace physx
 				};
 
 
-				CUresult result = mCudaContext->launchKernel(copyToDiffuseUnsortedFunction, numBlocks, mMaxDiffuseBuffersPerSystem, nbActiveParticles, PxgParticleSystemKernelBlockDim::UPDATEBOUND, 1, 1, 0, bpStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+				CUresult result = mCudaContext->launchKernel(copyToDiffuseUnsortedFunction, numBlocks, mMaxDiffuseBuffersPerSystem, nbActiveParticles, numThreadsPerBlock, 1, 1, 0, bpStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				PX_UNUSED(result);
 
