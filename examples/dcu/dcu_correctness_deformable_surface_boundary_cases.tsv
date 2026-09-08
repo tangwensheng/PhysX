@@ -1,0 +1,7 @@
+# case	batch	target	arguments	normal_exit	description
+deformable_surface_grid4	boundary	bench_deformable_surface_smoke	300 --grid 4 --no-self-collision --cleanexit-wait 0	0	Deformable surface baseline with 16 vertices
+deformable_surface_grid8	boundary	bench_deformable_surface_smoke	300 --grid 8 --no-self-collision --cleanexit-wait 0	0	Deformable surface boundary with 64 vertices
+deformable_surface_grid12	boundary	bench_deformable_surface_smoke	300 --grid 12 --no-self-collision --cleanexit-wait 0	0	Deformable surface boundary above 128 vertices
+deformable_surface_grid16	boundary	bench_deformable_surface_smoke	300 --grid 16 --no-self-collision --cleanexit-wait 0	0	Deformable surface tier 1 scale with 256 vertices
+deformable_surface_grid24	boundary	bench_deformable_surface_smoke	300 --grid 24 --no-self-collision --cleanexit-wait 0	0	Deformable surface intermediate scale with 576 vertices
+deformable_surface_grid32	boundary	bench_deformable_surface_smoke	300 --grid 32 --no-self-collision --cleanexit-wait 0	0	Deformable surface tier 2 scale with 1024 vertices

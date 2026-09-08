@@ -1,0 +1,17 @@
+# case	batch	target	arguments	normal_exit	description
+large_t1_broadphase_gpu	tier1	bench_gpu_broadphase_smoke	--bodies 1024 --cycles 8	0	Tier 1 forced GPU broadphase with 1024 bodies
+large_t1_sdf_pgs	tier1	bench_sdf_smoke	pgs 300 --bodies 64 --spacing 1.25 --no-cleanexit	0	Tier 1 SDF contact with 64 rigid bodies
+large_t1_trimesh_complex	tier1	bench_complex_trimesh_smoke	720 --bodies 512 --grid 64 --start-height 3	0	Tier 1 complex triangle mesh with 512 rigid bodies
+large_t1_deformable_surface	tier1	bench_deformable_surface_smoke	300 --grid 16 --no-self-collision --cleanexit-wait 0	0	Tier 1 deformable surface with 256 vertices
+large_t1_deformable_volume	tier1	bench_deformable_volume_smoke	300 --voxels 8	0	Tier 1 deformable volume with voxel resolution 8
+large_t1_pbd_particles	tier1	bench_pbd_particles_conservative_smoke	300 --dim 32	0	Tier 1 conservative PBD buffer with 1024 particles
+large_t1_pbd_cloth_plane	tier1	bench_pbd_cloth_smoke	300 --dim 32 --plane --force-gpu-bp --cleanexit-wait 0	0	Tier 1 PBD cloth plane contact with 1024 particles
+large_t1_pbd_cloth_pinned	tier1	bench_pbd_cloth_smoke	300 --dim 32 --pin-corners --force-gpu-bp --cleanexit-wait 0	0	Tier 1 pinned PBD cloth with 1024 particles
+large_t2_broadphase_gpu	tier2	bench_gpu_broadphase_smoke	--bodies 4096 --cycles 8	0	Tier 2 forced GPU broadphase with 4096 bodies
+large_t2_sdf_pgs	tier2	bench_sdf_smoke	pgs 300 --bodies 256 --spacing 1.25 --no-cleanexit	0	Tier 2 SDF contact with 256 rigid bodies
+large_t2_trimesh_complex	tier2	bench_complex_trimesh_smoke	720 --bodies 1024 --grid 96 --start-height 3	0	Tier 2 complex triangle mesh with 1024 rigid bodies
+large_t2_deformable_surface	tier2	bench_deformable_surface_smoke	300 --grid 32 --no-self-collision --cleanexit-wait 0	0	Tier 2 deformable surface with 1024 vertices
+large_t2_deformable_volume	tier2	bench_deformable_volume_smoke	300 --voxels 12	0	Tier 2 deformable volume with voxel resolution 12
+large_t2_pbd_particles	tier2	bench_pbd_particles_conservative_smoke	300 --dim 64	0	Tier 2 conservative PBD buffer with 4096 particles
+large_t2_pbd_cloth_plane	tier2	bench_pbd_cloth_smoke	300 --dim 64 --plane --force-gpu-bp --cleanexit-wait 0	0	Tier 2 PBD cloth plane contact with 4096 particles
+large_t2_pbd_cloth_pinned	tier2	bench_pbd_cloth_smoke	300 --dim 64 --pin-corners --force-gpu-bp --cleanexit-wait 0	0	Tier 2 pinned PBD cloth with 4096 particles

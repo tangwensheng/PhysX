@@ -1,6 +1,7 @@
 // PhysX DCU smoke test: many rigid bodies colliding with a complex static triangle mesh.
 
 #include "PxPhysicsAPI.h"
+#include "cudamanager/PxCudaContext.h"
 #include "cudamanager/PxCudaContextManager.h"
 #include "gpu/PxGpu.h"
 #include <cmath>
@@ -203,18 +204,32 @@ int main(int argc, char** argv)
 
     printf("Starting simulation: steps=%d bodies=%zu grid=%d startHeight=%.6f\n", steps, boxes.size(), grid, startHeight);
     fflush(stdout);
+    const int timingWarmupSteps = steps > 10 ? 10 : 0;
+    double simulationMs = 0.0;
     for (int i = 0; i < steps; ++i) {
         if (printAllSteps || i < 10 || i == steps - 1) {
             printf("Simulate step %d/%d...\n", i + 1, steps);
             fflush(stdout);
         }
+        const std::chrono::steady_clock::time_point stepStart = std::chrono::steady_clock::now();
         scene->simulate(1.0f / 60.0f);
+        const double simulateMs = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - stepStart).count();
         if (printAllSteps || i < 10 || i == steps - 1) {
             printf("Fetch step %d/%d...\n", i + 1, steps);
             fflush(stdout);
         }
+        const std::chrono::steady_clock::time_point fetchStart = std::chrono::steady_clock::now();
         scene->fetchResults(true);
+        if (i >= timingWarmupSteps)
+            simulationMs += simulateMs + std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - fetchStart).count();
     }
+    const int measuredSteps = steps - timingWarmupSteps;
+    printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
+           timingWarmupSteps, measuredSteps, simulationMs,
+           measuredSteps > 0 ? simulationMs / double(measuredSteps) : 0.0,
+           simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);
 
     int bad = 0;
     int belowTerrain = 0;
@@ -272,13 +287,13 @@ int main(int argc, char** argv)
         printf("Device synchronize before release...\n");
         fflush(stdout);
         PxScopedCudaLock lock(*gpuMgr);
-        printf("Device context lock acquired; entering hipDeviceSynchronize...\n");
+        printf("Device context lock acquired; entering PhysX streamSynchronize...\n");
         fflush(stdout);
-        const hipError_t syncResult = hipDeviceSynchronize();
-        printf("Device synchronize before release result: %s (%d)\n",
-               hipGetErrorString(syncResult), int(syncResult));
+        PxCudaContext* context = gpuMgr->getCudaContext();
+        const PxI32 syncResult = context ? PxI32(context->streamSynchronize(0)) : -1;
+        printf("Device synchronize before release result: %d\n", int(syncResult));
         fflush(stdout);
-        if (syncResult != hipSuccess) {
+        if (syncResult != 0) {
             printf("Skipping PhysX release after failed device synchronize.\n");
             fflush(stdout);
             std::_Exit(10);

@@ -1,0 +1,17 @@
+# case	batch	target	arguments	normal_exit	description
+sdf_threshold_bodies49	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 49 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 49 rigid bodies
+sdf_threshold_bodies50	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 50 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 50 rigid bodies
+sdf_threshold_bodies51	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 51 rigid bodies
+sdf_threshold_bodies52	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 52 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 52 rigid bodies
+sdf_threshold_bodies53	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 53 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 53 rigid bodies
+sdf_threshold_bodies54	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 54 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 54 rigid bodies
+sdf_threshold_bodies55	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 55 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 55 rigid bodies
+sdf_threshold_bodies56	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 56 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 56 rigid bodies
+sdf_threshold_bodies57	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 57 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 57 rigid bodies
+sdf_threshold_bodies58	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 58 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 58 rigid bodies
+sdf_threshold_bodies59	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 59 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 59 rigid bodies
+sdf_threshold_bodies60	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 60 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 60 rigid bodies
+sdf_threshold_bodies61	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 61 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 61 rigid bodies
+sdf_threshold_bodies62	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 62 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 62 rigid bodies
+sdf_threshold_bodies63	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 63 --spacing 1.25 --no-cleanexit	0	SDF PGS threshold audit with 63 rigid bodies
+sdf_threshold_bodies64	sdf-threshold	bench_sdf_smoke	pgs 300 --bodies 64 --spacing 1.25 --no-cleanexit	0	SDF PGS reproduced failing scale with 64 rigid bodies

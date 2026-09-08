@@ -1,0 +1,17 @@
+# case	batch	target	arguments	normal_exit	description
+broadphase_gpu	batch1	bench_gpu_broadphase_smoke	--bodies 512 --cycles 8	0	Forced GPU broadphase pair churn
+tgs_solver	batch1	bench_tgs_smoke	tgs 300	0	GPU dynamics TGS solver
+tgs_solver_180	precision	bench_tgs_smoke	tgs 180	0	GPU dynamics TGS solver strict 180-step comparison
+articulation_pgs	batch1	bench_articulation_smoke	pgs 300 --drive-target 0.35	0	Reduced-coordinate articulation with PGS
+articulation_tgs	batch1	bench_articulation_smoke	tgs 300 --drive-target 0.35	0	Reduced-coordinate articulation with TGS
+trimesh_basic	batch1	bench_trimesh_smoke	240	0	Basic triangle mesh contact
+sdf_pgs	batch2	bench_sdf_smoke	pgs 300 --bodies 8 --no-cleanexit	0	SDF contact with PGS and normal main return
+trimesh_complex	batch2	bench_complex_trimesh_smoke	720 --bodies 256 --grid 48 --start-height 3	0	Complex convex-triangle-mesh narrowphase
+deformable_surface	batch3	bench_deformable_surface_smoke	300 --grid 4 --no-self-collision --cleanexit-wait 0	0	Deformable surface with plane contact
+deformable_volume	batch3	bench_deformable_volume_smoke	300 --voxels 4	0	Deformable volume with plane contact
+pbd_particles	batch4	bench_pbd_particles_conservative_smoke	300 --dim 8	0	Conservative PBD particle buffer
+pbd_cloth_plane	batch4	bench_pbd_cloth_smoke	300 --dim 8 --plane --force-gpu-bp --cleanexit-wait 0	0	PBD cloth with plane contact
+pbd_cloth_pinned	batch4	bench_pbd_cloth_smoke	300 --dim 8 --pin-corners --force-gpu-bp --cleanexit-wait 0	0	PBD cloth pinned-corner spring path
+pbd_diffuse	batch4	bench_pbd_diffuse_zero_smoke	45 --plane --generate-first-step-only	0	PBD diffuse generation and primitive collision
+pbd_rigid	batch4	bench_pbd_rigid_smoke	300	0	PBD shape-matched rigid cluster
+teardown_articulation_pgs	teardown	bench_articulation_smoke	pgs 300 --drive-target 0.35	1	Representative normal-exit teardown path

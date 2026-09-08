@@ -242,18 +242,32 @@ int main(int argc, char** argv)
     printf("Starting simulation: steps=%d grid=%u vertices=%u plane=%s selfCollision=%s\n",
            steps, grid, grid * grid, addPlane ? "yes" : "no", selfCollision ? "yes" : "no");
     fflush(stdout);
+    const int timingWarmupSteps = steps > 10 ? 10 : 0;
+    double simulationMs = 0.0;
     for (int i = 0; i < steps; ++i) {
         if (i < 10 || i == steps - 1) {
             printf("Simulate step %d/%d...\n", i + 1, steps);
             fflush(stdout);
         }
+        const std::chrono::steady_clock::time_point stepStart = std::chrono::steady_clock::now();
         scene->simulate(1.0f / 60.0f);
+        const double simulateMs = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - stepStart).count();
         if (i < 10 || i == steps - 1) {
             printf("Fetch step %d/%d...\n", i + 1, steps);
             fflush(stdout);
         }
+        const std::chrono::steady_clock::time_point fetchStart = std::chrono::steady_clock::now();
         scene->fetchResults(true);
+        if (i >= timingWarmupSteps)
+            simulationMs += simulateMs + std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - fetchStart).count();
     }
+    const int measuredSteps = steps - timingWarmupSteps;
+    printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
+           timingWarmupSteps, measuredSteps, simulationMs,
+           measuredSteps > 0 ? simulationMs / double(measuredSteps) : 0.0,
+           simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);
 
     const PxU32 numVertices = grid * grid;
     PxVec4* positionsPinned = Ext::PxCudaHelpersExt::allocPinnedHostBuffer<PxVec4>(*gpuMgr, numVertices);

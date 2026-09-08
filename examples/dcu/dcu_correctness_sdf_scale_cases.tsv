@@ -1,0 +1,6 @@
+# case	batch	target	arguments	normal_exit	description
+sdf_scale_bodies8	sdf-scale	bench_sdf_smoke	pgs 300 --bodies 8 --spacing 1.25 --no-cleanexit	0	SDF PGS closure baseline with 8 rigid bodies
+sdf_scale_bodies16	sdf-scale	bench_sdf_smoke	pgs 300 --bodies 16 --spacing 1.25 --no-cleanexit	0	SDF PGS scale audit with 16 rigid bodies
+sdf_scale_bodies32	sdf-scale	bench_sdf_smoke	pgs 300 --bodies 32 --spacing 1.25 --no-cleanexit	0	SDF PGS validated pressure scale with 32 rigid bodies
+sdf_scale_bodies48	sdf-scale	bench_sdf_smoke	pgs 300 --bodies 48 --spacing 1.25 --no-cleanexit	0	SDF PGS intermediate scale with 48 rigid bodies
+sdf_scale_bodies64	sdf-scale	bench_sdf_smoke	pgs 300 --bodies 64 --spacing 1.25 --no-cleanexit	0	SDF PGS tier 1 scale with 64 rigid bodies

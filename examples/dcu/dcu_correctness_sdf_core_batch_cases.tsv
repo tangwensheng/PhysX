@@ -1,0 +1,5 @@
+# case	batch	target	arguments	normal_exit	description	environment
+sdf_core_batch1	sdf-core-batch	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body core split into one mesh-mesh block per launch	PX_DCU_NP_TRIMESH_TRIMESH_BATCH=1
+sdf_core_batch32	sdf-core-batch	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body core split into at most 32 mesh-mesh blocks per launch	PX_DCU_NP_TRIMESH_TRIMESH_BATCH=32
+sdf_core_batch49	sdf-core-batch	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body core split below the reproduced 50-block launch	PX_DCU_NP_TRIMESH_TRIMESH_BATCH=49
+sdf_core_batch50	sdf-core-batch	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body control preserving the reproduced 50-block launch	PX_DCU_NP_TRIMESH_TRIMESH_BATCH=50

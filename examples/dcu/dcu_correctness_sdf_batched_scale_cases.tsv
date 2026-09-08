@@ -1,0 +1,9 @@
+# case	batch	target	arguments	normal_exit	description
+sdf_batched_bodies51_run1	sdf-batched-stability	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body default batch-32 candidate stability run 1
+sdf_batched_bodies51_run2	sdf-batched-stability	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body default batch-32 candidate stability run 2
+sdf_batched_bodies51_run3	sdf-batched-stability	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body default batch-32 candidate stability run 3
+sdf_batched_bodies51_run4	sdf-batched-stability	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body default batch-32 candidate stability run 4
+sdf_batched_bodies51_run5	sdf-batched-stability	bench_sdf_smoke	pgs 300 --bodies 51 --spacing 1.25 --no-cleanexit	0	SDF 51-body default batch-32 candidate stability run 5
+sdf_batched_bodies64	sdf-batched-scale	bench_sdf_smoke	pgs 300 --bodies 64 --spacing 1.25 --no-cleanexit	0	SDF tier-1 scale with default batch-32 mesh-mesh core
+sdf_batched_bodies128	sdf-batched-scale	bench_sdf_smoke	pgs 300 --bodies 128 --spacing 1.25 --no-cleanexit	0	SDF intermediate scale with default batch-32 mesh-mesh core
+sdf_batched_bodies256	sdf-batched-scale	bench_sdf_smoke	pgs 300 --bodies 256 --spacing 1.25 --no-cleanexit	0	SDF tier-2 scale with default batch-32 mesh-mesh core

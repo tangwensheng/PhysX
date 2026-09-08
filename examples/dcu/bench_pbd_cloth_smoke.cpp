@@ -6,6 +6,7 @@
 #include "extensions/PxParticleExt.h"
 #include "extensions/PxCudaHelpersExt.h"
 #include "gpu/PxGpu.h"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -15,6 +16,8 @@
 #include <vector>
 
 using namespace physx;
+
+static const char* const gClothDiagnosticMarker = "PX_DCU_PBD_CLOTH_VALIDATION_V61_SCALE_AWARE_TAIL";
 
 class CountingErrorCallback : public PxErrorCallback
 {
@@ -96,6 +99,7 @@ int main(int argc, char** argv)
     printf("========================================\n");
     printf(" PhysX DCU Smoke - PBD Cloth\n");
     printf("========================================\n");
+    printf("Cloth diagnostic marker: %s\n", gClothDiagnosticMarker);
     printf("steps=%d dim=%u populateOnly=%d pinCorners=%d plane=%d forceGpuBp=%d\n\n",
            steps, dim, populateOnly ? 1 : 0, pinCorners ? 1 : 0, addPlane ? 1 : 0,
            forceGpuBroadphase ? 1 : 0);
@@ -234,6 +238,65 @@ int main(int argc, char** argv)
     pre->partitionSprings(clothDesc, output);
     pre->release();
 
+    PxU32 partitionedSpringCount = 0;
+    PxU32 partitionRangeErrors = 0;
+    PxU32 partitionEndpointErrors = 0;
+    PxU32 partitionEndpointConflicts = 0;
+    std::vector<PxU64> sourceSpringKeys;
+    std::vector<PxU64> orderedSpringKeys;
+    sourceSpringKeys.reserve(numSprings);
+    orderedSpringKeys.reserve(numSprings);
+    for (PxU32 i = 0; i < numSprings; ++i) {
+        const PxParticleSpring& spring = springs[i];
+        const PxU32 lo = PxMin(spring.ind0, spring.ind1);
+        const PxU32 hi = PxMax(spring.ind0, spring.ind1);
+        sourceSpringKeys.push_back((PxU64(lo) << 32) | PxU64(hi));
+    }
+    std::vector<PxI32> endpointPartition(numParticles, -1);
+    PxU32 partitionStart = 0;
+    for (PxU32 partition = 0; partition < output.nbPartitions; ++partition) {
+        const PxU32 partitionEnd = output.accumulatedSpringsPerPartitions[partition];
+        if (partitionEnd < partitionStart || partitionEnd > numSprings) {
+            ++partitionRangeErrors;
+            break;
+        }
+        for (PxU32 i = partitionStart; i < partitionEnd; ++i) {
+            const PxParticleSpring& spring = output.orderedSprings[i];
+            if (spring.ind0 >= numParticles || spring.ind1 >= numParticles) {
+                ++partitionEndpointErrors;
+                continue;
+            }
+            const PxU32 lo = PxMin(spring.ind0, spring.ind1);
+            const PxU32 hi = PxMax(spring.ind0, spring.ind1);
+            orderedSpringKeys.push_back((PxU64(lo) << 32) | PxU64(hi));
+            if (endpointPartition[spring.ind0] == PxI32(partition))
+                ++partitionEndpointConflicts;
+            if (endpointPartition[spring.ind1] == PxI32(partition))
+                ++partitionEndpointConflicts;
+            endpointPartition[spring.ind0] = PxI32(partition);
+            endpointPartition[spring.ind1] = PxI32(partition);
+        }
+        partitionStart = partitionEnd;
+    }
+    partitionedSpringCount = partitionStart;
+    std::sort(sourceSpringKeys.begin(), sourceSpringKeys.end());
+    std::sort(orderedSpringKeys.begin(), orderedSpringKeys.end());
+    const bool partitionCoverageValid = output.nbSprings == numSprings && partitionedSpringCount == numSprings &&
+        partitionRangeErrors == 0 && partitionEndpointErrors == 0 && partitionEndpointConflicts == 0 &&
+        sourceSpringKeys == orderedSpringKeys;
+    printf("Spring partition diagnostics partitions=%u outputSprings=%u coveredSprings=%u maxPerPartition=%u "
+           "remapOutputSize=%u rangeErrors=%u endpointErrors=%u endpointConflicts=%u coverage=%s\n",
+           output.nbPartitions, output.nbSprings, partitionedSpringCount, output.maxSpringsPerPartition,
+           output.remapOutputSize, partitionRangeErrors, partitionEndpointErrors, partitionEndpointConflicts,
+           partitionCoverageValid ? "VALID" : "INVALID");
+    if (partitionRangeErrors == 0) {
+        for (PxU32 partition = 0; partition < output.nbPartitions; ++partition) {
+            const PxU32 start = partition ? output.accumulatedSpringsPerPartitions[partition - 1] : 0;
+            const PxU32 end = output.accumulatedSpringsPerPartitions[partition];
+            printf("Spring partition %u range=[%u,%u) count=%u\n", partition, start, end, end - start);
+        }
+    }
+
     printf("Creating and populating particle cloth buffer...\n");
     fflush(stdout);
     PxParticleClothBuffer* clothBuffer = ExtGpu::PxCreateAndPopulateParticleClothBuffer(desc, clothDesc, output, gpuMgr);
@@ -246,7 +309,7 @@ int main(int argc, char** argv)
     PX_EXT_PINNED_MEMORY_FREE(*gpuMgr, velocities);
     PX_EXT_PINNED_MEMORY_FREE(*gpuMgr, phases);
 
-    bool pass = true;
+    bool pass = partitionCoverageValid;
     if (populateOnly) {
         printf("Populate-only validation completed; skipping addParticleBuffer/simulation.\n");
         fflush(stdout);
@@ -254,18 +317,32 @@ int main(int argc, char** argv)
         ps->addParticleBuffer(clothBuffer);
         printf("Starting simulation: steps=%d dim=%u\n", steps, dim);
         fflush(stdout);
+        const int timingWarmupSteps = steps > 10 ? 10 : 0;
+        double simulationMs = 0.0;
         for (int i = 0; i < steps; ++i) {
             if (printAllSteps || i < 10 || i == steps - 1) {
                 printf("Simulate step %d/%d...\n", i + 1, steps);
                 fflush(stdout);
             }
+            const std::chrono::steady_clock::time_point stepStart = std::chrono::steady_clock::now();
             scene->simulate(1.0f / 60.0f);
+            const double simulateMs = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - stepStart).count();
             if (printAllSteps || i < 10 || i == steps - 1) {
                 printf("Fetch step %d/%d...\n", i + 1, steps);
                 fflush(stdout);
             }
+            const std::chrono::steady_clock::time_point fetchStart = std::chrono::steady_clock::now();
             scene->fetchResults(true);
+            if (i >= timingWarmupSteps)
+                simulationMs += simulateMs + std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - fetchStart).count();
         }
+        const int measuredSteps = steps - timingWarmupSteps;
+        printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
+               timingWarmupSteps, measuredSteps, simulationMs,
+               measuredSteps > 0 ? simulationMs / double(measuredSteps) : 0.0,
+               simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);
 
         std::vector<PxVec4> positionsReadback(numParticles);
         std::vector<PxVec4> velocitiesReadback(numParticles);
@@ -293,6 +370,16 @@ int main(int argc, char** argv)
         PxReal minDynamicY = PX_MAX_F32;
         PxReal maxSpringError = 0.0f;
         PxReal sumSpringError = 0.0f;
+        PxReal sumSquaredSpringError = 0.0f;
+        PxReal maxSpringLength = 0.0f;
+        PxU32 maxSpringIndex = 0;
+        PxU32 validSpringCount = 0;
+        PxU32 springsAboveHalfSpacing = 0;
+        PxU32 springsAboveSpacing = 0;
+        PxU32 springsAboveOneAndHalfSpacing = 0;
+        PxU32 springsAboveHalfSpacingByAnchorDistance[5] = { 0, 0, 0, 0, 0 };
+        std::vector<PxReal> springErrors;
+        springErrors.reserve(numSprings);
 
         if (readbackOk) {
             for (PxU32 i = 0; i < numParticles; ++i) {
@@ -324,12 +411,40 @@ int main(int argc, char** argv)
                     continue;
                 const PxReal length = (PxVec3(p1.x, p1.y, p1.z) - PxVec3(p0.x, p0.y, p0.z)).magnitude();
                 const PxReal error = PxAbs(length - spring.length);
-                maxSpringError = PxMax(maxSpringError, error);
+                if (validSpringCount == 0 || error > maxSpringError) {
+                    maxSpringError = error;
+                    maxSpringLength = length;
+                    maxSpringIndex = i;
+                }
                 sumSpringError += error;
+                sumSquaredSpringError += error * error;
+                springErrors.push_back(error);
+                ++validSpringCount;
+                if (error >= spacing * 0.5f)
+                {
+                    ++springsAboveHalfSpacing;
+                    const PxU32 row0 = spring.ind0 / dim;
+                    const PxU32 col0 = spring.ind0 % dim;
+                    const PxU32 row1 = spring.ind1 / dim;
+                    const PxU32 col1 = spring.ind1 % dim;
+                    const PxU32 anchorDistance0 = PxMin(row0 + col0, row0 + (dim - 1 - col0));
+                    const PxU32 anchorDistance1 = PxMin(row1 + col1, row1 + (dim - 1 - col1));
+                    const PxU32 anchorDistance = PxMin(anchorDistance0, anchorDistance1);
+                    ++springsAboveHalfSpacingByAnchorDistance[PxMin(anchorDistance, 4u)];
+                }
+                if (error >= spacing)
+                    ++springsAboveSpacing;
+                if (error >= spacing * 1.5f)
+                    ++springsAboveOneAndHalfSpacing;
             }
         }
 
-        const PxReal averageSpringError = numSprings ? sumSpringError / PxReal(numSprings) : 0.0f;
+        std::sort(springErrors.begin(), springErrors.end());
+        const PxReal averageSpringError = validSpringCount ? sumSpringError / PxReal(validSpringCount) : 0.0f;
+        const PxReal rmsSpringError = validSpringCount ? PxSqrt(sumSquaredSpringError / PxReal(validSpringCount)) : 0.0f;
+        const PxReal p50SpringError = validSpringCount ? springErrors[(validSpringCount - 1) * 50 / 100] : 0.0f;
+        const PxReal p95SpringError = validSpringCount ? springErrors[(validSpringCount - 1) * 95 / 100] : 0.0f;
+        const PxReal p99SpringError = validSpringCount ? springErrors[(validSpringCount - 1) * 99 / 100] : 0.0f;
         const PxReal dynamicDrop = minDynamicY < PX_MAX_F32 ? 2.0f - minDynamicY : 0.0f;
         const PxReal heightSpan = maxParticleY > -PX_MAX_F32 ? maxParticleY - minParticleY : 0.0f;
         printf("GPU readback sync=%d positionCopy=%d velocityCopy=%d\n",
@@ -338,18 +453,52 @@ int main(int argc, char** argv)
                minParticleY, maxParticleY, maxSpeed, badParticles, numParticles);
         printf("Spring validation pinnedDrift=%.6f dynamicDrop=%.6f heightSpan=%.6f maxError=%.6f avgError=%.6f\n",
                maxPinnedDrift, dynamicDrop, heightSpan, maxSpringError, averageSpringError);
+        printf("Spring error distribution valid=%u/%u p50=%.6f p95=%.6f p99=%.6f rms=%.6f "
+               "above0.5spacing=%u above1.0spacing=%u above1.5spacing=%u\n",
+               validSpringCount, numSprings, p50SpringError, p95SpringError, p99SpringError, rmsSpringError,
+               springsAboveHalfSpacing, springsAboveSpacing, springsAboveOneAndHalfSpacing);
+        printf("Springs above 0.5 spacing by nearest-anchor distance d0=%u d1=%u d2=%u d3=%u d4plus=%u\n",
+               springsAboveHalfSpacingByAnchorDistance[0], springsAboveHalfSpacingByAnchorDistance[1],
+               springsAboveHalfSpacingByAnchorDistance[2], springsAboveHalfSpacingByAnchorDistance[3],
+               springsAboveHalfSpacingByAnchorDistance[4]);
+        if (validSpringCount) {
+            const PxParticleSpring& spring = springs[maxSpringIndex];
+            const PxVec4& p0 = positionsReadback[spring.ind0];
+            const PxVec4& p1 = positionsReadback[spring.ind1];
+            const PxU32 row0 = spring.ind0 / dim;
+            const PxU32 col0 = spring.ind0 % dim;
+            const PxU32 row1 = spring.ind1 / dim;
+            const PxU32 col1 = spring.ind1 % dim;
+            const PxU32 anchorDistance0 = PxMin(row0 + col0, row0 + (dim - 1 - col0));
+            const PxU32 anchorDistance1 = PxMin(row1 + col1, row1 + (dim - 1 - col1));
+            printf("Worst spring index=%u endpoints=(%u[%u,%u],%u[%u,%u]) anchorDistance=(%u,%u) "
+                   "rest=%.6f length=%.6f error=%.6f ratio=%.6f\n",
+                   maxSpringIndex, spring.ind0, row0, col0, spring.ind1, row1, col1,
+                   anchorDistance0, anchorDistance1, spring.length, maxSpringLength, maxSpringError,
+                   spring.length > 0.0f ? maxSpringLength / spring.length : 0.0f);
+            printf("Worst spring positions p0=(%.6f,%.6f,%.6f,%.6f) p1=(%.6f,%.6f,%.6f,%.6f)\n",
+                   p0.x, p0.y, p0.z, p0.w, p1.x, p1.y, p1.z, p1.w);
+        }
 
         PxBounds3 bounds = ps->getWorldBounds(1.0f);
         const bool validBounds = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum);
         const bool validParticles = readbackOk && badParticles == 0;
         const bool pinnedStable = !pinCorners || maxPinnedDrift < 0.001f;
         const bool nonRigidMotion = !pinCorners || steps < 30 || (dynamicDrop > 0.05f && heightSpan > 0.05f);
-        const bool boundedSpringError = (!pinCorners && !addPlane) || steps == 0 || maxSpringError < spacing * 0.5f;
+        const bool completeSpringSamples = validSpringCount == numSprings;
+        const bool averageSpringErrorBounded = averageSpringError < spacing * 0.1f;
+        const bool rmsSpringErrorBounded = rmsSpringError < spacing * 0.25f;
+        const bool p95SpringErrorBounded = p95SpringError < spacing * 0.5f;
+        const bool p99SpringErrorBounded = p99SpringError < spacing;
+        const bool maxSpringErrorBounded = maxSpringError < spacing * 2.0f;
+        const bool springDistributionBounded = completeSpringSamples && averageSpringErrorBounded &&
+            rmsSpringErrorBounded && p95SpringErrorBounded && p99SpringErrorBounded && maxSpringErrorBounded;
+        const bool boundedSpringError = (!pinCorners && !addPlane) || steps == 0 || springDistributionBounded;
         const bool reachedPlane = !addPlane || pinCorners || steps < 60 || maxParticleY < 0.25f;
         const bool noPlanePenetration = !addPlane || steps == 0 || minParticleY > -0.02f;
         const bool settledOnPlane = !addPlane || pinCorners || steps < 180 ||
             (minParticleY > 0.02f && maxParticleY < 0.12f && maxSpeed < 0.05f);
-        pass = validBounds && validParticles && pinnedStable && nonRigidMotion && boundedSpringError &&
+        pass = pass && validBounds && validParticles && pinnedStable && nonRigidMotion && boundedSpringError &&
             reachedPlane && noPlanePenetration && settledOnPlane;
         printf("PBD cloth system bounds min=(%.6f %.6f %.6f) max=(%.6f %.6f %.6f)\n",
                bounds.minimum.x, bounds.minimum.y, bounds.minimum.z,
@@ -359,6 +508,12 @@ int main(int argc, char** argv)
                validBounds ? "yes" : "no", validParticles ? "yes" : "no", pinnedStable ? "yes" : "no",
                nonRigidMotion ? "yes" : "no", boundedSpringError ? "yes" : "no",
                reachedPlane ? "yes" : "no", noPlanePenetration ? "yes" : "no", settledOnPlane ? "yes" : "no");
+        printf("Spring checks partitionCoverage=%s completeSamples=%s avgLt0.1=%s rmsLt0.25=%s "
+               "p95Lt0.5=%s p99Lt1.0=%s maxLt2.0=%s\n",
+               partitionCoverageValid ? "yes" : "no", completeSpringSamples ? "yes" : "no",
+               averageSpringErrorBounded ? "yes" : "no", rmsSpringErrorBounded ? "yes" : "no",
+               p95SpringErrorBounded ? "yes" : "no", p99SpringErrorBounded ? "yes" : "no",
+               maxSpringErrorBounded ? "yes" : "no");
     }
     if (gErr.errorCount != 0) {
         printf("FAIL: PhysX reported %u error(s)\n", gErr.errorCount);

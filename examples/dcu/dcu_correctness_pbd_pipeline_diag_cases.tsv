@@ -1,0 +1,2 @@
+# case	batch	target	arguments	normal_exit	description	environment
+large_t2_pbd_particles_pipeline_diag	diagnostic	bench_pbd_particles_conservative_smoke	300 --dim 64 --print-all-steps	0	Tier 2 PBD primitive narrowphase and contact-sort localization	PX_DCU_PBD_PIPELINE_DIAG=1 PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG=1 PX_DCU_PBD_PRIMITIVE_RANK_DIAG=1
