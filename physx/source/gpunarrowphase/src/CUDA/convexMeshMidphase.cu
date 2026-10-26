@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -53,7 +53,32 @@
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41) && PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41
+extern "C" __device__ __constant__ char gPxgDcuSdfConvexMidphaseO3P41Version[] = "PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41_GFX936_DEVICE_V1";
+#endif
+
 extern "C" __host__ void initNarrowphaseKernels4() {}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionSdfInlineVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V1_SDF_INLINE";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionInverseCacheVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V2_INVERSE_CACHE";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionPack2SerialVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V3_PACK2_SERIAL";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionDefaultBodyVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V4_DEFAULT_BODY_RESTORED";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionOccupancy2Version[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V5_OCCUPANCY2";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionCreatePatchNoInlineVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V6_CREATE_PATCH_NOINLINE";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionContactPredicateVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V7_CONTACT_PREDICATE";
+extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionNativeBlockCountVersion[] =
+	"PX_DCU_TRITRI_COLLISION_DEVICE_V8_NATIVE_BLOCK_COUNT";
+extern "C" __device__ __constant__ char gPxgDcuTriTriOverlapLaunchBounds64Version[] =
+	"PX_DCU_TRITRI_OVERLAP_DEVICE_V10_LAUNCH_BOUNDS64";
+#endif
 
 #include "manifold.cuh"
 #include "vector_functions.h"
@@ -767,8 +792,102 @@ struct Contact
 	}
 };
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+struct ContactPredicateDcuV7
+{
+	PxVec3 pos;
+	PxReal separation;
+	PxVec3 normal;
+	bool candidateContact = false;
+
+	PX_FORCE_INLINE __device__ void markAsProcessed()
+	{
+		candidateContact = false;
+	}
+};
+#endif
+
+template<bool ContactPredicateDcuV7Enabled>
+struct ContactTypeSelector
+{
+	typedef Contact Type;
+};
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+template<>
+struct ContactTypeSelector<true>
+{
+	typedef ContactPredicateDcuV7 Type;
+};
+#endif
+
+template<bool ContactPredicateDcuV7Enabled>
+struct ContactPayloadSelector
+{
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ PxVec3 normal(const ContactType& contact)
+	{
+		return contact.normal;
+	}
+
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ PxVec3 pos(const ContactType& contact)
+	{
+		return contact.pos;
+	}
+
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ PxReal separation(const ContactType& contact)
+	{
+		return contact.separation;
+	}
+
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ PxVec3& collisionPoint(ContactType& contact, PxVec3&)
+	{
+		return contact.pos;
+	}
+
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ void commitPoint(ContactType&, const PxVec3&)
+	{
+	}
+};
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+template<>
+struct ContactPayloadSelector<true>
+{
+	static PX_FORCE_INLINE __device__ PxVec3 normal(const ContactPredicateDcuV7& contact)
+	{
+		return contact.candidateContact ? contact.normal : PxVec3(0.0f);
+	}
+
+	static PX_FORCE_INLINE __device__ PxVec3 pos(const ContactPredicateDcuV7& contact)
+	{
+		return contact.candidateContact ? contact.pos : PxVec3(0.0f);
+	}
+
+	static PX_FORCE_INLINE __device__ PxReal separation(const ContactPredicateDcuV7& contact)
+	{
+		return contact.candidateContact ? contact.separation : PX_MAX_F32;
+	}
+
+	static PX_FORCE_INLINE __device__ PxVec3& collisionPoint(ContactPredicateDcuV7&, PxVec3& candidatePoint)
+	{
+		return candidatePoint;
+	}
+
+	static PX_FORCE_INLINE __device__ void commitPoint(ContactPredicateDcuV7& contact, const PxVec3& candidatePoint)
+	{
+		contact.pos = candidatePoint;
+	}
+};
+#endif
+
 //Must be called by full warps
-PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patchesS, PxU32 p, Contact& contact, bool& anyKeepS, PxReal clusterBias,
+template<bool ContactPredicateDcuV7Enabled, typename ContactType>
+PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patchesS, PxU32 p, ContactType& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxReal* shMinSepS, PxI32& remainingContacts, PxVec4* tempPointsS)
 {
 	const PxU32 threadIndexInWarp = threadIdx.x & 31;
@@ -777,11 +896,20 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 	assert(p < MAX_MESH_MESH_PATCHES2);
 	Patch& patch = patchesS[p];
 
-	PxReal proj = contact.normal.dot(patch.Normal);
+	const bool candidateContact = contact.candidateContact;
+	const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::normal(contact);
+	const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::pos(contact);
+	const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::separation(contact);
+	PxReal proj = contactNormal.dot(patch.Normal);
 
 	//Normals are very close, this point is now a candidate for an existing patch...
 	bool accept2 = proj > PATCH_ACCEPTANCE_EPS2;
 	bool accept = proj > PATCH_ACCEPTANCE_EPS3;
+	if (ContactPredicateDcuV7Enabled)
+	{
+		accept2 = candidateContact && accept2;
+		accept = candidateContact && accept;
+	}
 
 	//We are going to eat this contact, but first scale its separation value by the projection onto the normal.
 	//This is important to avoid instabilities due to approximating normals
@@ -795,7 +923,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 	}
 
 	// syncthreads() but with explicit barrier number to make sure we really have the whole block waiting here.
-	__syncthreads(); // was: asm volatile ("bar.sync 1;") — named barrier not supported in HIP
+	__syncthreads(); // was: asm volatile ("bar.sync 1;") �?named barrier not supported in HIP
 
 	//if (accept2)
 	//{
@@ -809,7 +937,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 	// some warp could be waiting right after that last barrier while another one is already around the loop!
 	if (anyKeepS)
 	{
-		reduceMask = contactReduce2<true, true, MESH_MESH_CONTACT_LIMIT, false>(contact.pos, contact.separation, patch.Normal, reduceMask, clusterBias);
+		reduceMask = contactReduce2<true, true, MESH_MESH_CONTACT_LIMIT, false>(contactPos, contactSeparation, patch.Normal, reduceMask, clusterBias);
 
 		PxU32 nbUsed = threadBlockCountAndBroadcast(accept2, countersS);
 		__syncthreads(); // sync for countersS reuse.
@@ -834,7 +962,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 		offset += patch.PointCount;
 
 		if (threadEmitsElement)
-			tempPointsS[offset] = PxVec4(contact.pos, contact.separation);
+			tempPointsS[offset] = PxVec4(contactPos, contactSeparation);
 
 		totalContacts += patch.PointCount; //Don't access patch.PointCount after __syncthreads(): reduceContactsSingleWarp potentially changed patch.PointCount	
 		__syncthreads();
@@ -850,7 +978,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 
 	// AD: we need a barrier to make sure that all threads have executed the if above.
 	// Otherwise we might change the flag and not all the threads will do the same thing.
-	__syncthreads(); // was: asm volatile ("bar.sync 2;") — named barrier not supported in HIP
+	__syncthreads(); // was: asm volatile ("bar.sync 2;") �?named barrier not supported in HIP
 
 	if (threadIdx.x == 0)
 		anyKeepS = false;
@@ -861,7 +989,8 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 }
 
 //Must be called by full warps
-PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& contact, bool& anyKeepS, PxReal clusterBias,
+template<bool ContactPredicateDcuV7Enabled, typename ContactType>
+PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, ContactType& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS, PxU32& numPatchesToKeep)
 {
 	const PxU32 threadIndexInWarp = threadIdx.x & 31;
@@ -878,9 +1007,13 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 		hasAnyContacts = false;
 
 		//Adds/removes a tiny bias based on projection onto average normal. 
-		PxReal minSep = contact.separation;
+		const bool candidateContact = contact.candidateContact;
+		const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::separation(contact);
+		const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::normal(contact);
+		const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::pos(contact);
+		PxReal minSep = contactSeparation;
 
-		PxU32 candidateMask = __ballot_sync(FULL_MASK, contact.candidateContact);
+		PxU32 candidateMask = __ballot_sync(FULL_MASK, candidateContact);
 
 		const PxU32 nbWarpContacts = __popc(candidateMask);
 
@@ -910,7 +1043,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 			if (warpIndex == minIBlock && threadIndexInWarp == minI)
 			{
 				myNormal = true;
-				patch.Normal = contact.normal;
+				patch.Normal = contactNormal;
 			}
 
 			// __syncthreads(); but with explicit barrier number to make sure we really have the whole block entering the if and waiting here.
@@ -920,9 +1053,9 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 
 			bool accept = false;
 			bool accept2 = false;
-			if (contact.candidateContact)
+			if (candidateContact)
 			{
-				PxReal proj = contact.normal.dot(patch.Normal);
+				PxReal proj = contactNormal.dot(patch.Normal);
 				accept2 = proj > PATCH_ACCEPTANCE_EPS2;
 				accept = proj > PATCH_ACCEPTANCE_EPS3 || myNormal;
 			}
@@ -930,7 +1063,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 			//Now let's output to the temp accum buffer, then run reduction on it
 
 			PxU32 reduceMask = __ballot_sync(FULL_MASK, accept);
-			reduceMask = contactReduce2<true, true, MESH_MESH_CONTACT_LIMIT, false>(contact.pos, contact.separation, patch.Normal, reduceMask, clusterBias);
+			reduceMask = contactReduce2<true, true, MESH_MESH_CONTACT_LIMIT, false>(contactPos, contactSeparation, patch.Normal, reduceMask, clusterBias);
 
 			//Now we have a mask of how many contacts match this patch...					
 			PxU32 totalContacts;
@@ -941,7 +1074,7 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 			if (totalContacts != 0)
 			{
 				if (threadEmitsElement)
-					tempPointsS[offset] = PxVec4(contact.pos, contact.separation);
+					tempPointsS[offset] = PxVec4(contactPos, contactSeparation);
 
 				__syncthreads();
 
@@ -971,6 +1104,56 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, Contact& conta
 	}
 }
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+__device__ __attribute__((noinline)) static void createNewPatchesNoInlineDcuV6(Patch* patchesS, Contact& contact, bool& anyKeepS,
+	PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
+	PxU32& numPatchesToKeep)
+{
+	createNewPatches<false>(patchesS, contact, anyKeepS, clusterBias,
+		countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);
+}
+#endif
+
+template<bool CreatePatchNoInlineDcuV6, bool ContactPredicateDcuV7Enabled>
+struct CreateNewPatchesSelector
+{
+	template<typename ContactType>
+	static PX_FORCE_INLINE __device__ void run(Patch* patchesS, ContactType& contact, bool& anyKeepS,
+		PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
+		PxU32& numPatchesToKeep)
+	{
+		createNewPatches<ContactPredicateDcuV7Enabled>(patchesS, contact, anyKeepS, clusterBias,
+			countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);
+	}
+};
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+template<>
+struct CreateNewPatchesSelector<true, false>
+{
+	static PX_FORCE_INLINE __device__ void run(Patch* patchesS, Contact& contact, bool& anyKeepS,
+		PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
+		PxU32& numPatchesToKeep)
+	{
+		createNewPatchesNoInlineDcuV6(patchesS, contact, anyKeepS, clusterBias,
+			countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);
+	}
+};
+#endif
+
+template<bool NativeBlockCountDcuV8>
+static PX_FORCE_INLINE __device__ PxU32 countGeneratedContacts(bool candidateContact, PxU32* countersS)
+{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (NativeBlockCountDcuV8)
+		return PxU32(__syncthreads_count(candidateContact));
+#endif
+	const PxU32 count = threadBlockCountAndBroadcast(candidateContact, countersS);
+	__syncthreads(); // Wait for every warp to finish reading countersS before it is reused.
+	return count;
+}
+
+template<bool CreatePatchNoInlineDcuV6, bool ContactPredicateDcuV7Enabled, bool NativeBlockCountDcuV8>
 __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0, const PxsCachedTransform& transform1,
 	const PxgTriangleMesh& mesh0, const PxgTriangleMesh& mesh1, const PxgShape& shape0, const PxgShape& shape1, const PxReal contactDistance, bool isFlipped,
 	PxU32 pairIndex,
@@ -1027,6 +1210,284 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 		anyKeepS = false;
 
 	__syncthreads();
+
+
+	PxU32 totalGenerated = 0;
+
+	//mesh0 is first the triangle mesh while mesh1 is first the SDF mesh
+	//In the second loop iteration it is the other way round
+	for (PxU32 outer = 0; outer < 2 && generateContacts; outer++)
+	{
+		PxReal cullScale = contactDistance;
+		PxU32 nbTriangles = 0;
+
+		if (outer == 0)
+		{
+			nbTriangles = mesh0.numTris;
+			cullScale /= PxMin(shape1.scale.scale.x, PxMin(shape1.scale.scale.y, shape1.scale.scale.z));
+			if (threadIdx.x == 0)
+				sdfTexture.initialize(mesh1); //The texture is stored in shared memory - only one threads needs to initialize it
+		}
+		else
+		{
+			if (mesh0.mTexObject /*&& totalGenerated < PxMax(32u, PxMin((mesh0.numVerts + 7)/8, 256u))*/)
+			{
+				nbTriangles = mesh1.numTris;
+				cullScale /= PxMin(shape0.scale.scale.x, PxMin(shape0.scale.scale.y, shape0.scale.scale.z));
+				if (threadIdx.x == 0)
+					sdfTexture.initialize(mesh0); //The texture is stored in shared memory - only one threads needs to initialize it
+			}
+			else break;
+		}
+		__syncthreads();
+
+		PxU32 maxRefinementLevel = 8;
+		PxReal refinementRatioSquared = 16 * 16;
+
+		PxU32 numTrianglesToSubdividePerThread = 0;
+
+		for (PxU32 i = 0; (i < nbTriangles || numTrianglesToSubdivideS > 0);)
+		{
+			typename ContactTypeSelector<ContactPredicateDcuV7Enabled>::Type contact;
+			PxVec3 candidatePoint = PxVec3(0.0f);
+			PxVec3& contactPoint = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::collisionPoint(contact, candidatePoint);
+
+			PxU32 nbFoundTriangles = 0;
+
+			if (outer == 0)
+			{
+				nbFoundTriangles = findInterestingTrianglesA<32, 1024>(mesh0.numTris, mesh0.indices, mesh0.trimeshVerts, shape0.scale, shape1.scale,
+					cullScale, sdfTexture, aToB, i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
+			}
+			else
+			{
+				nbFoundTriangles = findInterestingTrianglesA<32, 1024>(mesh1.numTris, mesh1.indices, mesh1.trimeshVerts, shape1.scale, shape0.scale,
+					cullScale, sdfTexture, aToB.getInverse(), i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
+			}
+			numTrianglesToSubdividePerThread = 0;
+
+			PxU32 ind = threadIdx.x < nbFoundTriangles ? triangleIndicesS[threadIdx.x].x : nbTriangles;
+			PxU32 subInd = threadIdx.x < nbFoundTriangles ? triangleIndicesS[threadIdx.x].y : 0;
+
+			bool needsRefinement = false;
+			if (ind < nbTriangles)
+			{
+				if (outer == 0)
+				{
+					PxVec3 v0, v1, v2;
+					getTriangleVertices(mesh0, shape0.scale, aToB, ind, subInd, v0, v1, v2);
+					v0 = shape2Vertex(v0, shape1.scale.scale, shape1.scale.rotation);
+					v1 = shape2Vertex(v1, shape1.scale.scale, shape1.scale.rotation);
+					v2 = shape2Vertex(v2, shape1.scale.scale, shape1.scale.rotation);
+
+					PxVec3 dir;
+					PxReal sep = doTriangleSDFCollision(sdfTexture, v0, v1, v2,
+						contactPoint, dir, cullScale);
+
+					if (mesh0.mTexObject == NULL)
+					{
+						//Check if the triangle needs subdivision
+						PxReal triRadius2 = triangleRadiusSquared(v0, v1, v2);
+						PxReal sdfRadius2 = sdfRadiusSquared(sdfTexture);
+						needsRefinement = triRadius2 * refinementRatioSquared > sdfRadius2;
+					}
+
+					contactPoint = vertex2Shape(contactPoint, shape1.scale.scale, shape1.scale.rotation);
+
+					//if (bounds.contains(pos))
+					{
+						if (sep < cullScale)
+						{
+							//dir.normalize(); //dir already normalized
+
+							dir = vertex2ShapeNormalVector(dir, shape1.scale.scale, shape1.scale.rotation);
+
+							PxReal m = dir.magnitudeSquared();
+
+							if (mesh0.mTexObject == NULL)
+							{
+								// Only one of the objects has an SDF. This should only happen if we're colliding
+								// against a flat, floor-like static triangle mesh because in the following, the
+								// contact normal will be defined as the triangle normal.
+
+								//Use the triangle's normal as direction instead of the direction from the SDF collision
+								//But still use the magnitude from the original dir to compute the separation
+								PxVec3 n = (v1 - v0).cross(v2 - v0);
+								PxVec3 sdfBoxCenter = 0.5f * (sdfTexture.sdfBoxHigher + sdfTexture.sdfBoxLower);
+								PxReal triangleNormalSign = -PxSign((sdfBoxCenter - v0).dot(n));
+								PxVec3 dir2 = triangleNormalSign * vertex2ShapeNormalVector(n, shape1.scale.scale, shape1.scale.rotation);
+								if (dir2.magnitudeSquared() > 1e-8f)
+								{
+									dir2.normalize();
+									dir = dir2 * PxSqrt(m);
+								}
+							}
+
+							if (m > 0.0f)
+							{
+								m = 1.0f / PxSqrt(m);
+								sep = sep * m;
+								dir = dir * m;
+							}
+
+							contact.candidateContact = sep < contactDistance;
+
+							if (contact.candidateContact)
+							{
+								ContactPayloadSelector<ContactPredicateDcuV7Enabled>::commitPoint(contact, contactPoint);
+								contact.separation = sep;
+								contact.normal = -dir; //PxVec3(0.0f, -1.0f, 0.0f); //
+							}
+						}
+					}
+				}
+				else
+				{
+					uint4 inds = mesh1.indices[ind];
+					PxVec3 v0 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.x]), shape1.scale.scale, shape1.scale.rotation);
+					PxVec3 v1 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.y]), shape1.scale.scale, shape1.scale.rotation);
+					PxVec3 v2 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.z]), shape1.scale.scale, shape1.scale.rotation);
+
+					PxVec3 dir;
+					PxReal sep = doTriangleSDFCollision(sdfTexture,
+						shape2Vertex(aToB.transformInv(v0), shape0.scale.scale, shape0.scale.rotation),
+						shape2Vertex(aToB.transformInv(v1), shape0.scale.scale, shape0.scale.rotation),
+						shape2Vertex(aToB.transformInv(v2), shape0.scale.scale, shape0.scale.rotation),
+						contactPoint, dir, cullScale);
+
+					contactPoint = aToB.transform(vertex2Shape(contactPoint, shape0.scale.scale, shape0.scale.rotation));
+
+					if (sep < cullScale)
+					{
+						//dir.normalize();
+
+						dir = vertex2ShapeNormalVector(dir, shape0.scale.scale, shape0.scale.rotation);
+
+						PxReal m = dir.magnitudeSquared();
+						if (m > 0.0f)
+						{
+							m = 1.0f / PxSqrt(m);
+							sep = sep * m;
+							dir = dir * m;
+						}
+
+						contact.candidateContact = sep < contactDistance;
+
+						if (contact.candidateContact)
+						{
+							ContactPayloadSelector<ContactPredicateDcuV7Enabled>::commitPoint(contact, contactPoint);
+							contact.separation = sep;
+							contact.normal = aToB.rotate(dir);
+						}
+					}
+				}
+			}
+			//needsRefinement = false;
+			PxU32 newBufferCount = addToRefinementBuffer<32, 256>(needsRefinement, ind, subInd, 0, trianglesToSubdivideS, maxRefinementLevel);
+			if (threadIdx.x == 0)
+				numTrianglesToSubdivideS = newBufferCount;
+
+			PxU32 generatedThisIter = countGeneratedContacts<NativeBlockCountDcuV8>(contact.candidateContact, countersS);
+
+			totalGenerated += generatedThisIter;
+			PxI32 remainingContacts = generatedThisIter;
+
+			numTrianglesToSubdividePerThread = numTrianglesToSubdivideS; // The selected count path synchronizes the block.
+
+
+			//First, iterate through existing patches to see if we have any interesting contacts for those patches...
+			for (PxU32 p = 0; (p < numPatchesToKeep) && (remainingContacts > 0); ++p)
+			{
+				tryToAssignContactToExistingPatch<ContactPredicateDcuV7Enabled>(patchesS, p, contact, anyKeepS, clusterBias,
+					countersS, shMinSepS, remainingContacts, tempPointsS);
+			}
+
+			CreateNewPatchesSelector<CreatePatchNoInlineDcuV6, ContactPredicateDcuV7Enabled>::run(
+				patchesS, contact, anyKeepS, clusterBias, countersS, remainingContacts, tempPointsS, shMinSepS,
+				numPatchesToKeep);
+		}
+	}
+
+	assert(numPatchesToKeep <= MAX_MESH_MESH_PATCHES2);
+
+	//Final step - output the contact patches and contact points...
+	writePatchesAndContacts<32>(transform0, transform1, shape0, shape1, isFlipped, pairIndex,
+		cmOutputs, materials, contactStream,
+		patchStream, patchAndContactCounters, touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+		patchBytesLimit, contactBytesLimit, forceBytesLimit, numPatchesToKeep, patchesS);
+}
+
+template<bool InlineSdfDcuV1>
+static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionSelected(SparseSDFTexture& texture,
+	const PxVec3& v0, const PxVec3& v1, const PxVec3& v2, PxVec3& point, PxVec3& dir, PxReal tolerance)
+{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (InlineSdfDcuV1)
+		return doTriangleSDFCollisionInlineDcuV1(texture, v0, v1, v2, point, dir, tolerance);
+#endif
+	return doTriangleSDFCollision(texture, v0, v1, v2, point, dir, tolerance);
+}
+
+template<bool InlineSdfDcuV1, bool CacheInverseDcuV2>
+__device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& transform0, const PxsCachedTransform& transform1,
+	const PxgTriangleMesh& mesh0, const PxgTriangleMesh& mesh1, const PxgShape& shape0, const PxgShape& shape1, const PxReal contactDistance, bool isFlipped,
+	PxU32 pairIndex,
+	PxsContactManagerOutput* PX_RESTRICT cmOutputs,
+	const PxsMaterialData* PX_RESTRICT materials,
+	PxU8* PX_RESTRICT contactStream,
+	PxU8* PX_RESTRICT patchStream,
+	PxgPatchAndContactCounters* PX_RESTRICT patchAndContactCounters,
+	PxU32* touchChangeFlags,
+	PxU32* patchChangeFlags,
+	PxU8* startContactPatches,
+	PxU8* startContactPoints,
+	PxU8* startContactForces,
+	PxU32 patchBytesLimit,
+	PxU32 contactBytesLimit,
+	PxU32 forceBytesLimit,
+	const PxReal clusterBias,
+	bool generateContacts)
+{
+	//This buffer stores the set of contacts we want to carry over between iterations/eventually report to the application
+
+	////Up to MAX_MESH_MESH_PATCHES2 contact patches
+	__shared__ Patch patchesS[MAX_MESH_MESH_PATCHES2];
+
+	//This is a temporary accumulation buffer used to a given patch. It is large enough to
+	//include 6 contacts from each warp plus 6 contacts from the kept contacts. It does not need
+	//multiple normals as all contacts being considered as a patch at this stage have very similar
+	//normals. The w component is the separation.
+	__shared__ PxVec4 tempPointsS[33 * MESH_MESH_CONTACT_LIMIT];
+
+	//Per-warp counter. Used for various stages of reduction...
+	__shared__ PxU32 countersS[32];
+	//Per-warp minSep value, used to select the warp with the deepest point. This chooses the patch we attempt
+	//to reduce to
+	__shared__ PxReal shMinSepS[32];
+	__shared__ uint2 triangleIndicesS[1024];
+
+	//If a triangle is very big compared to the SDF object that collides against it, then schedule a second collision pass where the triangle gets subdivided
+	__shared__ uint2 trianglesToSubdivideS[256]; //This buffer can only hold up to one quarter of the elements as triangleIndicesS because each triangle can produce up to 4 sub-triangles during on-the-fly refinement
+	__shared__ PxU32 numTrianglesToSubdivideS;
+
+	__shared__ __align__(16) char sSdfTexture[sizeof(SparseSDFTexture)];
+	SparseSDFTexture& sdfTexture = reinterpret_cast<SparseSDFTexture&>(*sSdfTexture);
+
+	if (threadIdx.x == 0)
+		numTrianglesToSubdivideS = 0;
+
+	__shared__ bool anyKeepS;
+	PxU32 numPatchesToKeep = 0;
+
+	const PxTransform aToB = transform1.transform.transformInv(transform0.transform);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxTransform bToA = CacheInverseDcuV2 ? aToB.getInverse() : aToB;
+#endif
+
+	if (threadIdx.x == 0)
+		anyKeepS = false;
+
+	__syncthreads();
 	
 
 	PxU32 totalGenerated = 0;
@@ -1076,8 +1537,14 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			}
 			else
 			{
+				const PxTransform reverseTransform =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					CacheInverseDcuV2 ? bToA : aToB.getInverse();
+#else
+					aToB.getInverse();
+#endif
 				nbFoundTriangles = findInterestingTrianglesA<32, 1024>(mesh1.numTris, mesh1.indices, mesh1.trimeshVerts, shape1.scale, shape0.scale,
-					cullScale, sdfTexture, aToB.getInverse(), i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
+					cullScale, sdfTexture, reverseTransform, i, triangleIndicesS, numTrianglesToSubdividePerThread, trianglesToSubdivideS);
 			}
 			numTrianglesToSubdividePerThread = 0;
 
@@ -1096,7 +1563,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 					v2 = shape2Vertex(v2, shape1.scale.scale, shape1.scale.rotation);
 
 					PxVec3 dir;
-					PxReal sep = doTriangleSDFCollision(sdfTexture, v0, v1, v2,
+					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfDcuV1>(sdfTexture, v0, v1, v2,
 						contact.pos, dir, cullScale);
 
 					if (mesh0.mTexObject == NULL)
@@ -1162,11 +1629,30 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 					PxVec3 v1 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.y]), shape1.scale.scale, shape1.scale.rotation);
 					PxVec3 v2 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.z]), shape1.scale.scale, shape1.scale.rotation);
 
+					const PxVec3 reverseV0 =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						CacheInverseDcuV2 ? bToA.transform(v0) : aToB.transformInv(v0);
+#else
+						aToB.transformInv(v0);
+#endif
+					const PxVec3 reverseV1 =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						CacheInverseDcuV2 ? bToA.transform(v1) : aToB.transformInv(v1);
+#else
+						aToB.transformInv(v1);
+#endif
+					const PxVec3 reverseV2 =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						CacheInverseDcuV2 ? bToA.transform(v2) : aToB.transformInv(v2);
+#else
+						aToB.transformInv(v2);
+#endif
+
 					PxVec3 dir;
-					PxReal sep = doTriangleSDFCollision(sdfTexture,
-						shape2Vertex(aToB.transformInv(v0), shape0.scale.scale, shape0.scale.rotation),
-						shape2Vertex(aToB.transformInv(v1), shape0.scale.scale, shape0.scale.rotation),
-						shape2Vertex(aToB.transformInv(v2), shape0.scale.scale, shape0.scale.rotation),
+					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfDcuV1>(sdfTexture,
+						shape2Vertex(reverseV0, shape0.scale.scale, shape0.scale.rotation),
+						shape2Vertex(reverseV1, shape0.scale.scale, shape0.scale.rotation),
+						shape2Vertex(reverseV2, shape0.scale.scale, shape0.scale.rotation),
 						contact.pos, dir, cullScale);
 
 					contact.pos = aToB.transform(vertex2Shape(contact.pos, shape0.scale.scale, shape0.scale.rotation));
@@ -1214,11 +1700,11 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			//First, iterate through existing patches to see if we have any interesting contacts for those patches...
 			for (PxU32 p = 0; (p < numPatchesToKeep) && (remainingContacts > 0); ++p)
 			{
-				tryToAssignContactToExistingPatch(patchesS, p, contact, anyKeepS, clusterBias,
+				tryToAssignContactToExistingPatch<false>(patchesS, p, contact, anyKeepS, clusterBias,
 					countersS, shMinSepS, remainingContacts, tempPointsS);
 			}
 
-			createNewPatches(patchesS, contact, anyKeepS, clusterBias,
+			createNewPatches<false>(patchesS, contact, anyKeepS, clusterBias,
 				countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);			
 		}
 	}
@@ -1289,9 +1775,8 @@ void evaluatePointDistancesSDFBatch(const PxgShape* PX_RESTRICT gpuShapes,
 }
 
 
-extern "C" __global__
-__launch_bounds__(1024, 1)
-void triangleTriangleCollision(PxU32 numWorkItems,
+template<bool InlineSdfDcuV1, bool CacheInverseDcuV2, PxU32 ItemsPerBlock>
+static PX_FORCE_INLINE __device__ void triangleTriangleCollisionImpl(PxU32 numWorkItems,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
 	const PxsCachedTransform* PX_RESTRICT transformCache,
 	const PxReal* PX_RESTRICT contactDistances,
@@ -1313,21 +1798,6 @@ void triangleTriangleCollision(PxU32 numWorkItems,
 	const PxReal clusterBias
 	)
 {
-	const PxU32 pairIdx = blockIdx.x;
-
-	if (pairIdx >= numWorkItems)
-		return;
-
-	//Now read in the shapes and transforms etc.
-
-	PxgContactManagerInput npWorkItem;
-	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
-
-	PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
-	PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
-	PxU32 shapeRef0 = npWorkItem.shapeRef0;
-	PxU32 shapeRef1 = npWorkItem.shapeRef1;
-
 	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
 	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
 	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
@@ -1341,6 +1811,115 @@ void triangleTriangleCollision(PxU32 numWorkItems,
 	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
 	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
 
+	for (PxU32 item = 0; item < ItemsPerBlock; ++item)
+	{
+		const PxU32 pairIdx = blockIdx.x * ItemsPerBlock + item;
+		if (pairIdx >= numWorkItems)
+			break;
+
+		// Now read in the shapes and transforms etc.
+		PxgContactManagerInput npWorkItem;
+		PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+		const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+		const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+		const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+		const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+		if (threadIdx.x < 32)
+		{
+			PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+			PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+			PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+			PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+			__syncwarp();
+			readTriangleMesh(shape0, mesh0);
+			readTriangleMesh(shape1, mesh1);
+		}
+
+		__syncthreads();
+
+		const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+		const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+			|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+			|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
+
+		if (doFirst)
+		{
+			doTriangleTriangleCollisionCandidate<InlineSdfDcuV1, CacheInverseDcuV2>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+				cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+				touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+				patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+		}
+		else
+		{
+			doTriangleTriangleCollisionCandidate<InlineSdfDcuV1, CacheInverseDcuV2>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+				cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+				touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+				patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+		}
+
+		if (item + 1 < ItemsPerBlock)
+			__syncthreads();
+	}
+}
+
+#define PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS \
+	PxU32 numWorkItems, \
+	const PxgContactManagerInput* PX_RESTRICT cmInputs, \
+	const PxsCachedTransform* PX_RESTRICT transformCache, \
+	const PxReal* PX_RESTRICT contactDistances, \
+	const PxgShape* PX_RESTRICT gpuShapes, \
+	PxsContactManagerOutput* PX_RESTRICT cmOutputs, \
+	PxU8* overlaps, \
+	const PxsMaterialData* PX_RESTRICT materials, \
+	PxU8* PX_RESTRICT contactStream, \
+	PxU8* PX_RESTRICT patchStream, \
+	PxgPatchAndContactCounters* PX_RESTRICT patchAndContactCounters, \
+	PxU32* touchChangeFlags, \
+	PxU32* patchChangeFlags, \
+	PxU8* startContactPatches, \
+	PxU8* startContactPoints, \
+	PxU8* startContactForces, \
+	PxU32 patchBytesLimit, \
+	PxU32 contactBytesLimit, \
+	PxU32 forceBytesLimit, \
+	const PxReal clusterBias
+
+#define PX_TRIANGLE_TRIANGLE_COLLISION_ARGS \
+	numWorkItems, cmInputs, transformCache, contactDistances, gpuShapes, cmOutputs, overlaps, materials, \
+	contactStream, patchStream, patchAndContactCounters, touchChangeFlags, patchChangeFlags, startContactPatches, \
+	startContactPoints, startContactForces, patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollision(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	const PxU32 pairIdx = blockIdx.x;
+
+	if (pairIdx >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+	const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
+	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
+	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sTransform1[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sMesh0[sizeof(PxgTriangleMesh)];
+	__shared__ __align__(16) char sMesh1[sizeof(PxgTriangleMesh)];
+	PxgShape& shape0 = reinterpret_cast<PxgShape&>(*sShape0);
+	PxgShape& shape1 = reinterpret_cast<PxgShape&>(*sShape1);
+	PxsCachedTransform& transform0 = reinterpret_cast<PxsCachedTransform&>(*sTransform0);
+	PxsCachedTransform& transform1 = reinterpret_cast<PxsCachedTransform&>(*sTransform1);
+	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
+	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
 
 	if (threadIdx.x < 32)
 	{
@@ -1356,27 +1935,307 @@ void triangleTriangleCollision(PxU32 numWorkItems,
 	__syncthreads();
 
 	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
-
-	bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL 
-		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w)) 
-		||((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
-
+	const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+		|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
 
 	if (doFirst)
 	{
-		doTriangleTriangleCollision(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
-			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters, 
-			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces, 
+		doTriangleTriangleCollision<false, false, false>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
 			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
 	}
 	else
 	{
-		doTriangleTriangleCollision(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+		doTriangleTriangleCollision<false, false, false>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
 			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
 			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
 			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
 	}
 }
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionSdfInlineDcuV1(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	triangleTriangleCollisionImpl<true, false, 1>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionInverseCacheDcuV2(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	triangleTriangleCollisionImpl<false, true, 1>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionPack2SerialDcuV3(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	triangleTriangleCollisionImpl<false, false, 2>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 2)
+void triangleTriangleCollisionOccupancy2DcuV5(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	const PxU32 pairIdx = blockIdx.x;
+
+	if (pairIdx >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+	const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
+	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
+	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sTransform1[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sMesh0[sizeof(PxgTriangleMesh)];
+	__shared__ __align__(16) char sMesh1[sizeof(PxgTriangleMesh)];
+	PxgShape& shape0 = reinterpret_cast<PxgShape&>(*sShape0);
+	PxgShape& shape1 = reinterpret_cast<PxgShape&>(*sShape1);
+	PxsCachedTransform& transform0 = reinterpret_cast<PxsCachedTransform&>(*sTransform0);
+	PxsCachedTransform& transform1 = reinterpret_cast<PxsCachedTransform&>(*sTransform1);
+	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
+	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
+
+	if (threadIdx.x < 32)
+	{
+		PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+		PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+		PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+		PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+		__syncwarp();
+		readTriangleMesh(shape0, mesh0);
+		readTriangleMesh(shape1, mesh1);
+	}
+
+	__syncthreads();
+
+	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+	const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+		|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
+
+	if (doFirst)
+	{
+		doTriangleTriangleCollision<false, false, false>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+	else
+	{
+		doTriangleTriangleCollision<false, false, false>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionCreatePatchNoInlineDcuV6(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	const PxU32 pairIdx = blockIdx.x;
+
+	if (pairIdx >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+	const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
+	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
+	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sTransform1[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sMesh0[sizeof(PxgTriangleMesh)];
+	__shared__ __align__(16) char sMesh1[sizeof(PxgTriangleMesh)];
+	PxgShape& shape0 = reinterpret_cast<PxgShape&>(*sShape0);
+	PxgShape& shape1 = reinterpret_cast<PxgShape&>(*sShape1);
+	PxsCachedTransform& transform0 = reinterpret_cast<PxsCachedTransform&>(*sTransform0);
+	PxsCachedTransform& transform1 = reinterpret_cast<PxsCachedTransform&>(*sTransform1);
+	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
+	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
+
+	if (threadIdx.x < 32)
+	{
+		PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+		PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+		PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+		PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+		__syncwarp();
+		readTriangleMesh(shape0, mesh0);
+		readTriangleMesh(shape1, mesh1);
+	}
+
+	__syncthreads();
+
+	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+	const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+		|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
+
+	if (doFirst)
+	{
+		doTriangleTriangleCollision<true, false, false>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+	else
+	{
+		doTriangleTriangleCollision<true, false, false>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionContactPredicateDcuV7(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	const PxU32 pairIdx = blockIdx.x;
+
+	if (pairIdx >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+	const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
+	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
+	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sTransform1[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sMesh0[sizeof(PxgTriangleMesh)];
+	__shared__ __align__(16) char sMesh1[sizeof(PxgTriangleMesh)];
+	PxgShape& shape0 = reinterpret_cast<PxgShape&>(*sShape0);
+	PxgShape& shape1 = reinterpret_cast<PxgShape&>(*sShape1);
+	PxsCachedTransform& transform0 = reinterpret_cast<PxsCachedTransform&>(*sTransform0);
+	PxsCachedTransform& transform1 = reinterpret_cast<PxsCachedTransform&>(*sTransform1);
+	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
+	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
+
+	if (threadIdx.x < 32)
+	{
+		PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+		PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+		PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+		PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+		__syncwarp();
+		readTriangleMesh(shape0, mesh0);
+		readTriangleMesh(shape1, mesh1);
+	}
+
+	__syncthreads();
+
+	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+	const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+		|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
+
+	if (doFirst)
+	{
+		doTriangleTriangleCollision<false, true, false>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+	else
+	{
+		doTriangleTriangleCollision<false, true, false>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+}
+
+extern "C" __global__
+__launch_bounds__(1024, 1)
+void triangleTriangleCollisionNativeBlockCountDcuV8(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+{
+	const PxU32 pairIdx = blockIdx.x;
+
+	if (pairIdx >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, pairIdx);
+
+	const PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	const PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	const PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	const PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	__shared__ __align__(16) char sShape0[sizeof(PxgShape)];
+	__shared__ __align__(16) char sShape1[sizeof(PxgShape)];
+	__shared__ __align__(16) char sTransform0[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sTransform1[sizeof(PxsCachedTransform)];
+	__shared__ __align__(16) char sMesh0[sizeof(PxgTriangleMesh)];
+	__shared__ __align__(16) char sMesh1[sizeof(PxgTriangleMesh)];
+	PxgShape& shape0 = reinterpret_cast<PxgShape&>(*sShape0);
+	PxgShape& shape1 = reinterpret_cast<PxgShape&>(*sShape1);
+	PxsCachedTransform& transform0 = reinterpret_cast<PxsCachedTransform&>(*sTransform0);
+	PxsCachedTransform& transform1 = reinterpret_cast<PxsCachedTransform&>(*sTransform1);
+	PxgTriangleMesh& mesh0 = reinterpret_cast<PxgTriangleMesh&>(*sMesh0);
+	PxgTriangleMesh& mesh1 = reinterpret_cast<PxgTriangleMesh&>(*sMesh1);
+
+	if (threadIdx.x < 32)
+	{
+		PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+		PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+		PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+		PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+		__syncwarp();
+		readTriangleMesh(shape0, mesh0);
+		readTriangleMesh(shape1, mesh1);
+	}
+
+	__syncthreads();
+
+	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+	const bool doFirst = mesh0.mTexObject && (mesh1.mTexObject == NULL
+		|| ((!mesh0.sdfDims.w) && (mesh1.sdfDims.w))
+		|| ((mesh1.sdfDims.w == mesh0.sdfDims.w) && mesh1.numVerts < mesh0.numVerts));
+
+	if (doFirst)
+	{
+		doTriangleTriangleCollision<false, false, true>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+	else
+	{
+		doTriangleTriangleCollision<false, false, true>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+			cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
+			touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
+			patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
+	}
+}
+#endif
+
+#undef PX_TRIANGLE_TRIANGLE_COLLISION_ARGS
+#undef PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS
 
 
 #include "schlockShared.h"
@@ -1528,5 +2387,141 @@ void triangleTriangleOverlaps(PxU32 numWorkItems,
 		overlaps[globalWarpIndex] = (result != GjkResult::eDISTANT);
 	}
 }
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __global__
+__launch_bounds__(64, 1)
+void triangleTriangleOverlapsLaunchBounds64DcuV10(PxU32 numWorkItems,
+	const PxgContactManagerInput* PX_RESTRICT cmInputs,
+	const PxsCachedTransform* PX_RESTRICT transformCache,
+	const PxReal* PX_RESTRICT contactDistances,
+	const PxgShape* PX_RESTRICT gpuShapes,
+	PxsContactManagerOutput* PX_RESTRICT cmOutputs,
+	PxU8* overlaps
+)
+{
+	const PxU32 warpsPerBlock = NP_TRIMESH_WARPS_PER_BLOCK;
+
+	const PxU32 threadIndexInWarp = threadIdx.x;
+	const PxU32 warpIndex = threadIdx.y;
+
+	__shared__ __align__(16) char sSharedGjkOutput[sizeof(schlock::GjkOutput) * warpsPerBlock];
+	__shared__ __align__(16) char sSharedGjkCachedData[sizeof(schlock::GjkCachedData) * warpsPerBlock];
+	__shared__ __align__(16) char sSharedPoints[sizeof(PxVec3) * warpsPerBlock * 16];
+	schlock::GjkOutput* sharedGjkOutput = reinterpret_cast<schlock::GjkOutput*>(sSharedGjkOutput);
+	schlock::GjkCachedData* sharedGjkCachedData = reinterpret_cast<schlock::GjkCachedData*>(sSharedGjkCachedData);
+	PxVec3* sharedPoints = reinterpret_cast<PxVec3*>(sSharedPoints);
+
+	schlock::GjkOutput& s_WarpGjkOutput = sharedGjkOutput[warpIndex];
+	schlock::GjkCachedData& s_WarpGjkCachedData = sharedGjkCachedData[warpIndex];
+	PxVec3* s_WarpPoints = &sharedPoints[warpIndex*16];
+
+	const PxU32 globalWarpIndex = warpIndex + blockIdx.x * blockDim.y;
+
+	if (globalWarpIndex >= numWorkItems)
+		return;
+
+	PxgContactManagerInput npWorkItem;
+	PxgContactManagerInput_ReadWarp(npWorkItem, cmInputs, globalWarpIndex);
+
+	PxU32 transformCacheRef0 = npWorkItem.transformCacheRef0;
+	PxU32 transformCacheRef1 = npWorkItem.transformCacheRef1;
+	PxU32 shapeRef0 = npWorkItem.shapeRef0;
+	PxU32 shapeRef1 = npWorkItem.shapeRef1;
+
+	PxgShape shape0;
+	PxgShape shape1;
+	PxsCachedTransform transform0;
+	PxsCachedTransform transform1;
+	PxgTriangleMesh mesh0;
+	PxgTriangleMesh mesh1;
+
+	PxgShape_ReadWarp(shape0, gpuShapes + shapeRef0);
+	PxgShape_ReadWarp(shape1, gpuShapes + shapeRef1);
+	PxsCachedTransform_ReadWarp(transform0, transformCache + transformCacheRef0);
+	PxsCachedTransform_ReadWarp(transform1, transformCache + transformCacheRef1);
+	__syncwarp();
+	readTriangleMesh(shape0, mesh0);
+	readTriangleMesh(shape1, mesh1);
+
+	const PxReal contactDistance = contactDistances[transformCacheRef0] + contactDistances[transformCacheRef1];
+
+	const PxTransform aToB = transform1.transform.transformInv(transform0.transform);
+
+	PxVec3 min0 = mesh0.bv32PackedNodes[0].mMin[threadIndexInWarp].getXYZ();
+	PxVec3 max0 = mesh0.bv32PackedNodes[0].mMax[threadIndexInWarp].getXYZ();
+	PxU32 mask0 = (1 << mesh0.bv32PackedNodes[0].mNbNodes) - 1;
+
+	PxVec3 min1 = mesh1.bv32PackedNodes[0].mMin[threadIndexInWarp].getXYZ();
+	PxVec3 max1 = mesh1.bv32PackedNodes[0].mMax[threadIndexInWarp].getXYZ();
+	PxU32 mask1 = (1 << mesh1.bv32PackedNodes[0].mNbNodes) - 1;
+
+	minIndex(min0.x, mask0, min0.x);
+	minIndex(min0.y, mask0, min0.y);
+	minIndex(min0.z, mask0, min0.z);
+	maxIndex(max0.x, mask0, max0.x);
+	maxIndex(max0.y, mask0, max0.y);
+	maxIndex(max0.z, mask0, max0.z);
+
+	minIndex(min1.x, mask1, min1.x);
+	minIndex(min1.y, mask1, min1.y);
+	minIndex(min1.z, mask1, min1.z);
+	maxIndex(max1.x, mask1, max1.x);
+	maxIndex(max1.y, mask1, max1.y);
+	maxIndex(max1.z, mask1, max1.z);
+
+	if (threadIndexInWarp == 0)
+		s_WarpGjkCachedData.size = 0;
+
+	if (threadIndexInWarp < 8)
+	{
+		PxVec3 pos0;
+		pos0.x = (threadIndexInWarp & 1) ? min0.x : max0.x;
+		pos0.y = (threadIndexInWarp & 2) ? min0.y : max0.y;
+		pos0.z = (threadIndexInWarp & 4) ? min0.z : max0.z;
+
+		s_WarpPoints[threadIndexInWarp] = pos0;
+
+		PxVec3 pos1;
+		pos1.x = (threadIndexInWarp & 1) ? min1.x : max1.x;
+		pos1.y = (threadIndexInWarp & 2) ? min1.y : max1.y;
+		pos1.z = (threadIndexInWarp & 4) ? min1.z : max1.z;
+
+		s_WarpPoints[threadIndexInWarp + 8] = pos1;
+	}
+
+	__syncwarp();
+
+	if (threadIndexInWarp < 16)
+	{
+		const PxgShape& shape = threadIndexInWarp < 8 ? shape0 : shape1;
+
+		PxVec3 v = vertex2Shape(s_WarpPoints[threadIndexInWarp], shape.scale.scale, shape.scale.rotation);
+
+		if (threadIndexInWarp < 8)
+			v = aToB.transform(v);
+
+		s_WarpPoints[threadIndexInWarp] = v;
+	}
+
+	__syncwarp();
+
+	const PxReal convergenceRatio = 1 - 0.000225f;
+
+	const PxReal sqDist = aToB.p.dot(aToB.p);
+	PxVec3 initialDir = sqDist > 0.f ? aToB.p.getNormalized() : PxVec3(0.f, 1.f, 0.f);
+
+	GjkResult::Enum result = squawk::gjk(
+		s_WarpPoints, 8,
+		&s_WarpPoints[8], 8,
+		initialDir,
+		contactDistance,
+		convergenceRatio,
+		s_WarpGjkOutput, s_WarpGjkCachedData);
+
+	if (threadIndexInWarp == 0)
+		overlaps[globalWarpIndex] = (result != GjkResult::eDISTANT);
+}
+#endif
 
 #pragma nv_diagnostic pop

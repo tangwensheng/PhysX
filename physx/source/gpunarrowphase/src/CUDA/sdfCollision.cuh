@@ -411,7 +411,8 @@ static __device__ PxReal doTetrahedronSDFCollision(SparseSDFTexture& texture, co
 	return dist;
 }
 
-static __device__ PxReal doTriangleSDFCollision(SparseSDFTexture& texture, const PxVec3& v0, const PxVec3& v1, const PxVec3& v2,
+template<bool InlineDcuV1>
+static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionBody(SparseSDFTexture& texture, const PxVec3& v0, const PxVec3& v1, const PxVec3& v2,
 	PxVec3& point, PxVec3& dir, PxReal tolerance)
 {
 	const PxReal third = 1.f / 3.f;
@@ -504,6 +505,20 @@ static __device__ PxReal doTriangleSDFCollision(SparseSDFTexture& texture, const
 	dist = PxSdfSampleWithGrad(texture, p, sdfGradient, dir, tolerance);
 	return dist;
 }
+
+static __device__ PxReal doTriangleSDFCollision(SparseSDFTexture& texture, const PxVec3& v0, const PxVec3& v1, const PxVec3& v2,
+	PxVec3& point, PxVec3& dir, PxReal tolerance)
+{
+	return doTriangleSDFCollisionBody<false>(texture, v0, v1, v2, point, dir, tolerance);
+}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionInlineDcuV1(SparseSDFTexture& texture,
+	const PxVec3& v0, const PxVec3& v1, const PxVec3& v2, PxVec3& point, PxVec3& dir, PxReal tolerance)
+{
+	return doTriangleSDFCollisionBody<true>(texture, v0, v1, v2, point, dir, tolerance);
+}
+#endif
 
 //Returns the new number of elements in the buffer
 //T should be of type PxU32 or a multiple of it (uint2, uint2, uint4)

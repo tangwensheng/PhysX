@@ -44,6 +44,13 @@
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_RIGID_DELTA_O3_P37) && PX_DCU_VOLUME_RIGID_DELTA_O3_P37
+extern "C" __device__ __constant__ char gPxgDcuRigidDeltaO3P37Version[] = "PX_DCU_RIGID_DELTA_O3_P37_GFX936_DEVICE_V1";
+#endif
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_DELTA_ACCUM_O3_P43) && PX_DCU_RIGID_DELTA_ACCUM_O3_P43
+extern "C" __device__ __constant__ char gPxgDcuRigidDeltaAccumO3P43Version[] = "PX_DCU_RIGID_DELTA_ACCUM_O3_P43_GFX936_DEVICE_V1";
+#endif
+
 extern "C" __host__ void initSimulationControllerKernels2() {}
 
 /*
@@ -876,3 +883,4 @@ extern "C" __global__ void accumulateDeltaVRigidSecondLaunchMultiStage2(
 		}
 	}
 }
+

@@ -50,6 +50,8 @@
 #include "PxgKernelLauncher.h"
 #include "PxgCudaMemoryAllocator.h"
 
+#include <cstdlib>
+
 #define GPU_AABB_DEBUG 0
 #define USE_NEW_LAUNCH_FUNCTION 1
 
@@ -85,6 +87,14 @@ static PX_FORCE_INLINE PxgCudaBroadPhaseSap& getGPUBroadPhase(BroadPhase& bp)
 	PX_ASSERT(bp.getType()==PxBroadPhaseType::eGPU);
 	return static_cast<PxgCudaBroadPhaseSap&>(bp);
 }
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+static bool dcuBroadPhaseDiagnosticsEnabled()
+{
+	const char* value = std::getenv("PX_DCU_BROADPHASE_DIAG");
+	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
+}
+#endif
 
 static void initEnvEntry(PxInt32ArrayPinnedSafe& envIDs, BoundsIndex index, PxU32 envID, PxU32 boundsSize)
 {
@@ -882,58 +892,61 @@ void PxgAABBManager::processFoundPairs()
 		const BroadPhasePair* createdPairs = mBroadPhase.getCreatedPairs(nbCreatePairs);
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		const PxU32 volumeDataSize = mVolumeData.size();
-		const PxU32 diagnosticPairCount = PxMin(nbCreatePairs, 16u);
-		PxU32 invalidHandlePairs = 0;
-		PxU32 nullUserDataPairs = 0;
-		PxU32 selfPairs = 0;
-		PxU32 firstMalformedPair = PX_INVALID_U32;
-		for (PxU32 i = 0; i < nbCreatePairs; ++i)
+		if (dcuBroadPhaseDiagnosticsEnabled())
 		{
-			const BroadPhasePair& pair = createdPairs[i];
-			const bool validA = pair.mVolA < volumeDataSize;
-			const bool validB = pair.mVolB < volumeDataSize;
-			const bool invalidHandle = !validA || !validB;
-			const bool nullUserData = !invalidHandle &&
-				(!mVolumeData[pair.mVolA].getUserData() || !mVolumeData[pair.mVolB].getUserData());
-			const bool selfPair = pair.mVolA == pair.mVolB;
-			invalidHandlePairs += PxU32(invalidHandle);
-			nullUserDataPairs += PxU32(nullUserData);
-			selfPairs += PxU32(selfPair);
-			if (firstMalformedPair == PX_INVALID_U32 && (invalidHandle || nullUserData || selfPair))
-				firstMalformedPair = i;
-		}
-		PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-			"DCU GPU broadphase found-pair diagnostic: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
-			nbCreatePairs, volumeDataSize, diagnosticPairCount, invalidHandlePairs,
-			nullUserDataPairs, selfPairs, firstMalformedPair);
-		for (PxU32 i = 0; i < diagnosticPairCount; ++i)
-		{
-			const BroadPhasePair& pair = createdPairs[i];
-			const bool validA = pair.mVolA < volumeDataSize;
-			const bool validB = pair.mVolB < volumeDataSize;
-			void* userDataA = validA ? mVolumeData[pair.mVolA].getUserData() : NULL;
-			void* userDataB = validB ? mVolumeData[pair.mVolB].getUserData() : NULL;
-			const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
-			const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
+			const PxU32 volumeDataSize = mVolumeData.size();
+			const PxU32 diagnosticPairCount = PxMin(nbCreatePairs, 16u);
+			PxU32 invalidHandlePairs = 0;
+			PxU32 nullUserDataPairs = 0;
+			PxU32 selfPairs = 0;
+			PxU32 firstMalformedPair = PX_INVALID_U32;
+			for (PxU32 i = 0; i < nbCreatePairs; ++i)
+			{
+				const BroadPhasePair& pair = createdPairs[i];
+				const bool validA = pair.mVolA < volumeDataSize;
+				const bool validB = pair.mVolB < volumeDataSize;
+				const bool invalidHandle = !validA || !validB;
+				const bool nullUserData = !invalidHandle &&
+					(!mVolumeData[pair.mVolA].getUserData() || !mVolumeData[pair.mVolB].getUserData());
+				const bool selfPair = pair.mVolA == pair.mVolB;
+				invalidHandlePairs += PxU32(invalidHandle);
+				nullUserDataPairs += PxU32(nullUserData);
+				selfPairs += PxU32(selfPair);
+				if (firstMalformedPair == PX_INVALID_U32 && (invalidHandle || nullUserData || selfPair))
+					firstMalformedPair = i;
+			}
 			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"DCU GPU broadphase found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
-				i, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
-				pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
-		}
-		if (firstMalformedPair >= diagnosticPairCount && firstMalformedPair != PX_INVALID_U32)
-		{
-			const BroadPhasePair& pair = createdPairs[firstMalformedPair];
-			const bool validA = pair.mVolA < volumeDataSize;
-			const bool validB = pair.mVolB < volumeDataSize;
-			void* userDataA = validA ? mVolumeData[pair.mVolA].getUserData() : NULL;
-			void* userDataB = validB ? mVolumeData[pair.mVolB].getUserData() : NULL;
-			const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
-			const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
-			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"DCU GPU broadphase first malformed found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
-				firstMalformedPair, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
-				pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
+				"DCU GPU broadphase found-pair diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN]: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
+				nbCreatePairs, volumeDataSize, diagnosticPairCount, invalidHandlePairs,
+				nullUserDataPairs, selfPairs, firstMalformedPair);
+			for (PxU32 i = 0; i < diagnosticPairCount; ++i)
+			{
+				const BroadPhasePair& pair = createdPairs[i];
+				const bool validA = pair.mVolA < volumeDataSize;
+				const bool validB = pair.mVolB < volumeDataSize;
+				void* userDataA = validA ? mVolumeData[pair.mVolA].getUserData() : NULL;
+				void* userDataB = validB ? mVolumeData[pair.mVolB].getUserData() : NULL;
+				const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
+				const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
+				PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
+					"DCU GPU broadphase found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
+					i, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
+					pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
+			}
+			if (firstMalformedPair >= diagnosticPairCount && firstMalformedPair != PX_INVALID_U32)
+			{
+				const BroadPhasePair& pair = createdPairs[firstMalformedPair];
+				const bool validA = pair.mVolA < volumeDataSize;
+				const bool validB = pair.mVolB < volumeDataSize;
+				void* userDataA = validA ? mVolumeData[pair.mVolA].getUserData() : NULL;
+				void* userDataB = validB ? mVolumeData[pair.mVolB].getUserData() : NULL;
+				const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
+				const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
+				PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
+					"DCU GPU broadphase first malformed found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
+					firstMalformedPair, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
+					pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
+			}
 		}
 #endif
 

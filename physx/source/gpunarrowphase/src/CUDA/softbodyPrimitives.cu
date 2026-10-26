@@ -74,6 +74,10 @@ using namespace schlock;
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39) && PX_DCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyPrimitivesO3P39Version[] = "PX_DCU_SOFTBODY_PRIMITIVES_O3_P39_GFX936_DEVICE_V1";
+#endif
+
 extern "C" __host__ void initNarrowphaseKernels14() {}
 
 struct sbTetDataScratch
@@ -2620,6 +2624,5 @@ void sb_clothVertContactGenLaunch(
 		atomicMax(stackSizeNeededOnDevice, numMidphasePairsFound * sizeof(uint4));
 	}
 }
-
 
 

@@ -69,6 +69,19 @@
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyPreIntegrateVersion[] = "PX_DCU_SOFTBODY_PREINTEGRATE_V1_256_THREADS";
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyFinalizeVelocitiesVersion[] = "PX_DCU_SOFTBODY_FINALIZE_VELOCITIES_V5_256_THREADS";
+extern "C" __device__ __constant__ char gPxgDcuSoftBodySleepingVersion[] = "PX_DCU_SOFTBODY_SLEEPING_V6_256_THREADS";
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyHexGsVersion[] = "PX_DCU_SOFTBODY_HEX_GS_V5_SINGLE_BLOCK_GRID_STRIDE";
+#if defined(PX_DCU_VOLUME_O3_P33) && PX_DCU_VOLUME_O3_P33
+extern "C" __device__ __constant__ char gPxgDcuVolumeO3P33Version[] = "PX_DCU_SOFTBODY_GM_O3_P33_GFX936_DEVICE_V1";
+#endif
+#if defined(PX_DCU_VOLUME_SOFTBODY_GM_O2_P40) && PX_DCU_VOLUME_SOFTBODY_GM_O2_P40
+extern "C" __device__ __constant__ char gPxgDcuVolumeO2P40Version[] = "PX_DCU_SOFTBODY_GM_O2_P40_GFX936_DEVICE_V1";
+#endif
+#endif
+
 extern "C" __host__ void initSoftBodyKernels1() {}
 
 
@@ -214,6 +227,15 @@ extern "C" __global__ void sb_gm_preIntegrateLaunch(
 
 	if (softbody.mBodyFlags & PxDeformableBodyFlag::eENABLE_SPECULATIVE_CCD)
 	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// The DCU launch uses 8 logical warps. Clear all 32 inputs consumed by
+		// the second-level reduction before the active warps publish their maxima.
+		if (warpIndex == 0)
+			maxMagnitudeVelSq[threadIdxInWarp] = 0.f;
+
+		__syncthreads();
+#endif
+
 		maxMagnitudeVelSq[warpIndex] = warpReduction<MaxOpFloat, PxReal>(FULL_MASK, maxMagVelSq);
 
 		__syncthreads();
@@ -1314,13 +1336,18 @@ PX_FORCE_INLINE __device__ void sb_gm_cp_solveHexahedronsPartition(PxgSoftBody& 
 }
 
 // following the structure of "sb_gm_cp_solveHexahedronsPartition"
-template <bool updatePosVel>
+template <bool updatePosVel, PxU32 fixedTetsPerElement = 0, bool omitDcuPerElementSync = false, bool flatFiveTetDcuP31 = false>
 PX_FORCE_INLINE __device__ void sb_gm_cp_solveHexahedronsPartition_parallelGS(PxgSoftBody& shSoftbody, const PxU32 workIndex,
 	const PxU32 nbTets, const PxReal invDt, bool isTGS, const bool isFirstIteration, PxsDeformableVolumeMaterialData* materials,
-	PxU32 numTetsPerElement)
+	PxU32 numTetsPerElement
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	, const PxU32 dcuDiagStage
+#endif
+	)
 {
 	const PxReal invDtSq = invDt * invDt;
-	const PxU32 nbElements = nbTets / numTetsPerElement;
+	const PxU32 tetsPerElement = fixedTetsPerElement ? fixedTetsPerElement : numTetsPerElement;
+	const PxU32 nbElements = nbTets / tetsPerElement;
 
 	float4* PX_RESTRICT unorderedPositions = shSoftbody.mSimPosition_InvMass;
 	float4* PX_RESTRICT unorderedVelocities = shSoftbody.mSimVelocity_InvMass;
@@ -1341,6 +1368,23 @@ PX_FORCE_INLINE __device__ void sb_gm_cp_solveHexahedronsPartition_parallelGS(Px
 	bool flipped = (pullInd[0].x & FLIPPED_MASK) != 0;
 	pullInd[0].x &= PULL_IND_MASK;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if(dcuDiagStage == 1)
+		return;
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (!omitDcuPerElementSync)
+		__syncwarp();
+
+#pragma unroll
+	for(PxU32 i = 0; i < 8; ++i)
+		p[i] = unorderedPositions[pullIndPtr[i]];
+
+#pragma unroll
+	for(PxU32 i = 0; i < 8; ++i)
+		v[i] = unorderedVelocities[pullIndPtr[i]];
+#else
 	float4* PX_RESTRICT pPtr[8];
 	float4* PX_RESTRICT vPtr[8];
 
@@ -1360,24 +1404,76 @@ PX_FORCE_INLINE __device__ void sb_gm_cp_solveHexahedronsPartition_parallelGS(Px
 #pragma unroll
 	for(PxU32 i = 0; i < 8; ++i)
 		v[i] = *vPtr[i];
+#endif
 
-	PxU32 offset = 0;
-	if(numTetsPerElement == 5 && flipped)
-		offset = 20;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if(dcuDiagStage == 2)
+		return;
+#endif
 
-	const PxU32* ptr = numTetsPerElement == 5 ? tets5PerVoxel : tets6PerVoxel;
-
-	for(PxU32 i = 0; i < numTetsPerElement; ++i)
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if (flatFiveTetDcuP31 && fixedTetsPerElement == 5)
 	{
-		const PxU32 a = ptr[4 * i + 0 + offset];
-		const PxU32 b = ptr[4 * i + 1 + offset];
-		const PxU32 c = ptr[4 * i + 2 + offset];
-		const PxU32 d = ptr[4 * i + 3 + offset];
-		sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * i, p[a], p[b], p[c], p[d], v[a], v[b], v[c],
-		                             v[d], invDtSq, invDt, isTGS, isFirstIteration, material);
+		// Literal indices let the compiler scalarize p/v; preserve tets5PerVoxel order.
+		if (!flipped)
+		{
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex, p[0], p[6], p[3], p[5], v[0], v[6], v[3], v[5], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 3) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements, p[0], p[1], p[5], p[3], v[0], v[1], v[5], v[3], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 4) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 2, p[6], p[7], p[3], p[5], v[6], v[7], v[3], v[5], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 5) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 3, p[4], p[5], p[6], p[0], v[4], v[5], v[6], v[0], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 6) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 4, p[2], p[3], p[0], p[6], v[2], v[3], v[0], v[6], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 7) return;
+		}
+		else
+		{
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex, p[1], p[7], p[4], p[2], v[1], v[7], v[4], v[2], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 3) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements, p[1], p[0], p[2], p[4], v[1], v[0], v[2], v[4], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 4) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 2, p[7], p[6], p[4], p[2], v[7], v[6], v[4], v[2], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 5) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 3, p[5], p[4], p[1], p[7], v[5], v[4], v[1], v[7], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 6) return;
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * 4, p[3], p[2], p[7], p[1], v[3], v[2], v[7], v[1], invDtSq, invDt, isTGS, isFirstIteration, material);
+			if (dcuDiagStage == 7) return;
+		}
+	}
+	else
+#endif
+	{
+		PxU32 offset = 0;
+		if(tetsPerElement == 5 && flipped)
+			offset = 20;
+
+		const PxU32* ptr = tetsPerElement == 5 ? tets5PerVoxel : tets6PerVoxel;
+
+		for(PxU32 i = 0; i < tetsPerElement; ++i)
+		{
+			const PxU32 a = ptr[4 * i + 0 + offset];
+			const PxU32 b = ptr[4 * i + 1 + offset];
+			const PxU32 c = ptr[4 * i + 2 + offset];
+			const PxU32 d = ptr[4 * i + 3 + offset];
+			sb_gm_cp_solveSubTetrahedron(shSoftbody, workIndex + nbElements * i, p[a], p[b], p[c], p[d], v[a], v[b], v[c],
+			                             v[d], invDtSq, invDt, isTGS, isFirstIteration, material);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if(i < 5 && dcuDiagStage == i + 3)
+				return;
+#endif
+		}
 	}
 
-	__syncwarp();
+	if (!omitDcuPerElementSync)
+		__syncwarp();
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if(dcuDiagStage == 8)
+		return;
+#endif
 
 	if (updatePosVel) // GS-style update - update position and velocity in place
 	{
@@ -1404,6 +1500,11 @@ PX_FORCE_INLINE __device__ void sb_gm_cp_solveHexahedronsPartition_parallelGS(Px
 			AtomicAdd(shSoftbody.mSimDelta[index], delta, 1.f); // 4th value (1.f) is unused.
 		}
 	}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	if(dcuDiagStage == 9)
+		return;
+#endif
 }
 
 //multiple blocks per soft body(NUM_BLOCK_PER_SOFTBODY_SOLVE_TETRA), each block has 256 threads
@@ -1417,7 +1518,11 @@ void sb_gm_cp_solveTetrahedronsPartitionLaunch(
 	const PxU32 partitionId,
 	bool isTGS,
 	bool isFirstIteration,
-	PxsDeformableVolumeMaterialData* materials)
+	PxsDeformableVolumeMaterialData* materials
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	, const PxU32 dcuDiagStage
+#endif
+	)
 {
 	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
 
@@ -1433,8 +1538,6 @@ void sb_gm_cp_solveTetrahedronsPartitionLaunch(
 	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC)
 		return;
 
-	const PxU32 groupThreadIdx = threadIdx.x + blockIdx.x * blockDim.x;
-
 	const PxU32 nbTets = shSoftbody.mNumTetsGM;
 	const PxU32 numPartitions = shSoftbody.mNumPartitionsGM;
 
@@ -1443,9 +1546,13 @@ void sb_gm_cp_solveTetrahedronsPartitionLaunch(
 		const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
 		const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];		
 
-		const PxU32 workIndex = startInd + groupThreadIdx;
-
+		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// One DCU block owns the partition; cooking guarantees its elements have disjoint vertices.
+		for(PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
+		#else
+		const PxU32 workIndex = startInd + threadIdx.x + blockIdx.x * blockDim.x;
 		if(workIndex < endInd)
+		#endif
 		{
 			if(shSoftbody.mNumTetsPerElement == 1)
 			{
@@ -1457,11 +1564,161 @@ void sb_gm_cp_solveTetrahedronsPartitionLaunch(
 
 				sb_gm_cp_solveHexahedronsPartition_parallelGS<true>(shSoftbody, workIndex, nbTets, invDt, isTGS,
 				                                                    isFirstIteration, materials,
-				                                                    shSoftbody.mNumTetsPerElement);
+				                                                    shSoftbody.mNumTetsPerElement
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				                                                    , dcuDiagStage
+#endif
+				                                                    );
 			}
 		}
 	}
 }
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyFiveTetProbeVersion[] = "PX_DCU_SOFTBODY_FIVE_TET_P3_V1_COMPILE_ONLY";
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyTwoBlockVersion[] = "PX_DCU_SOFTBODY_TWO_BLOCK_P12_V1";
+
+// Five-tet specialization; selected only by an explicit gfx936 host opt-in.
+extern "C" __global__
+__launch_bounds__(PxgSoftBodyKernelBlockDim::SB_SOLVETETRA_LOW, 1)
+void sb_gm_cp_solveTetrahedronsPartitionFiveTetDcuP3(
+	PxgSoftBody* gSoftbodies, const PxU32* activeSoftbodies, const PxU32 numActiveSoftbodies,
+	const PxReal invDt, const PxU32 partitionId, bool isTGS, bool isFirstIteration,
+	PxsDeformableVolumeMaterialData* materials, const PxU32 dcuDiagStage)
+{
+	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
+	const PxU32 softbodyId = activeSoftbodies[blockIdx.y];
+	PxgSoftBody& softbody = gSoftbodies[softbodyId];
+	blockCopy<float>(reinterpret_cast<float*>(&tSoftbody), reinterpret_cast<float*>(&softbody), sizeof(PxgSoftBody));
+	__syncthreads();
+	PxgSoftBody& shSoftbody = reinterpret_cast<PxgSoftBody&>(*tSoftbody);
+	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC ||
+		shSoftbody.mNumTetsPerElement != 5 || partitionId >= shSoftbody.mNumPartitionsGM)
+		return;
+	const PxU32 nbTets = shSoftbody.mNumTetsGM;
+	if (nbTets == 0)
+		return;
+	const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
+	const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];
+	// The cooked GS partition has disjoint vertices; each block owns a disjoint element subset.
+	for (PxU32 workIndex = startInd + threadIdx.x + blockIdx.x * blockDim.x;
+		workIndex < endInd; workIndex += blockDim.x * gridDim.x)
+		sb_gm_cp_solveHexahedronsPartition_parallelGS<true, 5>(shSoftbody, workIndex, nbTets,
+			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
+}
+
+// Single-block 64-thread five-tet entry; selected only by the gfx936 P18 host opt-in.
+extern "C" __device__ __constant__ char gPxgDcuSoftBodySixtyFourProbeVersion[] = "PX_DCU_SOFTBODY_P17_64_THREAD_OFFLINE_V1";
+extern "C" __global__
+__launch_bounds__(64, 1)
+void sb_gm_cp_solveTetrahedronsPartitionFiveTet64DcuP17(
+	PxgSoftBody* gSoftbodies, const PxU32* activeSoftbodies, const PxU32 numActiveSoftbodies,
+	const PxReal invDt, const PxU32 partitionId, bool isTGS, bool isFirstIteration,
+	PxsDeformableVolumeMaterialData* materials, const PxU32 dcuDiagStage)
+{
+	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
+	const PxU32 softbodyId = activeSoftbodies[blockIdx.y];
+	PxgSoftBody& softbody = gSoftbodies[softbodyId];
+	blockCopy<float>(reinterpret_cast<float*>(&tSoftbody), reinterpret_cast<float*>(&softbody), sizeof(PxgSoftBody));
+	__syncthreads();
+	PxgSoftBody& shSoftbody = reinterpret_cast<PxgSoftBody&>(*tSoftbody);
+	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC ||
+		shSoftbody.mNumTetsPerElement != 5 || partitionId >= shSoftbody.mNumPartitionsGM)
+		return;
+	const PxU32 nbTets = shSoftbody.mNumTetsGM;
+	if (nbTets == 0)
+		return;
+	const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
+	const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];
+	for (PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
+		sb_gm_cp_solveHexahedronsPartition_parallelGS<true, 5>(shSoftbody, workIndex, nbTets,
+			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
+}
+
+// P23 candidate: keep the P18 mapping and math, but copy the shared softbody with uint2 lanes.
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyCopy2P23Version[] = "PX_DCU_SOFTBODY_64_COPY2_P23_GFX936_SELECTED";
+extern "C" __global__
+__launch_bounds__(64, 1)
+void sb_gm_cp_solveTetrahedronsPartitionFiveTet64Copy2DcuP23(
+	PxgSoftBody* gSoftbodies, const PxU32* activeSoftbodies, const PxU32 numActiveSoftbodies,
+	const PxReal invDt, const PxU32 partitionId, bool isTGS, bool isFirstIteration,
+	PxsDeformableVolumeMaterialData* materials, const PxU32 dcuDiagStage)
+{
+	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
+	const PxU32 softbodyId = activeSoftbodies[blockIdx.y];
+	PxgSoftBody& softbody = gSoftbodies[softbodyId];
+	blockCopy<uint2>(reinterpret_cast<uint2*>(&tSoftbody), reinterpret_cast<const uint2*>(&softbody), sizeof(PxgSoftBody));
+	__syncthreads();
+	PxgSoftBody& shSoftbody = reinterpret_cast<PxgSoftBody&>(*tSoftbody);
+	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC ||
+		shSoftbody.mNumTetsPerElement != 5 || partitionId >= shSoftbody.mNumPartitionsGM)
+		return;
+	const PxU32 nbTets = shSoftbody.mNumTetsGM;
+	if (nbTets == 0)
+		return;
+	const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
+	const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];
+	for (PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
+		sb_gm_cp_solveHexahedronsPartition_parallelGS<true, 5>(shSoftbody, workIndex, nbTets,
+			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
+}
+
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyFlatFiveTetP31Version[] = "PX_DCU_SOFTBODY_64_FLAT_FIVE_TET_P31_GFX936_DEVICE_V1";
+extern "C" __global__
+__launch_bounds__(64, 1)
+void sb_gm_cp_solveTetrahedronsPartitionFiveTet64FlatDcuP31(
+	PxgSoftBody* gSoftbodies, const PxU32* activeSoftbodies, const PxU32 numActiveSoftbodies,
+	const PxReal invDt, const PxU32 partitionId, bool isTGS, bool isFirstIteration,
+	PxsDeformableVolumeMaterialData* materials, const PxU32 dcuDiagStage)
+{
+	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
+	const PxU32 softbodyId = activeSoftbodies[blockIdx.y];
+	PxgSoftBody& softbody = gSoftbodies[softbodyId];
+	blockCopy<float>(reinterpret_cast<float*>(&tSoftbody), reinterpret_cast<float*>(&softbody), sizeof(PxgSoftBody));
+	__syncthreads();
+	PxgSoftBody& shSoftbody = reinterpret_cast<PxgSoftBody&>(*tSoftbody);
+	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC ||
+		shSoftbody.mNumTetsPerElement != 5 || partitionId >= shSoftbody.mNumPartitionsGM)
+		return;
+	const PxU32 nbTets = shSoftbody.mNumTetsGM;
+	if (nbTets == 0)
+		return;
+	const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
+	const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];
+	for (PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
+		sb_gm_cp_solveHexahedronsPartition_parallelGS<true, 5, false, true>(shSoftbody, workIndex, nbTets,
+			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
+}
+
+// P27 candidate: the 64-thread DCU mapping has no per-element cross-thread dependency.
+// Keep the P18 body and float shared copy, but omit only its per-element warp barriers.
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyNoPerElementSyncP27Version[] = "PX_DCU_SOFTBODY_64_NO_PER_ELEMENT_SYNC_P27_GFX936_SELECTED";
+extern "C" __global__
+__launch_bounds__(64, 1)
+void sb_gm_cp_solveTetrahedronsPartitionFiveTet64NoPerElementSyncDcuP27(
+	PxgSoftBody* gSoftbodies, const PxU32* activeSoftbodies, const PxU32 numActiveSoftbodies,
+	const PxReal invDt, const PxU32 partitionId, bool isTGS, bool isFirstIteration,
+	PxsDeformableVolumeMaterialData* materials, const PxU32 dcuDiagStage)
+{
+	__shared__ __align__(16) char tSoftbody[sizeof(PxgSoftBody)];
+	const PxU32 softbodyId = activeSoftbodies[blockIdx.y];
+	PxgSoftBody& softbody = gSoftbodies[softbodyId];
+	blockCopy<float>(reinterpret_cast<float*>(&tSoftbody), reinterpret_cast<float*>(&softbody), sizeof(PxgSoftBody));
+	__syncthreads();
+	PxgSoftBody& shSoftbody = reinterpret_cast<PxgSoftBody&>(*tSoftbody);
+	if (shSoftbody.mBodyFlags & PxDeformableBodyFlag::eKINEMATIC ||
+		shSoftbody.mNumTetsPerElement != 5 || partitionId >= shSoftbody.mNumPartitionsGM)
+		return;
+	const PxU32 nbTets = shSoftbody.mNumTetsGM;
+	if (nbTets == 0)
+		return;
+	const PxU32 startInd = partitionId > 0 ? shSoftbody.mSimAccumulatedPartitionsCP[partitionId - 1] : 0;
+	const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];
+	for (PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
+		sb_gm_cp_solveHexahedronsPartition_parallelGS<true, 5, true>(shSoftbody, workIndex, nbTets,
+			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
+}
+#endif
 
 //multiple blocks per soft body(NUM_BLOCK_PER_SOFTBODY_SOLVE_TETRA), each block has 256 threads
 extern "C" __global__
@@ -1505,7 +1762,11 @@ void sb_gm_cp_solveTetrahedronsJacobiPartitionLaunch(
 		// If we want to try a purely Jacobi-style update, we need to pass in "isFirstIteration" as a parameter, or
 		// always pass "true".
 		sb_gm_cp_solveHexahedronsPartition_parallelGS<false>(shSoftbody, workIndex, nbTets, invDt, isTGS, false,
-		                                                     materials, shSoftbody.mNumTetsPerElement);
+		                                                     materials, shSoftbody.mNumTetsPerElement
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		                                                     , 0
+#endif
+		                                                     );
 	}
 }
 
@@ -3210,7 +3471,8 @@ extern "C" __global__ void sb_gm_finalizeVelocitiesLaunch(
 
 	if (threadIdx.x < 32)
 	{
-		awake = isAwake[threadIdx.x];
+		const PxU32 numWarpsPerBlock = blockDim.x / 32;
+		awake = threadIdx.x < numWarpsPerBlock ? isAwake[threadIdx.x] : false;
 		awake = __any_sync(FULL_MASK, awake);
 
 		if (awake)
@@ -3233,25 +3495,26 @@ extern "C" __global__ void sb_sleeping(
 	__shared__ PxU32 shMasks[NumWarps];
 	const PxU32 globalThreadIdx = threadIdx.x + blockIdx.x * blockDim.x;
 
-	if (globalThreadIdx >= numActiveSoftBodies)
-		return;
+	bool stateChanged = false;
+	if (globalThreadIdx < numActiveSoftBodies)
+	{
+		const PxU32 id = activeId[globalThreadIdx];
+		PxgSoftBody& softBody = softBodies[id];
 
-	const PxU32 id = activeId[globalThreadIdx];
-	PxgSoftBody& softBody = softBodies[id];
+		const bool reset = softBody.mAwake;
+		PxReal counter = wakeCounters[id];
+		const bool wasActive = counter > 0.f;
 
-	bool reset = softBody.mAwake;
+		if (reset)
+			counter = resetCounter;
+		else
+			counter = PxMax(0.f, counter - dt);
 
-	PxReal counter = wakeCounters[id];
-	bool wasActive = counter > 0.f;
+		stateChanged = (counter > 0.f) ^ wasActive;
+		wakeCounters[id] = counter;
+	}
 
-	if (reset)
-		counter = resetCounter;
-	else
-		counter = PxMax(0.f, counter - dt);
-
-	bool isActive = counter > 0.f;
-
-	PxU32 mask = __ballot_sync(FULL_MASK, isActive^wasActive);
+	const PxU32 mask = __ballot_sync(FULL_MASK, stateChanged);
 
 	/*if (isActive^wasActive)
 	{
@@ -3261,16 +3524,16 @@ extern "C" __global__ void sb_sleeping(
 			printf("%i: numActive = %i, Soft body %i ready for sleep\n", globalThreadIdx, numActiveSoftBodies, id);
 	}*/
 
-	wakeCounters[id] = counter;
 	if ((threadIdx.x & 31) == 0)
 		shMasks[threadIdx.x / 32] = mask;
 
 	__syncthreads();
 
 	const PxU32 startIdx = (blockIdx.x*blockDim.x) / 32;
-	if (threadIdx.x < NumWarps && (startIdx+threadIdx.x) < ((numActiveSoftBodies+31)/32))
+	const PxU32 numWarpsPerBlock = blockDim.x / 32;
+	const PxU32 numStateWords = (numActiveSoftBodies + 31) / 32;
+	if (threadIdx.x < numWarpsPerBlock && startIdx + threadIdx.x < numStateWords)
 		stateChangedMask[startIdx + threadIdx.x] = shMasks[threadIdx.x];
 
 
 }
-

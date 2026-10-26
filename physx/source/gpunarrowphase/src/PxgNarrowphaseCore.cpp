@@ -97,6 +97,7 @@
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 // Support for the DCU device-drop probe defined below.
 #include "foundation/PxThread.h"
+#include <atomic>
 #include <chrono>
 #include <cstdlib>
 #include <cstdio>
@@ -111,6 +112,100 @@ using namespace physx;
 using namespace Gu;
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
+// Both histogram passes must use the same width because the second pass
+// reconstructs offsets from the first pass's per-block aggregates.
+static const PxU32 gDcuParticlePrimitiveBoundBlockSize = 256;
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+namespace
+{
+	bool dcuPbdContactDiagEnabled()
+	{
+		const char* value = std::getenv("PX_DCU_PBD_CONTACT_DIAG");
+		return value && std::strcmp(value, "1") == 0;
+	}
+
+	bool dcuPbdContactDiagOnceEnabled()
+	{
+		const char* value = std::getenv("PX_DCU_PBD_CONTACT_DIAG_ONCE");
+		return value && std::strcmp(value, "1") == 0;
+	}
+
+	bool dcuPbdPrimitivePipelineDiagEnabled()
+	{
+		const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG");
+		return value && std::strcmp(value, "1") == 0;
+	}
+
+	void dcuPbdPrimitivePipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream,
+		const char* phase, CUdeviceptr deviceCount, PxU32 hostValue)
+	{
+		if (!dcuPbdPrimitivePipelineDiagEnabled())
+			return;
+
+		static std::atomic<unsigned long long> sequence(0);
+		const unsigned long long checkpoint = sequence.fetch_add(1, std::memory_order_relaxed) + 1;
+		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
+		PxU32 count = 0;
+		PxCUresult copyResult = CUDA_SUCCESS;
+		if (syncResult == CUDA_SUCCESS && deviceCount)
+			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
+
+		std::printf("[DCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=narrowphase seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
+		std::fflush(stdout);
+	}
+
+	void dcuPbdPrintPairCount(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr pairCount,
+		const char* phase, bool& printed)
+	{
+		if (!dcuPbdContactDiagEnabled() || (dcuPbdContactDiagOnceEnabled() && printed))
+			return;
+
+		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
+		PxU32 count = 0;
+		PxCUresult copyResult = syncResult == CUDA_SUCCESS
+			? cudaContext->memcpyDtoH(&count, pairCount, sizeof(PxU32)) : syncResult;
+		std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=%s sync=%d copy=%d pairs=%u\n",
+			phase, int(syncResult), int(copyResult), count);
+		std::fflush(stdout);
+		printed = true;
+	}
+
+	void dcuPbdPrintCollisionContact(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr contactCount,
+		CUdeviceptr contacts, bool& printed)
+	{
+		if (!dcuPbdContactDiagEnabled() || (dcuPbdContactDiagOnceEnabled() && printed))
+			return;
+
+		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
+		PxU32 count = 0;
+		PxgParticlePrimitiveContact firstContact = {};
+		PxCUresult copyResult = syncResult == CUDA_SUCCESS
+			? cudaContext->memcpyDtoH(&count, contactCount, sizeof(PxU32)) : syncResult;
+		if (copyResult == CUDA_SUCCESS && count > 0)
+			copyResult = cudaContext->memcpyDtoH(&firstContact, contacts, sizeof(firstContact));
+
+		if (count > 0 && copyResult == CUDA_SUCCESS)
+		{
+			std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u firstParticle=%llu firstRigid=%llu normal=(%.9g,%.9g,%.9g) pen=%.9g\n",
+				int(syncResult), int(copyResult), count,
+				static_cast<unsigned long long>(firstContact.particleId),
+				static_cast<unsigned long long>(firstContact.rigidId),
+				firstContact.normal_pen.x, firstContact.normal_pen.y, firstContact.normal_pen.z,
+				firstContact.normal_pen.w);
+		}
+		else
+		{
+			std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u\n",
+				int(syncResult), int(copyResult), count);
+		}
+		std::fflush(stdout);
+		printed = true;
+	}
+}
+
 // ---------------------------------------------------------------------------
 // DCU device-drop probe.
 //
@@ -903,6 +998,324 @@ namespace
 				patchBytesLimit, contactBytesLimit, forceBytesLimit);
 		}
 	}
+
+	bool dcuTriTriOverlapDiagArmed(PxU32 call)
+	{
+		const char* enabled = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG");
+		if (!enabled || std::strcmp(enabled, "1") != 0)
+			return false;
+
+		const char* callEnv = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG_CALL");
+		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 0u;
+		return targetCall == 0u || targetCall == call;
+	}
+
+	bool dcuTriTriOverlapSyncBatchArmed(PxU32 call)
+	{
+		const char* enabled = std::getenv("PX_DCU_TRITRI_OVERLAP_SYNC_BATCH");
+		if (!enabled || std::strcmp(enabled, "1") != 0)
+			return false;
+
+		const char* callEnv = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG_CALL");
+		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 0u;
+		return targetCall == 0u || targetCall == call;
+	}
+
+	bool dcuTriTriOverlapPack2Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK2");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTrimeshPlaneBatch2Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH2");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriOverlapPack4Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK4");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriOverlapLaunchBounds64Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionSdfInlineEnabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_SDF_INLINE");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionInverseCacheEnabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_INVERSE_CACHE");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionPack2Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_PACK2");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionOccupancy2Enabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_OCCUPANCY2");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionCreatePatchNoInlineEnabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_CREATE_PATCH_NOINLINE");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionContactPredicateEnabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_CONTACT_PREDICATE");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	bool dcuTriTriCollisionNativeBlockCountEnabled()
+	{
+		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_NATIVE_BLOCK_COUNT");
+		return enabled && std::strcmp(enabled, "1") == 0;
+	}
+
+	PX_NOINLINE bool dcuValidateTriTriOverlapInputs(
+		PxCudaContext* cudaContext,
+		CUstream stream,
+		PxU32 call,
+		PxU32 numTests,
+		CUdeviceptr cmInputsDevice,
+		CUdeviceptr shapesDevice,
+		PxU64 shapeCapacity,
+		CUdeviceptr transformsDevice,
+		PxU64 transformCapacity,
+		CUdeviceptr contactDistancesDevice,
+		PxU64 contactDistanceCapacity)
+	{
+		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
+		if (syncResult != CUDA_SUCCESS)
+		{
+			std::fprintf(stderr,
+				"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=pre_sync sync=%d verdict=UPSTREAM_FAILED\n",
+				call, numTests, int(syncResult));
+			std::fflush(stderr);
+			return false;
+		}
+
+		PxArray<PxgContactManagerInput> inputs(numTests);
+		PxCUresult copyResult = CUDA_SUCCESS;
+		if (numTests)
+			copyResult = cudaContext->memcpyDtoH(inputs.begin(), cmInputsDevice,
+				size_t(numTests) * sizeof(PxgContactManagerInput));
+		if (copyResult != CUDA_SUCCESS)
+		{
+			std::fprintf(stderr,
+				"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=cm_copy copy=%d verdict=COPY_FAILED\n",
+				call, numTests, int(copyResult));
+			std::fflush(stderr);
+			return false;
+		}
+
+		PxU32 errors = 0;
+		PxU32 copyFailures = 0;
+		PxU32 meshHeaders = 0;
+		PxU32 packedNodes = 0;
+		PxArray<size_t> checkedMeshPointers;
+
+		for (PxU32 testIndex = 0; testIndex < numTests; ++testIndex)
+		{
+			const PxgContactManagerInput& input = inputs[testIndex];
+			const PxU32 shapeRefs[2] = { input.shapeRef0, input.shapeRef1 };
+			const PxU32 transformRefs[2] = { input.transformCacheRef0, input.transformCacheRef1 };
+
+			for (PxU32 side = 0; side < 2u; ++side)
+			{
+				const PxU32 shapeRef = shapeRefs[side];
+				if (PxU64(shapeRef) >= shapeCapacity)
+				{
+					if (errors < 16u)
+						std::fprintf(stderr,
+							"[DCU TRITRI OVERLAP DIAG] error=shape_ref test=%u side=%u ref=%u capacity=%llu\n",
+							testIndex, side, shapeRef, static_cast<unsigned long long>(shapeCapacity));
+					++errors;
+				}
+				else
+				{
+					PxgShape shape;
+					const CUdeviceptr shapeAddress = shapesDevice + PxU64(shapeRef) * sizeof(PxgShape);
+					const PxCUresult shapeCopy = cudaContext->memcpyDtoH(&shape, shapeAddress, sizeof(shape));
+					if (shapeCopy != CUDA_SUCCESS)
+					{
+						if (errors < 16u)
+							std::fprintf(stderr,
+								"[DCU TRITRI OVERLAP DIAG] error=shape_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
+								testIndex, side, shapeRef, static_cast<unsigned long long>(shapeAddress), int(shapeCopy));
+						++errors;
+						++copyFailures;
+					}
+					else
+					{
+						const bool triangleMeshShape = shape.type == PxU32(PxGeometryType::eTRIANGLEMESH);
+						if (!triangleMeshShape)
+						{
+							if (errors < 16u)
+								std::fprintf(stderr,
+									"[DCU TRITRI OVERLAP DIAG] error=shape_type test=%u side=%u ref=%u type=%u expected=%u\n",
+									testIndex, side, shapeRef, shape.type, PxU32(PxGeometryType::eTRIANGLEMESH));
+							++errors;
+						}
+
+						if (triangleMeshShape && shape.hullOrMeshPtr == 0u)
+						{
+							if (errors < 16u)
+								std::fprintf(stderr,
+									"[DCU TRITRI OVERLAP DIAG] error=null_mesh test=%u side=%u ref=%u\n",
+									testIndex, side, shapeRef);
+							++errors;
+						}
+						else if (triangleMeshShape)
+						{
+							bool alreadyChecked = false;
+							for (PxU32 i = 0; i < checkedMeshPointers.size(); ++i)
+								alreadyChecked = alreadyChecked || checkedMeshPointers[i] == shape.hullOrMeshPtr;
+
+							if (!alreadyChecked)
+							{
+								checkedMeshPointers.pushBack(shape.hullOrMeshPtr);
+								uint4 header;
+								const CUdeviceptr meshAddress = CUdeviceptr(shape.hullOrMeshPtr);
+								const PxCUresult headerCopy = cudaContext->memcpyDtoH(&header, meshAddress, sizeof(header));
+								if (headerCopy != CUDA_SUCCESS)
+								{
+									if (errors < 16u)
+										std::fprintf(stderr,
+											"[DCU TRITRI OVERLAP DIAG] error=mesh_header_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
+											testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress), int(headerCopy));
+									++errors;
+									++copyFailures;
+								}
+								else
+								{
+									++meshHeaders;
+									// GPU triangle-mesh layout intentionally stores zero in header.z.
+									const bool headerValid = header.x > 0u && header.y > 0u && header.w > 0u
+										&& header.x <= (1u << 28) && header.y <= (1u << 28)
+										&& header.z <= (1u << 28) && header.w <= (1u << 24);
+									if (!headerValid)
+									{
+										if (errors < 16u)
+											std::fprintf(stderr,
+												"[DCU TRITRI OVERLAP DIAG] error=mesh_header test=%u side=%u ref=%u address=0x%llx verts=%u tris=%u nodes=%u packed=%u\n",
+												testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress),
+												header.x, header.y, header.z, header.w);
+										++errors;
+									}
+									else
+									{
+										Gu::BV32DataPacked root;
+										const PxCUresult rootCopy = cudaContext->memcpyDtoH(&root,
+											meshAddress + sizeof(uint4), sizeof(root));
+										if (rootCopy != CUDA_SUCCESS)
+										{
+											if (errors < 16u)
+												std::fprintf(stderr,
+													"[DCU TRITRI OVERLAP DIAG] error=packed_root_copy test=%u side=%u ref=%u result=%d\n",
+													testIndex, side, shapeRef, int(rootCopy));
+											++errors;
+											++copyFailures;
+										}
+										else
+										{
+											++packedNodes;
+											bool rootValid = root.mNbNodes > 0u && root.mNbNodes <= 32u;
+											const PxU32 nodeCount = PxMin(root.mNbNodes, 32u);
+											for (PxU32 node = 0; node < nodeCount; ++node)
+											{
+												const PxVec4& minimum = root.mMin[node];
+												const PxVec4& maximum = root.mMax[node];
+												rootValid = rootValid && minimum.isFinite() && maximum.isFinite()
+													&& minimum.x <= maximum.x && minimum.y <= maximum.y && minimum.z <= maximum.z;
+											}
+											std::fprintf(stderr,
+												"[DCU TRITRI OVERLAP DIAG] mesh_root test=%u side=%u ref=%u address=0x%llx "
+												"verts=%u tris=%u nodes=%u packed=%u nb_nodes=%u depth=%u valid=%u\n",
+												testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress),
+												header.x, header.y, header.z, header.w, root.mNbNodes, root.mDepth,
+												rootValid ? 1u : 0u);
+											if (!rootValid)
+											{
+												if (errors < 16u)
+													std::fprintf(stderr,
+														"[DCU TRITRI OVERLAP DIAG] error=packed_root test=%u side=%u ref=%u nb_nodes=%u depth=%u\n",
+														testIndex, side, shapeRef, root.mNbNodes, root.mDepth);
+												++errors;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				const PxU32 transformRef = transformRefs[side];
+				if (PxU64(transformRef) >= transformCapacity || PxU64(transformRef) >= contactDistanceCapacity)
+				{
+					if (errors < 16u)
+						std::fprintf(stderr,
+							"[DCU TRITRI OVERLAP DIAG] error=transform_ref test=%u side=%u ref=%u transform_capacity=%llu distance_capacity=%llu\n",
+							testIndex, side, transformRef, static_cast<unsigned long long>(transformCapacity),
+							static_cast<unsigned long long>(contactDistanceCapacity));
+					++errors;
+					continue;
+				}
+
+				PxsCachedTransform cachedTransform;
+				PxReal distance = 0.0f;
+				const PxCUresult transformCopy = cudaContext->memcpyDtoH(&cachedTransform,
+					transformsDevice + PxU64(transformRef) * sizeof(PxsCachedTransform), sizeof(cachedTransform));
+				const PxCUresult distanceCopy = transformCopy == CUDA_SUCCESS
+					? cudaContext->memcpyDtoH(&distance,
+						contactDistancesDevice + PxU64(transformRef) * sizeof(PxReal), sizeof(distance))
+					: transformCopy;
+				if (transformCopy != CUDA_SUCCESS || distanceCopy != CUDA_SUCCESS)
+				{
+					if (errors < 16u)
+						std::fprintf(stderr,
+							"[DCU TRITRI OVERLAP DIAG] error=transform_copy test=%u side=%u ref=%u transform_result=%d distance_result=%d\n",
+							testIndex, side, transformRef, int(transformCopy), int(distanceCopy));
+					++errors;
+					++copyFailures;
+				}
+				else if (!cachedTransform.transform.isFinite() || !PxIsFinite(distance) || distance < 0.0f)
+				{
+					if (errors < 16u)
+						std::fprintf(stderr,
+							"[DCU TRITRI OVERLAP DIAG] error=transform_value test=%u side=%u ref=%u finite=%u distance=%.9g\n",
+							testIndex, side, transformRef, cachedTransform.transform.isFinite() ? 1u : 0u, double(distance));
+					++errors;
+				}
+			}
+		}
+
+		std::fprintf(stderr,
+		"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u sync=%d "
+			"shape_capacity=%llu transform_capacity=%llu distance_capacity=%llu unique_meshes=%u mesh_headers=%u packed_roots=%u "
+			"copy_failures=%u errors=%u verdict=%s\n",
+			call, numTests, int(syncResult), static_cast<unsigned long long>(shapeCapacity),
+			static_cast<unsigned long long>(transformCapacity), static_cast<unsigned long long>(contactDistanceCapacity),
+			checkedMeshPointers.size(), meshHeaders, packedNodes, copyFailures, errors, errors ? "INVALID" : "VALID");
+		std::fflush(stderr);
+		return errors == 0u;
+	}
 }
 #endif
 
@@ -1159,6 +1572,18 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(numTests)
 		};
 
+#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+        // Only the ordinary-rigid benchmark explicitly supplies these tokens.
+        // No environment token: preserve the original path without extra output.
+        static const PxU32 useBoundedIndexP54 = []() -> PxU32 {
+            const char* value = std::getenv("PX_DCU_RIGID_STAGE2_INDEX_P54");
+            const bool bounded = value && std::strcmp(value, "ordinary-rigid/p54/1") == 0;
+            if (bounded || (value && std::strcmp(value, "ordinary-rigid/p54/0") == 0))
+                std::printf("p54_stage2_dispatch=%s marker=PX_DCU_RIGID_STAGE2_INDEX_P54_HOST_V1\n",
+                            bounded ? "bounded_subtract" : "original_modulo");
+            return bounded ? 1u : 0u;
+        }();
+#endif
 		PxCudaKernelParam kernelParams2[] =
 		{
 			PX_CUDA_KERNEL_PARAM(touchChangeFlags),
@@ -1170,6 +1595,9 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(blockAccumArray),
 			PX_CUDA_KERNEL_PARAM(numTests),
 			PX_CUDA_KERNEL_PARAM(cmArray)
+#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+            , PX_CUDA_KERNEL_PARAM(useBoundedIndexP54)
+#endif
 		};
 
 		result = mCudaContext->launchKernel(kernelFunction1, PxgNarrowPhaseGridDims::COMPACT_LOST_FOUND_PAIRS, 1, 1,
@@ -2043,36 +2471,76 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshPlaneGpu(PxgGpuContactManagers& gpuMan
 	{
 		CUfunction triMeshPlaneKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::TRIMESH_PLANE_CORE);
 
-		PxCudaKernelParam kernelParams_stage[] =
+		PxU32 blocksPerLaunch = numTests;
+		PxU32 numThreadsPerBlock = 1024;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		blocksPerLaunch = 1;
+		numThreadsPerBlock = WARP_SIZE;
+		const bool planeBatch2Enabled = dcuTrimeshPlaneBatch2Enabled();
+		if (planeBatch2Enabled)
 		{
-			PX_CUDA_KERNEL_PARAM(toleranceLength),
-			PX_CUDA_KERNEL_PARAM(cmInputs),
-			PX_CUDA_KERNEL_PARAM(cmOutputs),
-			PX_CUDA_KERNEL_PARAM(gpuShapes),
-			PX_CUDA_KERNEL_PARAM(transformCache),
-			PX_CUDA_KERNEL_PARAM(contactDistance),
-			PX_CUDA_KERNEL_PARAM(materials),
-			PX_CUDA_KERNEL_PARAM(cmPersistentMultiManifolds),
-			PX_CUDA_KERNEL_PARAM(mContactStream),
-			PX_CUDA_KERNEL_PARAM(mPatchStream),
-			PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
-			PX_CUDA_KERNEL_PARAM(touchLostFlags),
-			PX_CUDA_KERNEL_PARAM(touchFoundFlags),
-			PX_CUDA_KERNEL_PARAM(baseContactPatches),
-			PX_CUDA_KERNEL_PARAM(baseContactPoints),
-			PX_CUDA_KERNEL_PARAM(baseContactForces),
-			PX_CUDA_KERNEL_PARAM(patchBytesLimit),
-			PX_CUDA_KERNEL_PARAM(contactBytesLimit),
-			PX_CUDA_KERNEL_PARAM(forceBytesLimit),
-			PX_CUDA_KERNEL_PARAM(clusterBias)
-		};
+			blocksPerLaunch = PxMin(2u, numTests);
 
-		const PxU32 numThreadsPerBlock = 1024;
-		const PxU32 numBlocks = numTests;
-		//Each thread do one collision detection
-		result = mCudaContext->launchKernel(triMeshPlaneKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU trimeshPlaneNarrowphase fail to launch kernel!!\n");
+			static bool s_dcuTrimeshPlaneBatch2Reported = false;
+			if (!s_dcuTrimeshPlaneBatch2Reported)
+			{
+				const bool legacyOverridePresent = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH") != NULL;
+				std::printf("[DCU TRIMESH PLANE] marker=PX_DCU_TRIMESH_PLANE_HOST_V2_BATCH2_OPT_IN requested=1 active=1 "
+					"blocks_per_launch=2 launch_block=32x1x1 reducer=reduceDcuTrimeshPlaneContacts "
+					"legacy_override_precedence=batch2 legacy_override_present=%u\n",
+					legacyOverridePresent ? 1u : 0u);
+				std::fflush(stdout);
+				s_dcuTrimeshPlaneBatch2Reported = true;
+			}
+		}
+		else if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH"))
+		{
+			const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
+			if (requestedBatch > 0)
+				blocksPerLaunch = requestedBatch;
+		}
+#endif
+
+		for (PxU32 workOffset = 0; workOffset < numTests; workOffset += blocksPerLaunch)
+		{
+			const PxU32 numBlocks = PxMin(blocksPerLaunch, numTests - workOffset);
+			PxCudaKernelParam kernelParams_stage[] =
+			{
+				PX_CUDA_KERNEL_PARAM(toleranceLength),
+				PX_CUDA_KERNEL_PARAM(cmInputs),
+				PX_CUDA_KERNEL_PARAM(cmOutputs),
+				PX_CUDA_KERNEL_PARAM(gpuShapes),
+				PX_CUDA_KERNEL_PARAM(transformCache),
+				PX_CUDA_KERNEL_PARAM(contactDistance),
+				PX_CUDA_KERNEL_PARAM(materials),
+				PX_CUDA_KERNEL_PARAM(cmPersistentMultiManifolds),
+				PX_CUDA_KERNEL_PARAM(mContactStream),
+				PX_CUDA_KERNEL_PARAM(mPatchStream),
+				PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
+				PX_CUDA_KERNEL_PARAM(touchLostFlags),
+				PX_CUDA_KERNEL_PARAM(touchFoundFlags),
+				PX_CUDA_KERNEL_PARAM(baseContactPatches),
+				PX_CUDA_KERNEL_PARAM(baseContactPoints),
+				PX_CUDA_KERNEL_PARAM(baseContactForces),
+				PX_CUDA_KERNEL_PARAM(patchBytesLimit),
+				PX_CUDA_KERNEL_PARAM(contactBytesLimit),
+				PX_CUDA_KERNEL_PARAM(forceBytesLimit),
+				PX_CUDA_KERNEL_PARAM(clusterBias),
+				PX_CUDA_KERNEL_PARAM(workOffset)
+			};
+
+			result = mCudaContext->launchKernel(triMeshPlaneKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			if (result != CUDA_SUCCESS)
+			{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+					"GPU trimeshPlaneNarrowphase fail to launch kernel; marker=PX_DCU_TRIMESH_PLANE_HOST_V1_BATCHED_32_THREAD_LAUNCH\n");
+#else
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU trimeshPlaneNarrowphase fail to launch kernel!!\n");
+#endif
+				break;
+			}
+		}
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(mStream);
@@ -2193,32 +2661,198 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 	PxU32* touchFoundFlags = reinterpret_cast<PxU32*>(gpuManagers.mTempRunsumArray.getDevicePtr() + sizeof(PxU32) * numTests);
 	CUresult result;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	static PxU32 s_dcuTriTriOverlapCallCount = 0;
+	const PxU32 dcuTriTriOverlapCall = ++s_dcuTriTriOverlapCallCount;
+	const bool dcuTriTriOverlapDiagEnabled = dcuTriTriOverlapDiagArmed(dcuTriTriOverlapCall);
+	const bool dcuTriTriOverlapSyncBatchEnabled = dcuTriTriOverlapSyncBatchArmed(dcuTriTriOverlapCall);
+#endif
+
 	mIntermStackAlloc.mMutex.lock();
 
 	CUdeviceptr gpuIntermOverlap = reinterpret_cast<CUdeviceptr>(mIntermStackAlloc.allocateAligned(256, numTests * sizeof(PxU8)));
 
 	{
-		CUfunction tritriOverlapKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::TRIMESH_TRIMESH_OVERLAP);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const bool overlapPack2Enabled = dcuTriTriOverlapPack2Enabled();
+		const bool overlapPack4Enabled = overlapPack2Enabled && dcuTriTriOverlapPack4Enabled();
+		const bool overlapLaunchBounds64Enabled = overlapPack2Enabled && !overlapPack4Enabled && dcuTriTriOverlapLaunchBounds64Enabled();
+#endif
+		CUfunction tritriOverlapKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			overlapLaunchBounds64Enabled ? PxgKernelIds::TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64_DCU_V10 :
+#endif
+			PxgKernelIds::TRIMESH_TRIMESH_OVERLAP);
 
-		PxCudaKernelParam kernelParams_stage[] =
-		{
-			PX_CUDA_KERNEL_PARAM(numTests),
-			PX_CUDA_KERNEL_PARAM(cmInputs),
-			PX_CUDA_KERNEL_PARAM(transformCache),
-			PX_CUDA_KERNEL_PARAM(contactDistance),
-			PX_CUDA_KERNEL_PARAM(gpuShapes),
-			PX_CUDA_KERNEL_PARAM(cmOutputs),
-			PX_CUDA_KERNEL_PARAM(gpuIntermOverlap)
-		};
-
-		const PxU32 numWarpPerBlocks = NP_TRIMESH_WARPS_PER_BLOCK;
+		const PxU32 kernelWarpsPerBlock = NP_TRIMESH_WARPS_PER_BLOCK;
+		PxU32 launchWarpsPerBlock = kernelWarpsPerBlock;
 		const PxU32 numThreadsPerWarp = 32;
+		PxU32 itemsPerLaunch = numTests;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// gfx936 is unstable when this mesh-mesh path submits several independent
+		// work items together. Keep one logical warp and one item per launch by
+		// default; the environment controls below remain available for experiments.
+		launchWarpsPerBlock = 1u;
+		itemsPerLaunch = PxMin(1u, numTests);
+		if (const char* warpsEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK"))
+		{
+			const PxU32 requestedWarps = PxU32(std::strtoul(warpsEnv, NULL, 10));
+			if (requestedWarps > 0u && requestedWarps <= kernelWarpsPerBlock)
+				launchWarpsPerBlock = requestedWarps;
+		}
 
-		const PxU32 numBlocks = (numTests + numWarpPerBlocks -1) / numWarpPerBlocks;
-		//Each thread do one collision detection
-		result = mCudaContext->launchKernel(tritriOverlapKernelFunction, numBlocks, 1, 1, numThreadsPerWarp, numWarpPerBlocks, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleOverlaps fail to launch !!\n");
+		if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH"))
+		{
+			const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
+			if (requestedBatch > 0)
+				itemsPerLaunch = PxMin(requestedBatch, numTests);
+		}
+
+		// Pack four independent items into one workgroup while retaining one
+		// workgroup per launch. This is opt-in because larger historical batches
+		// have triggered VMFaults on gfx936.
+		if (overlapPack4Enabled)
+		{
+			launchWarpsPerBlock = 4u;
+			itemsPerLaunch = PxMin(4u, numTests);
+
+			static bool s_dcuTriTriOverlapPack4Reported = false;
+			if (!s_dcuTriTriOverlapPack4Reported)
+			{
+				const bool manualOverridesPresent =
+					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
+					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
+				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V11_PACK4_OPT_IN requested=1 active=1 "
+					"base_pack2_requested=1 items_per_launch=4 launch_warps_per_block=4 launch_grid=1x1x1 launch_block=32x4x1 "
+					"manual_overrides_precedence=pack4 manual_overrides_present=%u\n",
+					manualOverridesPresent ? 1u : 0u);
+				std::fflush(stdout);
+				s_dcuTriTriOverlapPack4Reported = true;
+			}
+		}
+		// Pack exactly two 32-lane logical warps in one wave64 workgroup. This
+		// does not increase the number of independent workgroups per launch.
+		else if (overlapPack2Enabled)
+		{
+			launchWarpsPerBlock = 2u;
+			itemsPerLaunch = PxMin(2u, numTests);
+
+			static bool s_dcuTriTriOverlapPack2Reported = false;
+			if (!s_dcuTriTriOverlapPack2Reported)
+			{
+				const bool manualOverridesPresent =
+					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
+					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
+				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V5_PACK2_OPT_IN requested=1 active=1 "
+					"items_per_launch=2 launch_warps_per_block=2 launch_grid=1x1x1 launch_block=32x2x1 "
+					"manual_overrides_precedence=pack2 manual_overrides_present=%u\n",
+					manualOverridesPresent ? 1u : 0u);
+				std::fflush(stdout);
+				s_dcuTriTriOverlapPack2Reported = true;
+			}
+		}
+
+		if (overlapLaunchBounds64Enabled)
+		{
+			static bool s_dcuTriTriOverlapLaunchBounds64Reported = false;
+			if (!s_dcuTriTriOverlapLaunchBounds64Reported)
+			{
+				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V10_LAUNCH_BOUNDS64_OPT_IN requested=1 active=1 "
+					"launch_bounds_max_threads=64 launch_bounds_min_blocks=1 launch_grid=1x1x1 launch_block=32x2x1 "
+					"kernel=triangleTriangleOverlapsLaunchBounds64DcuV10\n");
+				std::fflush(stdout);
+				s_dcuTriTriOverlapLaunchBounds64Reported = true;
+			}
+		}
+
+		if (dcuTriTriOverlapDiagEnabled)
+		{
+			const bool inputsValid = dcuValidateTriTriOverlapInputs(mCudaContext, mStream, dcuTriTriOverlapCall, numTests,
+				reinterpret_cast<CUdeviceptr>(cmInputs), reinterpret_cast<CUdeviceptr>(gpuShapes),
+				mGpuShapesManager.mGpuShapesBuffer.getSize() / sizeof(PxgShape),
+				reinterpret_cast<CUdeviceptr>(transformCache), mGpuTransformCache.getSize() / sizeof(PxsCachedTransform),
+				reinterpret_cast<CUdeviceptr>(contactDistance), mGpuContactDistance.getSize() / sizeof(PxReal));
+			if (!inputsValid)
+			{
+				std::fprintf(stderr,
+					"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort reason=invalid_inputs exit=97\n",
+					dcuTriTriOverlapCall, numTests);
+				std::fflush(stderr);
+				std::_Exit(97);
+			}
+		}
+#endif
+
+		for (PxU32 workOffset = 0; workOffset < numTests; workOffset += itemsPerLaunch)
+		{
+			const PxU32 batchSize = PxMin(itemsPerLaunch, numTests - workOffset);
+			const PxgContactManagerInput* cmInputsBatch = cmInputs + workOffset;
+			PxsContactManagerOutput* cmOutputsBatch = cmOutputs + workOffset;
+			CUdeviceptr gpuIntermOverlapBatch = gpuIntermOverlap + workOffset * sizeof(PxU8);
+
+			PxCudaKernelParam kernelParams_stage[] =
+			{
+				PX_CUDA_KERNEL_PARAM(batchSize),
+				PX_CUDA_KERNEL_PARAM(cmInputsBatch),
+				PX_CUDA_KERNEL_PARAM(transformCache),
+				PX_CUDA_KERNEL_PARAM(contactDistance),
+				PX_CUDA_KERNEL_PARAM(gpuShapes),
+				PX_CUDA_KERNEL_PARAM(cmOutputsBatch),
+				PX_CUDA_KERNEL_PARAM(gpuIntermOverlapBatch)
+			};
+
+			const PxU32 numBlocks = (batchSize + launchWarpsPerBlock - 1) / launchWarpsPerBlock;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (dcuTriTriOverlapDiagEnabled || dcuTriTriOverlapSyncBatchEnabled)
+			{
+				std::fprintf(stderr,
+					"[DCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_begin "
+					"work_offset=%u batch_size=%u blocks=%u launch_warps_per_block=%u shared_warps_per_block=%u "
+					"cm_inputs=0x%llx cm_outputs=0x%llx overlaps=0x%llx\n",
+					dcuTriTriOverlapCall, numTests, workOffset, batchSize, numBlocks, launchWarpsPerBlock, kernelWarpsPerBlock,
+					static_cast<unsigned long long>(reinterpret_cast<CUdeviceptr>(cmInputsBatch)),
+					static_cast<unsigned long long>(reinterpret_cast<CUdeviceptr>(cmOutputsBatch)),
+					static_cast<unsigned long long>(gpuIntermOverlapBatch));
+				std::fflush(stderr);
+			}
+#endif
+			// Each warp does one collision detection.
+			result = mCudaContext->launchKernel(tritriOverlapKernelFunction, numBlocks, 1, 1,
+				numThreadsPerWarp, launchWarpsPerBlock, 1, 0, mStream, kernelParams_stage,
+				sizeof(kernelParams_stage), 0, PX_FL);
+			if (result != CUDA_SUCCESS)
+			{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+					"GPU triangleTriangleOverlaps fail to launch; marker=PX_DCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
+#else
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleOverlaps fail to launch !!\n");
+#endif
+				break;
+			}
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			if (dcuTriTriOverlapSyncBatchEnabled)
+			{
+				const PxCUresult syncResult = mCudaContext->streamSynchronize(mStream);
+				std::fprintf(stderr,
+					"[DCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_end "
+					"work_offset=%u batch_size=%u sync=%d verdict=%s\n",
+					dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult),
+					syncResult == CUDA_SUCCESS ? "STABLE" : "FAILED");
+				std::fflush(stderr);
+				if (syncResult != CUDA_SUCCESS)
+				{
+					std::fprintf(stderr,
+						"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort "
+						"reason=batch_sync_failed work_offset=%u batch_size=%u sync=%d exit=98\n",
+						dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult));
+					std::fflush(stderr);
+					std::_Exit(98);
+				}
+			}
+#endif
+		}
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(mStream);
@@ -2229,37 +2863,171 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 
 	{
 		PxgDevicePointer<PxgPatchAndContactCounters> patchAndContactCountersD = mPatchAndContactCountersOnDevice.getTypedDevicePtr();
-		CUfunction tritriKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::TRIMESH_TRIMESH_CORE);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const bool sdfInlineEnabled = dcuTriTriCollisionSdfInlineEnabled();
+		const bool inverseCacheEnabled = dcuTriTriCollisionInverseCacheEnabled() && !sdfInlineEnabled;
+		const bool collisionPack2Enabled = dcuTriTriCollisionPack2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled;
+		const bool collisionOccupancy2Enabled = dcuTriTriCollisionOccupancy2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled;
+		const bool collisionCreatePatchNoInlineEnabled = dcuTriTriCollisionCreatePatchNoInlineEnabled() &&
+			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled;
+		const bool collisionContactPredicateEnabled = dcuTriTriCollisionContactPredicateEnabled() &&
+			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled &&
+			!collisionCreatePatchNoInlineEnabled;
+		const bool collisionNativeBlockCountEnabled = dcuTriTriCollisionNativeBlockCountEnabled() &&
+			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled &&
+			!collisionCreatePatchNoInlineEnabled && !collisionContactPredicateEnabled;
+#endif
+		CUfunction tritriKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			sdfInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_SDF_INLINE_DCU_V1 :
+			inverseCacheEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_INVERSE_CACHE_DCU_V2 :
+			collisionPack2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_PACK2_SERIAL_DCU_V3 :
+			collisionOccupancy2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_OCCUPANCY2_DCU_V5 :
+			collisionCreatePatchNoInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CREATE_PATCH_NOINLINE_DCU_V6 :
+			collisionContactPredicateEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CONTACT_PREDICATE_DCU_V7 :
+			collisionNativeBlockCountEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_NATIVE_BLOCK_COUNT_DCU_V8 :
+#endif
+			PxgKernelIds::TRIMESH_TRIMESH_CORE);
 
-		PxCudaKernelParam kernelParams_stage[] =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if (sdfInlineEnabled)
 		{
-			PX_CUDA_KERNEL_PARAM(numTests),
-			PX_CUDA_KERNEL_PARAM(cmInputs),
-			PX_CUDA_KERNEL_PARAM(transformCache),
-			PX_CUDA_KERNEL_PARAM(contactDistance),
-			PX_CUDA_KERNEL_PARAM(gpuShapes),
-			PX_CUDA_KERNEL_PARAM(cmOutputs),
-			PX_CUDA_KERNEL_PARAM(gpuIntermOverlap),
-			PX_CUDA_KERNEL_PARAM(materials),
-			PX_CUDA_KERNEL_PARAM(mContactStream),
-			PX_CUDA_KERNEL_PARAM(mPatchStream),
-			PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
-			PX_CUDA_KERNEL_PARAM(touchLostFlags),
-			PX_CUDA_KERNEL_PARAM(touchFoundFlags),
-			PX_CUDA_KERNEL_PARAM(baseContactPatches),
-			PX_CUDA_KERNEL_PARAM(baseContactPoints),
-			PX_CUDA_KERNEL_PARAM(baseContactForces),
-			PX_CUDA_KERNEL_PARAM(patchBytesLimit),
-			PX_CUDA_KERNEL_PARAM(contactBytesLimit),
-			PX_CUDA_KERNEL_PARAM(forceBytesLimit),
-			PX_CUDA_KERNEL_PARAM(clusterBias)
-		};
-	
-		const PxU32 numBlocks = numTests;
-		//Each thread do one collision detection
-		result = mCudaContext->launchKernel(tritriKernelFunction, numBlocks, 1, 1, 1024, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
-		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleCollision fail to launch !!\n");
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V1_SDF_INLINE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionSdfInlineDcuV1\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (inverseCacheEnabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V2_INVERSE_CACHE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionInverseCacheDcuV2\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (collisionPack2Enabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V3_PACK2_SERIAL_OPT_IN requested=1 active=1 items_per_launch=2 launch_grid=1x1x1 launch_block=1024x1x1 concurrent_blocks=1 kernel=triangleTriangleCollisionPack2SerialDcuV3\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (collisionOccupancy2Enabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V5_OCCUPANCY2_OPT_IN requested=1 active=1 launch_bounds_min_blocks_request=2 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionOccupancy2DcuV5\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (collisionCreatePatchNoInlineEnabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V6_CREATE_PATCH_NOINLINE_OPT_IN requested=1 active=1 helper=createNewPatchesNoInlineDcuV6 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionCreatePatchNoInlineDcuV6\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (collisionContactPredicateEnabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V7_CONTACT_PREDICATE_OPT_IN requested=1 active=1 payload_writes=candidate_only processed_clear=candidate_only launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionContactPredicateDcuV7\n");
+				std::fflush(stdout);
+			}
+		}
+		else if (collisionNativeBlockCountEnabled)
+		{
+			static std::atomic<bool> markerPrinted(false);
+			bool expected = false;
+			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
+			{
+				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V8_NATIVE_BLOCK_COUNT_OPT_IN requested=1 active=1 count_scope=generated_contacts primitive=__syncthreads_count launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionNativeBlockCountDcuV8\n");
+				std::fflush(stdout);
+			}
+		}
+#endif
+
+		PxU32 blocksPerLaunch = numTests;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		blocksPerLaunch = PxMin(collisionPack2Enabled ? 2u : 1u, numTests);
+		if (!collisionPack2Enabled)
+		{
+			if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_BATCH"))
+			{
+				const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
+				if (requestedBatch > 0)
+					blocksPerLaunch = PxMin(requestedBatch, numTests);
+			}
+		}
+#endif
+
+		for (PxU32 workOffset = 0; workOffset < numTests; workOffset += blocksPerLaunch)
+		{
+			const PxU32 batchSize = PxMin(blocksPerLaunch, numTests - workOffset);
+			const PxgContactManagerInput* cmInputsBatch = cmInputs + workOffset;
+			PxsContactManagerOutput* cmOutputsBatch = cmOutputs + workOffset;
+			CUdeviceptr gpuIntermOverlapBatch = gpuIntermOverlap + workOffset * sizeof(PxU8);
+			PxU32* touchLostFlagsBatch = touchLostFlags + workOffset;
+			PxU32* touchFoundFlagsBatch = touchFoundFlags + workOffset;
+
+			PxCudaKernelParam kernelParams_stage[] =
+			{
+				PX_CUDA_KERNEL_PARAM(batchSize),
+				PX_CUDA_KERNEL_PARAM(cmInputsBatch),
+				PX_CUDA_KERNEL_PARAM(transformCache),
+				PX_CUDA_KERNEL_PARAM(contactDistance),
+				PX_CUDA_KERNEL_PARAM(gpuShapes),
+				PX_CUDA_KERNEL_PARAM(cmOutputsBatch),
+				PX_CUDA_KERNEL_PARAM(gpuIntermOverlapBatch),
+				PX_CUDA_KERNEL_PARAM(materials),
+				PX_CUDA_KERNEL_PARAM(mContactStream),
+				PX_CUDA_KERNEL_PARAM(mPatchStream),
+				PX_CUDA_KERNEL_PARAM(patchAndContactCountersD),
+				PX_CUDA_KERNEL_PARAM(touchLostFlagsBatch),
+				PX_CUDA_KERNEL_PARAM(touchFoundFlagsBatch),
+				PX_CUDA_KERNEL_PARAM(baseContactPatches),
+				PX_CUDA_KERNEL_PARAM(baseContactPoints),
+				PX_CUDA_KERNEL_PARAM(baseContactForces),
+				PX_CUDA_KERNEL_PARAM(patchBytesLimit),
+				PX_CUDA_KERNEL_PARAM(contactBytesLimit),
+				PX_CUDA_KERNEL_PARAM(forceBytesLimit),
+				PX_CUDA_KERNEL_PARAM(clusterBias)
+			};
+
+			// Each baseline block handles one item; Pack2 keeps one block and processes two items serially.
+			const PxU32 launchBlocks =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				collisionPack2Enabled ? 1u : batchSize;
+#else
+				batchSize;
+#endif
+			result = mCudaContext->launchKernel(tritriKernelFunction, launchBlocks, 1, 1, 1024, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			if (result != CUDA_SUCCESS)
+			{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+					"GPU triangleTriangleCollision fail to launch; marker=PX_DCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
+#else
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleCollision fail to launch !!\n");
+#endif
+				break;
+			}
+		}
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(mStream);
@@ -4148,6 +4916,8 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 
 	//Get the particle stream!
 	CUstream particleStream = particleCore->getStream();
+	static bool pbdContactDiagBoundPrinted = false;
+	static bool pbdContactDiagCollisionPrinted = false;
 
 	// Simulation particles
 	{
@@ -4167,11 +4937,26 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 				PX_CUDA_KERNEL_PARAM(tempCellsHistogramd)		// output
 			};
 
-			result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				gDcuParticlePrimitiveBoundBlockSize,
+#else
+				PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
+#endif
+				1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
-				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#else
+					"GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
+#endif
 
 			PX_ASSERT(result == CUDA_SUCCESS);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+				"primitive_bound_first_complete", 0, numTests);
+#endif
 #if GPU_NP_DEBUG
 			result = mCudaContext->streamSynchronize(particleStream);
 			if (result != CUDA_SUCCESS)
@@ -4201,9 +4986,27 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 				PX_CUDA_KERNEL_PARAM(totalPairsd)
 			};
 
-			result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+			result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				gDcuParticlePrimitiveBoundBlockSize,
+#else
+				PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
+#endif
+				1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
-				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#else
+					"GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+				"primitive_bound_second_complete", reinterpret_cast<CUdeviceptr>(totalPairsd), numTests);
+			dcuPbdPrintPairCount(mCudaContext, particleStream, reinterpret_cast<CUdeviceptr>(totalPairsd),
+				"bound_second", pbdContactDiagBoundPrinted);
+#endif
 #if GPU_NP_DEBUG
 			result = mCudaContext->streamSynchronize(particleStream);
 			if (result != CUDA_SUCCESS)
@@ -4256,6 +5059,14 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 			result = mCudaContext->launchKernel(psCollisionKernelFunction, PxgParticleSystemKernelGridDim::PS_COLLISION, 1, 1, PxgParticleSystemKernelBlockDim::PS_COLLISION, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU particlePrimitivesCollisionLaunch fail to launch!!\n");
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+				"primitive_collision_complete", reinterpret_cast<CUdeviceptr>(writer.numTotalContacts), numTests);
+			dcuPbdPrintCollisionContact(mCudaContext, particleStream,
+				reinterpret_cast<CUdeviceptr>(writer.numTotalContacts),
+				reinterpret_cast<CUdeviceptr>(writer.particleContacts), pbdContactDiagCollisionPrinted);
+#endif
 
 #if GPU_NP_DEBUG
 			result = mCudaContext->streamSynchronize(particleStream);
@@ -4733,9 +5544,20 @@ void PxgGpuNarrowphaseCore::testSDKConvexParticle(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(tempCellsHistogramd)
 		};
 
-		result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+		result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			gDcuParticlePrimitiveBoundBlockSize,
+#else
+			PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
+#endif
+			1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#else
+				"GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
+#endif
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(particleStream);
 		if (result != CUDA_SUCCESS)
@@ -4753,9 +5575,20 @@ void PxgGpuNarrowphaseCore::testSDKConvexParticle(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(totalPairsd)
 		};
 
-		result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1, PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE, 1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
+		result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			gDcuParticlePrimitiveBoundBlockSize,
+#else
+			PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
+#endif
+			1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
-			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#else
+				"GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
+#endif
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(particleStream);
 		if (result != CUDA_SUCCESS)
@@ -5114,13 +5947,25 @@ void PxgGpuNarrowphaseCore::softbodyOtherContactApplyCollisionToSimMeshMapping(
 		PX_CUDA_KERNEL_PARAM(prevNumCountsd)
 	};
 
-	PxU32 numWarpsPerBlock = 16;
+	PxU32 numWarpsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		8;
+#else
+		16;
+#endif
 	PxU32 numBlocks = 1024;
 	//each warp deal with one test. 
 	result = mCudaContext->launchKernel(sbContactRemapKernelFunction, numBlocks, 1, 1, WARP_SIZE, numWarpsPerBlock, 1, 0, softbodyStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 
 	if (result != CUDA_SUCCESS)
+	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+			"GPU sb_other_contact_remap_to_simLaunch fail to launch kernel!! PX_DCU_SOFTBODY_OTHER_CONTACT_REMAP_V3_8_WARPS\n");
+#else
 		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_other_contact_remap_to_simLaunch fail to launch kernel!!\n");
+#endif
+	}
 }
 
 void PxgGpuNarrowphaseCore::softbodyFemContactApplyCollisionToSimMeshMapping(
@@ -6873,13 +7718,24 @@ void PxgGpuNarrowphaseCore::testSDKFemClothPlane(PxgGpuContactManagers& gpuManag
 		};
 
 		const PxU32 numVertBlocks = numTests;
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const PxU32 numWarpPerBlock = 8;
+	#else
 		const PxU32 numWarpPerBlock = 16;
+	#endif
 		const PxU32 numThreadsPerWarp = 32;
 
 		//each thread deal with a vert
 		result = mCudaContext->launchKernel(fcVertCollisionKernelFunction, numVertBlocks, 1, 1, numThreadsPerWarp, numWarpPerBlock, 1, 0, femClothStream, vertKernelParams, sizeof(vertKernelParams), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
+		{
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
+				"GPU cloth_planeVertContactGenLaunch fail to launch kernel!! PX_DCU_CLOTH_PLANE_VERTEX_V1_8_WARPS\n");
+	#else
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU cloth_planeVertContactGenLaunch fail to launch kernel!!\n");
+	#endif
+		}
 
 #if GPU_NP_DEBUG
 		result = mCudaContext->streamSynchronize(femClothStream);

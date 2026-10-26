@@ -832,7 +832,14 @@ static __device__ PxU32 D6JointSolverPrep(Px1DConstraint* constraints, const Pxg
 	return constraintCount;
 }
 
-extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+extern "C" __device__ __constant__ char gPxgDcuContactPrepLaunchBoundsP78R2Version[] = "PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1";
+
+extern "C" __global__ __launch_bounds__(PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 2)
+#else
+extern "C" __global__
+#endif
+void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 	PxgSolverSharedDesc<IterativeSolveData>* sharedDesc, const PxU32 diagnosticMode)
 {
 	__shared__ PxgBlockContactPoint* volatile blockContactPoints[PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK/32];
@@ -891,6 +898,10 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 	{
 		const volatile char* version = gPxgDcuSolverPrePrepStageVersion;
 		contactCounts[0] = PxU32(version[0]);
+#if defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+		const volatile char* launchBoundsVersion = gPxgDcuContactPrepLaunchBoundsP78R2Version;
+		contactCounts[0] = PxU32(launchBoundsVersion[0]);
+#endif
 	}
 #endif
 
@@ -909,6 +920,9 @@ extern "C" __global__ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* g
 			PxU32(globalHeader.mDescStride), PxU32(globalHeader.constraintType), globalHeader.mConstraintBatchIndex,
 			globalHeader.mStartPartitionIndex, globalHeader.mask, static_cast<void*>(shDesc.mBatchHeaders),
 			static_cast<void*>(gDesc->mBatchHeaders), static_cast<void*>(shDesc.blockBatches));
+#if defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+		printf("PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1\n");
+#endif
 	}
 
 	const PxU32 nbElemsPerBody = gDesc->nbElementsPerBody;

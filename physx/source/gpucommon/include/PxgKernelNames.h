@@ -120,6 +120,9 @@ KERNEL_DEF(TRIMESH_PLANE_CORE, "trimeshPlaneNarrowphase")
 KERNEL_DEF(TRIMESH_HEIGHTFIELD_CORE, "trimeshHeightfieldNarrowphase")
 KERNEL_DEF(TRIMESH_TRIMESH_CORE, "triangleTriangleCollision")
 KERNEL_DEF(TRIMESH_TRIMESH_OVERLAP, "triangleTriangleOverlaps")
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+KERNEL_DEF(TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64_DCU_V10, "triangleTriangleOverlapsLaunchBounds64DcuV10")
+#endif
 
 KERNEL_DEF(EVALUATE_POINT_DISTANCES_SDF, "evaluatePointDistancesSDFBatch")
 
@@ -372,6 +375,13 @@ KERNEL_DEF(SB_SOLVE_SOFT_CLOTH_BOTH_DELTA, "sb_solveOutputSCDeltaVLaunch")
 KERNEL_DEF(SB_SOLVE_PARTICLE_SOFT_DELTA, "sb_solveOutputSPDeltaVLaunch")
 KERNEL_DEF(SB_SOLVE_PARTICLE_PARTICLE_DELTA, "sb_solveOutputParticleDeltaVLaunch")
 KERNEL_DEF(SB_GM_CP_SOLVE_TETRA, "sb_gm_cp_solveTetrahedronsPartitionLaunch")
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_FIVE_TET_DCU_P3, "sb_gm_cp_solveTetrahedronsPartitionFiveTetDcuP3")
+KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_DCU_P17, "sb_gm_cp_solveTetrahedronsPartitionFiveTet64DcuP17")
+KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_COPY2_DCU_P23, "sb_gm_cp_solveTetrahedronsPartitionFiveTet64Copy2DcuP23")
+KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_NO_PER_ELEMENT_SYNC_DCU_P27, "sb_gm_cp_solveTetrahedronsPartitionFiveTet64NoPerElementSyncDcuP27")
+KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_FLAT_DCU_P31, "sb_gm_cp_solveTetrahedronsPartitionFiveTet64FlatDcuP31")
+#endif
 KERNEL_DEF(SB_GM_CP_SOLVE_TETRA_JACOBI_PARTITION, "sb_gm_cp_solveTetrahedronsJacobiPartitionLaunch")
 KERNEL_DEF(SB_GM_UPDATETETMODELVERTS, "sb_gm_updateTetModelVertsLaunch")
 KERNEL_DEF(SB_GM_ZERO_TETMULTIPLIERS, "sb_gm_zeroTetMultipliers")
@@ -614,5 +624,33 @@ KERNEL_DEF(sdf_CountHoles, "sdfCountHoles")
 KERNEL_DEF(sdf_FindHoles, "sdfFindHoles")
 KERNEL_DEF(sdf_ApplyHoleCorrections, "sdfApplyHoleCorrections")
 KERNEL_DEF(sdf_CalculateDenseGridPointCloud, "sdfCalculateDenseGridPointCloud")
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+// Trimesh-trimesh collision variant with the triangle-SDF refinement helper forced inline.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_SDF_INLINE_DCU_V1, "triangleTriangleCollisionSdfInlineDcuV1")
+// Trimesh-trimesh collision variant that reuses the inverse pair transform during SDF triangle filtering.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_INVERSE_CACHE_DCU_V2, "triangleTriangleCollisionInverseCacheDcuV2")
+// Trimesh-trimesh collision variant that serializes two items inside one 1024-thread workgroup.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_PACK2_SERIAL_DCU_V3, "triangleTriangleCollisionPack2SerialDcuV3")
+// Default collision body compiled with a two-workgroup launch-bound request.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_OCCUPANCY2_DCU_V5, "triangleTriangleCollisionOccupancy2DcuV5")
+// Default collision body with only createNewPatches moved behind a device noinline boundary.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_CREATE_PATCH_NOINLINE_DCU_V6, "triangleTriangleCollisionCreatePatchNoInlineDcuV6")
+// Collision body that keeps inactive-lane contact payload dead until a candidate is accepted.
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_CONTACT_PREDICATE_DCU_V7, "triangleTriangleCollisionContactPredicateDcuV7")
+KERNEL_DEF(TRIMESH_TRIMESH_CORE_NATIVE_BLOCK_COUNT_DCU_V8, "triangleTriangleCollisionNativeBlockCountDcuV8")
+// Deterministic stable radix pass used only by the DCU broadphase path.
+KERNEL_DEF(RS_BP_SERIAL_COUNTING_PASS_DCU_V3, "radixSortBroadPhaseSerialCountingPassDcuV3")
+// Deterministic stable radix pass used only by the DCU PBD primitive-contact path.
+KERNEL_DEF(RS_PBD_PRIMITIVE_SERIAL_COUNTING_PASS_DCU_V4, "radixSortPbdPrimitiveSerialCountingPassDcuV4")
+// Chunk-parallel, complete 32-bit stable radix sort used by the opt-in DCU PBD path.
+KERNEL_DEF(RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_DCU_V5, "radixSortPbdPrimitiveChunkedCounting32DcuV5")
+// V5-equivalent primitive sort with scalar radix extraction forced inline.
+KERNEL_DEF(RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_INLINE_DCU_V7, "radixSortPbdPrimitiveChunkedCounting32InlineDcuV7")
+// Complete stable 64-bit primitive sort with the high-word gather fused between the low/high passes.
+KERNEL_DEF(RS_PBD_PRIMITIVE_CHUNKED_COUNTING_64_INLINE_DCU_V63, "radixSortPbdPrimitiveChunkedCounting64InlineDcuV63")
+// Chunk-parallel, complete 32-bit stable radix sort for the opt-in PBD spatial hash path.
+KERNEL_DEF(RS_PBD_SPATIAL_CHUNKED_COUNTING_32_DCU_V6, "radixSortPbdSpatialChunkedCounting32DcuV6")
+#endif
 
 #endif

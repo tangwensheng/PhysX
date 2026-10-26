@@ -55,6 +55,8 @@
 
 #if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
 #define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 32
+extern "C" __device__ __constant__ char gPxgDcuTrimeshPlaneVersion[] =
+	"PX_DCU_TRIMESH_PLANE_V1_32_THREAD_BATCHED_LAUNCH";
 #else
 #define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 1024
 #endif

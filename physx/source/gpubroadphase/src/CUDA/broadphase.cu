@@ -48,6 +48,10 @@
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuBroadphaseReportStageVersion[] = "PX_DCU_GPU_BROADPHASE_REPORT_V5_SERIAL_FULL_COMPACTION";
+#endif
+
 extern "C" __host__ void initBroadphaseKernels0() {}
 
 #define USE_ENV_IDS	1
@@ -2381,6 +2385,60 @@ extern "C" __global__ void accumulateReportsStage_1(const PxgBroadPhaseDesc* bpD
 //actorFoundPairs blockIdx.y == 1, actorFoundPairs blockIdx.y == 3 
 extern "C" __global__ void accumulateReportsStage_2(PxgBroadPhaseDesc* bpDesc)	// BP_ACCUMULATE_REPORT_STAGE_2 //###ONESHOT
 {
+	const bool outputAggReport = ((blockIdx.y % 2) == 0);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	// The generic Stage2 ballot/scan path can produce a valid-sized but incorrect
+	// compaction on gfx936. Build each of the four report lists deterministically;
+	// Stage1 remains unchanged, but its per-block histograms are not consumed here.
+	if(blockIdx.x == 0 && threadIdx.x == 0)
+	{
+		const bool outputFoundReport = (blockIdx.y < 2);
+		const PxU32 nbPairs = outputFoundReport ? bpDesc->sharedFoundPairIndex : bpDesc->sharedLostPairIndex;
+		const PxU32 nbPairsSafe = PxMin(nbPairs, bpDesc->max_found_lost_pairs);
+		const PxgBroadPhasePair* pairs = outputFoundReport ? bpDesc->foundPairReport : bpDesc->lostPairReport;
+		PxgBroadPhasePair* outputPairs;
+		PxU32 maxOutputPairs;
+		if(outputAggReport)
+		{
+			outputPairs = outputFoundReport ? bpDesc->foundAggPairReport : bpDesc->lostAggPairReport;
+			maxOutputPairs = bpDesc->max_found_lost_agg_pairs;
+		}
+		else
+		{
+			outputPairs = outputFoundReport ? bpDesc->foundActorPairReport : bpDesc->lostActorPairReport;
+			maxOutputPairs = bpDesc->max_found_lost_pairs;
+		}
+
+		const Bp::VolumeData* volumeData = bpDesc->aabbMngr_volumeData;
+		PxU32 outputIndex = 0;
+		for(PxU32 workIndex = 0; workIndex < nbPairsSafe; ++workIndex)
+		{
+			const PxgBroadPhasePair pair = pairs[workIndex];
+			const bool isSingleActorA = volumeData ? volumeData[pair.mVolA].isSingleActor() : true;
+			const bool isSingleActorB = volumeData ? volumeData[pair.mVolB].isSingleActor() : true;
+			const bool isAgg = !(isSingleActorA && isSingleActorB);
+
+			assert(pair.mVolA != pair.mVolB);
+			if(outputAggReport == isAgg)
+			{
+				if(outputIndex < maxOutputPairs)
+					outputPairs[outputIndex] = pair;
+				++outputIndex;
+			}
+		}
+
+		if(outputAggReport)
+		{
+			if(outputFoundReport)
+				bpDesc->sharedFoundAggPairIndex = outputIndex;
+			else
+				bpDesc->sharedLostAggPairIndex = outputIndex;
+		}
+	}
+	return;
+#endif
+
 	const PxU32 warpPerBlock = PxgBPKernelBlockDim::BP_COMPUTE_INCREMENTAL_CMP_COUNTS2 / WARP_SIZE;
 
 	const PxU32 numBlocks = PxgBPKernelGridDim::BP_COMPUTE_INCREMENTAL_CMP_COUNTS2;
@@ -2388,8 +2446,6 @@ extern "C" __global__ void accumulateReportsStage_2(PxgBroadPhaseDesc* bpDesc)	/
 	__shared__ PxU32 sWarpAccum[warpPerBlock];
 	__shared__ PxU32 sBlockHistogram[numBlocks];
 	__shared__ PxU32 sAccum;
-
-	const bool outputAggReport = ((blockIdx.y % 2)  == 0 )? true : false;
 
 	const PxU32 idx = threadIdx.x;
 
@@ -2472,36 +2528,6 @@ extern "C" __global__ void accumulateReportsStage_2(PxgBroadPhaseDesc* bpDesc)	/
 	const PxU32 nbPairsSafe = PxMin(nbPairs, bpDesc->max_found_lost_pairs); // AD: pairs buffer is sized according to this, aggregate count is not considered.
 	
 	const Bp::VolumeData* volumeData = bpDesc->aabbMngr_volumeData;
-
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	// gfx936 wave64 loses the second logical 32-lane warp in this stage's
-	// ballot-based compaction for small report lists. Keep the existing stage 1
-	// counts, but compact these lists deterministically in the first block.
-	if(nbPairsSafe <= WARP_SIZE * 8)
-	{
-		if(blockIdx.x == 0 && idx == 0)
-		{
-			PxU32 outputIndex = 0;
-			for(PxU32 workIndex = 0; workIndex < nbPairsSafe; ++workIndex)
-			{
-				const PxgBroadPhasePair pair = pairs[workIndex];
-				const bool isSingleActorA = volumeData ? volumeData[pair.mVolA].isSingleActor() : true;
-				const bool isSingleActorB = volumeData ? volumeData[pair.mVolB].isSingleActor() : true;
-				const bool isAgg = !(isSingleActorA && isSingleActorB);
-				const bool selected = outputAggReport ? isAgg : !isAgg;
-
-				assert(pair.mVolA != pair.mVolB);
-				if(selected)
-				{
-					if(outputIndex < maxPairs)
-						aggOrActorPairs[outputIndex] = pair;
-					++outputIndex;
-				}
-			}
-		}
-		return;
-	}
-#endif
 
 	const PxU32 totalBlockRequired = (nbPairs + (blockDim.x - 1)) / blockDim.x;
 

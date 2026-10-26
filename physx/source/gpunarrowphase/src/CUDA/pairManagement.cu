@@ -35,6 +35,10 @@
 #include "PxgContactManager.h"
 #include "PxgNpKernelIndices.h"
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49) && PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49
+extern "C" __device__ __constant__ char gPxgDcuRigidPairManagementO3P49Version[] = "PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49_GFX936_DEVICE_V1";
+#endif
+
 namespace physx
 {
 	class PxsContactManager;

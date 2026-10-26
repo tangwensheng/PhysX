@@ -50,6 +50,10 @@
 #include "solver.cuh"
 #include "PxgArticulationCoreDesc.h"
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48) && PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48
+extern "C" __device__ __constant__ char gPxgDcuRigidSolverMultiBlockO3P48Version[] = "PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48_GFX936_DEVICE_V1";
+#endif
+
 using namespace physx;
 
 extern "C" __host__ void initSolverKernels6() {}

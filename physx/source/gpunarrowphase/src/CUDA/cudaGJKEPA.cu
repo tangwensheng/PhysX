@@ -74,6 +74,10 @@ extern "C" __host__ void initNarrowphaseKernels6() {}
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 extern "C" __device__ __constant__ char gPxgDcuLostFoundCompactStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V54_SERIAL_LOST_FOUND_COMPACT";
+#if defined(PX_DCU_RIGID_GJKEPA_O3_P45) && PX_DCU_RIGID_GJKEPA_O3_P45
+// Product identity only; no kernel algorithm or memory ownership change.
+extern "C" __device__ __constant__ char gPxgDcuRigidGjkEpaO3P45Version[] = "PX_DCU_RIGID_GJKEPA_O3_P45_GFX936_DEVICE_V1";
+#endif
 #endif
 
 __device__ __forceinline__ static
@@ -1537,6 +1541,50 @@ protected:
 	PxU32							mNumPairs;
 };
 
+#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2IndexP54Version[] = "PX_DCU_RIGID_STAGE2_INDEX_P54_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedSplitP64Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetchP65Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetch8P68Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetch16P70Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2MetadataPrefetchP72Version[] = "PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2EmptyBatchSkipP73Version[] = "PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2SetBitCompactP74Version[] = "PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2DualGroupSkipP75Version[] = "PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2PackedOutputCountsP76Version[] = "PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76_GFX936_DEVICE_V1";
+#endif
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_FLAGS4_P60) && PX_DCU_RIGID_STAGE2_FLAGS4_P60
+extern "C" __device__ __constant__ char gPxgDcuRigidStage2Flags4P60Version[] = "PX_DCU_RIGID_STAGE2_FLAGS4_P60_GFX936_DEVICE_V1";
+#endif
+
 extern "C" __global__ void prepareLostFoundPairs_Stage2(
 															const PxU32* PX_RESTRICT inputFlagsArray,
 															const PxU32* PX_RESTRICT tempRunsumArray,
@@ -1546,15 +1594,769 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 															uint2* PX_RESTRICT lostAndTotalReportedPairsCount,
 															PxU32* PX_RESTRICT blockAccumulationArray,
 															PxU32 numPairs,
-															PxsContactManager** PX_RESTRICT contactManagerArray)
+															PxsContactManager** PX_RESTRICT contactManagerArray
+#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+                                                            , PxU32 useBoundedIndexP54
+#endif
+                                                            )
 {
 #if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
 	if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
 	{
+#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+        // The loop visits [0, 2*numPairs); n==0 visits nothing. Preserve the
+        // original serial copy/count order and all mapped-memory plain stores.
+        if (useBoundedIndexP54)
+        {
+            PxU32 outputCount = 0;
+            lostAndTotalReportedPairsCount->x = 0;
+
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
+            // Preserve the original serial order while making each half's index
+            // affine: the first half reads [0, numPairs), then the second half
+            // reads [numPairs, 2*numPairs) with the same output order.
+#if defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+            // P76 retains P73's eight-flag empty-group skip. For each emitted
+            // entry, load the contiguous source count bytes once, reorder the
+            // three live bytes into destination order, and store one dword.
+            PxU32 index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP76[8];
+                __builtin_memcpy(flagsP76, inputFlagsArray + index, sizeof(flagsP76));
+                if ((flagsP76[0] | flagsP76[1] | flagsP76[2] | flagsP76[3] |
+                     flagsP76[4] | flagsP76[5] | flagsP76[6] | flagsP76[7]) == 0)
+                    continue;
+                #pragma unroll 8
+                for (PxU32 laneP76 = 0; laneP76 < 8; ++laneP76)
+                {
+                    if (flagsP76[laneP76])
+                    {
+                        const PxU32 current = index + laneP76;
+                        PxU32 sourceCountsP76;
+                        __builtin_memcpy(&sourceCountsP76, &allOutputManagers[current].allflagsStart, sizeof(sourceCountsP76));
+                        const PxU32 compactedCountsP76 =
+                            ((sourceCountsP76 >> 8) & 0xffu) |
+                            ((sourceCountsP76 >> 16) & 0xff00u) |
+                            (sourceCountsP76 & 0xff0000u);
+                        __builtin_memcpy(&compactedOutputManagers[outputCount], &compactedCountsP76, sizeof(compactedCountsP76));
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    PxU32 sourceCountsP76;
+                    __builtin_memcpy(&sourceCountsP76, &allOutputManagers[index].allflagsStart, sizeof(sourceCountsP76));
+                    const PxU32 compactedCountsP76 =
+                        ((sourceCountsP76 >> 8) & 0xffu) |
+                        ((sourceCountsP76 >> 16) & 0xff00u) |
+                        (sourceCountsP76 & 0xff0000u);
+                    __builtin_memcpy(&compactedOutputManagers[outputCount], &compactedCountsP76, sizeof(compactedCountsP76));
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+            // P75 batches two P73 groups. A fully empty 16-lane window costs one
+            // branch; mixed windows retain two ordered eight-lane sub-loops.
+            PxU32 index = 0;
+            for (; numPairs - index >= 16; index += 16)
+            {
+                PxU32 flagsP75[16];
+                __builtin_memcpy(flagsP75, inputFlagsArray + index, sizeof(flagsP75));
+                const PxU32 anyLowP75 = flagsP75[0] | flagsP75[1] | flagsP75[2] | flagsP75[3] |
+                                        flagsP75[4] | flagsP75[5] | flagsP75[6] | flagsP75[7];
+                const PxU32 anyHighP75 = flagsP75[8] | flagsP75[9] | flagsP75[10] | flagsP75[11] |
+                                         flagsP75[12] | flagsP75[13] | flagsP75[14] | flagsP75[15];
+                if ((anyLowP75 | anyHighP75) == 0)
+                    continue;
+                if (anyLowP75)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 0; laneP75 < 8; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+                if (anyHighP75)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 8; laneP75 < 16; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+            }
+            if (numPairs - index >= 8)
+            {
+                PxU32 flagsP75[8];
+                __builtin_memcpy(flagsP75, inputFlagsArray + index, sizeof(flagsP75));
+                if ((flagsP75[0] | flagsP75[1] | flagsP75[2] | flagsP75[3] |
+                     flagsP75[4] | flagsP75[5] | flagsP75[6] | flagsP75[7]) != 0)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 0; laneP75 < 8; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+                index += 8;
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+            // P74 converts each eight-flag group to a lane mask, then visits only
+            // set lanes from lowest to highest. First-occurrence output order and
+            // the scalar field/pointer stores remain unchanged.
+            PxU32 index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP74[8];
+                __builtin_memcpy(flagsP74, inputFlagsArray + index, sizeof(flagsP74));
+                PxU32 maskP74 = 0;
+                #pragma unroll 8
+                for (PxU32 laneP74 = 0; laneP74 < 8; ++laneP74)
+                {
+                    maskP74 |= (flagsP74[laneP74] != 0) << laneP74;
+                }
+                while (maskP74)
+                {
+                    const PxU32 laneP74 = PxU32(__ffs(maskP74) - 1);
+                    const PxU32 current = index + laneP74;
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[current];
+                    ++outputCount;
+                    maskP74 &= maskP74 - 1;
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+            // P73 starts from P68's eight-flag load and skips the per-lane loop
+            // only when all eight flags are zero. Non-empty groups retain the
+            // original ascending emission order and scalar store sequence.
+            PxU32 index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP73[8];
+                __builtin_memcpy(flagsP73, inputFlagsArray + index, sizeof(flagsP73));
+                if ((flagsP73[0] | flagsP73[1] | flagsP73[2] | flagsP73[3] |
+                     flagsP73[4] | flagsP73[5] | flagsP73[6] | flagsP73[7]) == 0)
+                    continue;
+                #pragma unroll 8
+                for (PxU32 laneP73 = 0; laneP73 < 8; ++laneP73)
+                {
+                    const PxU32 current = index + laneP73;
+                    if (flagsP73[laneP73])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+            // P72 keeps the P68 eight-flag batch and additionally loads each
+            // group's manager-output metadata and manager pointer up front, so
+            // those reads no longer serialize behind the per-lane flag test.
+            // Emission still visits the group lanes in ascending order and
+            // keeps every original scalar store and the serial outputCount.
+            PxU32 index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP72[8];
+                __builtin_memcpy(flagsP72, inputFlagsArray + index, sizeof(flagsP72));
+                PxsContactManagerOutput metadataP72[8];
+                __builtin_memcpy(metadataP72, allOutputManagers + index, sizeof(metadataP72));
+                PxsContactManager* managersP72[8];
+                __builtin_memcpy(managersP72, contactManagerArray + index, sizeof(managersP72));
+                #pragma unroll 8
+                for (PxU32 laneP72 = 0; laneP72 < 8; ++laneP72)
+                {
+                    if (flagsP72[laneP72])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = metadataP72[laneP72].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = metadataP72[laneP72].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = metadataP72[laneP72].statusFlag;
+                        outputManagersPtrs[outputCount] = managersP72[laneP72];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+            PxU32 index = 0;
+            for (; numPairs - index >= 16; index += 16)
+            {
+                PxU32 flagsP70[16];
+                __builtin_memcpy(flagsP70, inputFlagsArray + index, sizeof(flagsP70));
+                #pragma unroll 16
+                for (PxU32 laneP70 = 0; laneP70 < 16; ++laneP70)
+                {
+                    const PxU32 current = index + laneP70;
+                    if (flagsP70[laneP70])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+            PxU32 index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP68[8];
+                __builtin_memcpy(flagsP68, inputFlagsArray + index, sizeof(flagsP68));
+                #pragma unroll 8
+                for (PxU32 laneP68 = 0; laneP68 < 8; ++laneP68)
+                {
+                    const PxU32 current = index + laneP68;
+                    if (flagsP68[laneP68])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+            // P65 only batches input-flag loads. It does not batch or reorder
+            // output stores, and the tail keeps the exact scalar behavior.
+            PxU32 index = 0;
+            for (; numPairs - index >= 4; index += 4)
+            {
+                PxU32 flagsP65[4];
+                __builtin_memcpy(flagsP65, inputFlagsArray + index, sizeof(flagsP65));
+                #pragma unroll 4
+                for (PxU32 laneP65 = 0; laneP65 < 4; ++laneP65)
+                {
+                    const PxU32 current = index + laneP65;
+                    if (flagsP65[laneP65])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#else
+            for (PxU32 index = 0; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#endif
+
+            lostAndTotalReportedPairsCount->x = outputCount;
+
+#if defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+            // P76 applies the same packed count transfer to the second affine half.
+            index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP76[8];
+                __builtin_memcpy(flagsP76, inputFlagsArray + numPairs + index, sizeof(flagsP76));
+                if ((flagsP76[0] | flagsP76[1] | flagsP76[2] | flagsP76[3] |
+                     flagsP76[4] | flagsP76[5] | flagsP76[6] | flagsP76[7]) == 0)
+                    continue;
+                #pragma unroll 8
+                for (PxU32 laneP76 = 0; laneP76 < 8; ++laneP76)
+                {
+                    if (flagsP76[laneP76])
+                    {
+                        const PxU32 current = index + laneP76;
+                        PxU32 sourceCountsP76;
+                        __builtin_memcpy(&sourceCountsP76, &allOutputManagers[current].allflagsStart, sizeof(sourceCountsP76));
+                        const PxU32 compactedCountsP76 =
+                            ((sourceCountsP76 >> 8) & 0xffu) |
+                            ((sourceCountsP76 >> 16) & 0xff00u) |
+                            (sourceCountsP76 & 0xff0000u);
+                        __builtin_memcpy(&compactedOutputManagers[outputCount], &compactedCountsP76, sizeof(compactedCountsP76));
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    PxU32 sourceCountsP76;
+                    __builtin_memcpy(&sourceCountsP76, &allOutputManagers[index].allflagsStart, sizeof(sourceCountsP76));
+                    const PxU32 compactedCountsP76 =
+                        ((sourceCountsP76 >> 8) & 0xffu) |
+                        ((sourceCountsP76 >> 16) & 0xff00u) |
+                        (sourceCountsP76 & 0xff0000u);
+                    __builtin_memcpy(&compactedOutputManagers[outputCount], &compactedCountsP76, sizeof(compactedCountsP76));
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+            // P75 applies the same dual-group window skip to the second affine half.
+            index = 0;
+            for (; numPairs - index >= 16; index += 16)
+            {
+                PxU32 flagsP75[16];
+                __builtin_memcpy(flagsP75, inputFlagsArray + numPairs + index, sizeof(flagsP75));
+                const PxU32 anyLowP75 = flagsP75[0] | flagsP75[1] | flagsP75[2] | flagsP75[3] |
+                                        flagsP75[4] | flagsP75[5] | flagsP75[6] | flagsP75[7];
+                const PxU32 anyHighP75 = flagsP75[8] | flagsP75[9] | flagsP75[10] | flagsP75[11] |
+                                         flagsP75[12] | flagsP75[13] | flagsP75[14] | flagsP75[15];
+                if ((anyLowP75 | anyHighP75) == 0)
+                    continue;
+                if (anyLowP75)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 0; laneP75 < 8; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+                if (anyHighP75)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 8; laneP75 < 16; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+            }
+            if (numPairs - index >= 8)
+            {
+                PxU32 flagsP75[8];
+                __builtin_memcpy(flagsP75, inputFlagsArray + numPairs + index, sizeof(flagsP75));
+                if ((flagsP75[0] | flagsP75[1] | flagsP75[2] | flagsP75[3] |
+                     flagsP75[4] | flagsP75[5] | flagsP75[6] | flagsP75[7]) != 0)
+                {
+                    #pragma unroll 8
+                    for (PxU32 laneP75 = 0; laneP75 < 8; ++laneP75)
+                    {
+                        if (flagsP75[laneP75])
+                        {
+                            const PxU32 current = index + laneP75;
+                            compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                            compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                            compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                            outputManagersPtrs[outputCount] = contactManagerArray[current];
+                            ++outputCount;
+                        }
+                    }
+                }
+                index += 8;
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+            // P74 applies the same set-bit compaction to the second affine half.
+            index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP74[8];
+                __builtin_memcpy(flagsP74, inputFlagsArray + numPairs + index, sizeof(flagsP74));
+                PxU32 maskP74 = 0;
+                #pragma unroll 8
+                for (PxU32 laneP74 = 0; laneP74 < 8; ++laneP74)
+                {
+                    maskP74 |= (flagsP74[laneP74] != 0) << laneP74;
+                }
+                while (maskP74)
+                {
+                    const PxU32 laneP74 = PxU32(__ffs(maskP74) - 1);
+                    const PxU32 current = index + laneP74;
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[current];
+                    ++outputCount;
+                    maskP74 &= maskP74 - 1;
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+            // P73 applies the same all-zero-group skip to the second affine half.
+            index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP73[8];
+                __builtin_memcpy(flagsP73, inputFlagsArray + numPairs + index, sizeof(flagsP73));
+                if ((flagsP73[0] | flagsP73[1] | flagsP73[2] | flagsP73[3] |
+                     flagsP73[4] | flagsP73[5] | flagsP73[6] | flagsP73[7]) == 0)
+                    continue;
+                #pragma unroll 8
+                for (PxU32 laneP73 = 0; laneP73 < 8; ++laneP73)
+                {
+                    const PxU32 current = index + laneP73;
+                    if (flagsP73[laneP73])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+            // P72 applies the same metadata prefetch to the second affine half.
+            index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP72[8];
+                __builtin_memcpy(flagsP72, inputFlagsArray + numPairs + index, sizeof(flagsP72));
+                PxsContactManagerOutput metadataP72[8];
+                __builtin_memcpy(metadataP72, allOutputManagers + index, sizeof(metadataP72));
+                PxsContactManager* managersP72[8];
+                __builtin_memcpy(managersP72, contactManagerArray + index, sizeof(managersP72));
+                #pragma unroll 8
+                for (PxU32 laneP72 = 0; laneP72 < 8; ++laneP72)
+                {
+                    if (flagsP72[laneP72])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = metadataP72[laneP72].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = metadataP72[laneP72].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = metadataP72[laneP72].statusFlag;
+                        outputManagersPtrs[outputCount] = managersP72[laneP72];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+            index = 0;
+            for (; numPairs - index >= 16; index += 16)
+            {
+                PxU32 flagsP70[16];
+                __builtin_memcpy(flagsP70, inputFlagsArray + numPairs + index, sizeof(flagsP70));
+                #pragma unroll 16
+                for (PxU32 laneP70 = 0; laneP70 < 16; ++laneP70)
+                {
+                    const PxU32 current = index + laneP70;
+                    if (flagsP70[laneP70])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+            index = 0;
+            for (; numPairs - index >= 8; index += 8)
+            {
+                PxU32 flagsP68[8];
+                __builtin_memcpy(flagsP68, inputFlagsArray + numPairs + index, sizeof(flagsP68));
+                #pragma unroll 8
+                for (PxU32 laneP68 = 0; laneP68 < 8; ++laneP68)
+                {
+                    const PxU32 current = index + laneP68;
+                    if (flagsP68[laneP68])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+            index = 0;
+            for (; numPairs - index >= 4; index += 4)
+            {
+                PxU32 flagsP65[4];
+                __builtin_memcpy(flagsP65, inputFlagsArray + numPairs + index, sizeof(flagsP65));
+                #pragma unroll 4
+                for (PxU32 laneP65 = 0; laneP65 < 4; ++laneP65)
+                {
+                    const PxU32 current = index + laneP65;
+                    if (flagsP65[laneP65])
+                    {
+                        compactedOutputManagers[outputCount].nbPatches = allOutputManagers[current].nbPatches;
+                        compactedOutputManagers[outputCount].prevPatches = allOutputManagers[current].prevPatches;
+                        compactedOutputManagers[outputCount].statusFlag = allOutputManagers[current].statusFlag;
+                        outputManagersPtrs[outputCount] = contactManagerArray[current];
+                        ++outputCount;
+                    }
+                }
+            }
+            for (; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#else
+            for (PxU32 index = 0; index < numPairs; ++index)
+            {
+                if (inputFlagsArray[numPairs + index])
+                {
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#endif
+#else
+            for (PxU32 idx = 0; idx < 2 * numPairs; ++idx)
+            {
+                if (idx == numPairs)
+                    lostAndTotalReportedPairsCount->x = outputCount;
+
+                if (inputFlagsArray[idx])
+                {
+                    const PxU32 index = idx < numPairs ? idx : idx - numPairs;
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+#endif
+
+            lostAndTotalReportedPairsCount->y = outputCount;
+            return;
+        }
+#endif
 		PxU32 outputCount = 0;
 		lostAndTotalReportedPairsCount->x = 0;
 
+#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_FLAGS4_P60) && PX_DCU_RIGID_STAGE2_FLAGS4_P60
+        // Flags are immutable device-buffer input on this stream. Read only complete
+        // groups, then keep the original per-index copy/count order and modulo.
+        // memcpy avoids stronger alignment or aliasing requirements on the parameter.
+        const PxU32 numFlagsP60 = 2 * numPairs;
+        PxU32 idxP60 = 0;
+        for (; numFlagsP60 - idxP60 >= 4; idxP60 += 4)
+        {
+            PxU32 flagsP60[4];
+            __builtin_memcpy(flagsP60, inputFlagsArray + idxP60, sizeof(flagsP60));
+            #pragma unroll 4
+            for (PxU32 laneP60 = 0; laneP60 < 4; ++laneP60)
+            {
+                const PxU32 idx = idxP60 + laneP60;
+                if (idx == numPairs)
+                    lostAndTotalReportedPairsCount->x = outputCount;
+                if (flagsP60[laneP60])
+                {
+                    const PxU32 index = idx % numPairs;
+                    compactedOutputManagers[outputCount].nbPatches = allOutputManagers[index].nbPatches;
+                    compactedOutputManagers[outputCount].prevPatches = allOutputManagers[index].prevPatches;
+                    compactedOutputManagers[outputCount].statusFlag = allOutputManagers[index].statusFlag;
+                    outputManagersPtrs[outputCount] = contactManagerArray[index];
+                    ++outputCount;
+                }
+            }
+        }
+        for (PxU32 idx = idxP60; idx < numFlagsP60; ++idx)
+#else
 		for (PxU32 idx = 0; idx < 2 * numPairs; ++idx)
+#endif
 		{
 			if (idx == numPairs)
 				lostAndTotalReportedPairsCount->x = outputCount;
@@ -1572,7 +2374,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 
 		lostAndTotalReportedPairsCount->y = outputCount;
 	}
-	return;
+		return;
 #endif
 
 	ReadArrayFunctor<PxU32> readF(tempRunsumArray);

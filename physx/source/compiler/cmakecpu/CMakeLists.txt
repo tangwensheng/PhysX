@@ -363,6 +363,15 @@ target_include_directories(HipContext PUBLIC
     /opt/dtk/include
 )
 target_compile_definitions(HipContext PRIVATE PX_DCU_PORT __HIP_PLATFORM_AMD__ PX_SUPPORT_GPU_PHYSX)
+# Match the gfx936 device kernel argument layout only for the explicit P54 product.
+option(PX_DCU_RIGID_STAGE2_INDEX_P54 "Opt-in gfx936 ordinary-rigid Stage2 host dispatch" OFF)
+if(PX_DCU_RIGID_STAGE2_INDEX_P54)
+    if(NOT DEFINED DCU_ARCH OR NOT DCU_ARCH STREQUAL "gfx936")
+        message(FATAL_ERROR "P54 host dispatch requires explicit DCU_ARCH=gfx936")
+    endif()
+    set_property(SOURCE ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp
+        APPEND PROPERTY COMPILE_OPTIONS -DPX_DCU_RIGID_STAGE2_INDEX_P54=1)
+endif()
 # -include forces the DCU stub <cuda.h> to be included before EVERY header,
 # ensuring CUDA_VERSION is set and PxCudaTypes.h skips its own definitions
 # (which would otherwise pull in <hip/hip_runtime.h> and break float4/float2).

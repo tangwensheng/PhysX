@@ -86,6 +86,13 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels10() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuParticlePrimitiveBoundVersion[] =
+	"PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256";
+extern "C" __device__ __constant__ char gPxgDcuParticlePrimitiveCollisionVersion[] =
+	"PX_DCU_PARTICLE_PRIMITIVE_COLLISION_V58_DIRECT_GRID_STRIDE";
+#endif
+
 PX_FORCE_INLINE __device__ PxBounds3 combine(const PxBounds3& bound0, const PxBounds3& bound1)
 {
 	PxBounds3 overlapBound;
@@ -1308,6 +1315,26 @@ extern "C" __global__ void ps_primitivesCollisionLaunch(
 			totalComparision, shapeToRigidRemapTable, writer);
 		return;
 	}
+
+	// The generic path below compacts non-empty cells with ballot/warp scans and
+	// a shared overflow queue. On gfx936 that mapping can be corrupted while
+	// remaining in bounds. Process every candidate cell exactly once instead;
+	// psPrimitivesCollision already ignores empty cells.
+	for (PxU32 baseIndex = blockIdx.x * blockDim.x; baseIndex < totalComparision;
+		baseIndex += blockDim.x * gridDim.x)
+	{
+		const PxU32 candidateIndex = baseIndex + threadIdx.x;
+		const bool hasWork = candidateIndex < totalComparision;
+		const PxU32 dataWorkIndex = hasWork ? candidateIndex : 0;
+		const PxU32 workIndex = hasWork ? candidateIndex : 0xFFFFFFFF;
+
+		PxgCellData data;
+		data.update(dataWorkIndex, numTests, cmInputs, shapes, bounds, contactDistance, restDistances, startIndices, particleSystems);
+		psPrimitivesCollision(isTGS, data.gridHash, data.rigidShape, data.particleShape, data.rigidCacheRef, data.particleCacheRef, transformCache,
+			*data.particleSystem, data.particleSystemId, data.cDistance, data.restDistance, materials, workIndex,
+			totalComparision, shapeToRigidRemapTable, writer);
+	}
+	return;
 #endif
 
 	for (PxU32 i = 0; i < totalComparision; i += blockDim.x * gridDim.x)

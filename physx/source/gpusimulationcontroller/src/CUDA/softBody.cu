@@ -68,6 +68,10 @@
 
 using namespace physx;
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_SOFTBODY_O3_P36) && PX_DCU_VOLUME_SOFTBODY_O3_P36
+extern "C" __device__ __constant__ char gPxgDcuSoftBodyO3P36Version[] = "PX_DCU_SOFTBODY_O3_P36_GFX936_DEVICE_V1";
+#endif
+
 extern "C" __host__ void initSoftBodyKernels0() {}
 
 

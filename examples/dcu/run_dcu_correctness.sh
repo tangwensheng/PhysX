@@ -3,7 +3,22 @@
 
 set -u
 
-RUNNER_MARKER="PX_DCU_CORRECTNESS_RUNNER_R5_PBD_STABLE_SORT_DIAG"
+RUNNER_MARKER="PX_DCU_CORRECTNESS_RUNNER_R14_NO_GIT_INSPECTION"
+# Kept so runners delivered before the no-Git-inspection cleanup remain compatible.
+RUNNER_COMPAT_MARKER_R13="PX_DCU_CORRECTNESS_RUNNER_R13_BROADPHASE_UPDATE_COMPACT"
+# Kept so the already-closed cloth P3 evidence helper can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R12="PX_DCU_CORRECTNESS_RUNNER_R12_BROADPHASE_UPDATE_DIAG"
+# Kept so the already-closed P8 and cloth P0/P1/P2 helper scripts can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R11="PX_DCU_CORRECTNESS_RUNNER_R11_PBD_PRIMITIVE_FUSED64"
+# Kept so the already-closed P6/P7 helper scripts can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R10="PX_DCU_CORRECTNESS_RUNNER_R10_PBD_PARTICLE_RANGE_PARALLEL"
+# Kept so the already-closed P5/P6 helper scripts can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R9="PX_DCU_CORRECTNESS_RUNNER_R9_PBD_PRIMITIVE_INLINE"
+# Kept so the already-closed P2/P3/P4 helper scripts can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R8="PX_DCU_CORRECTNESS_RUNNER_R8_PBD_PARTICLE_RANGE_CHUNKED"
+# Kept so the already-closed P2/P3 helper scripts can still validate this newer runner.
+RUNNER_COMPAT_MARKER_R7="PX_DCU_CORRECTNESS_RUNNER_R7_PBD_PARTICLE_RANGE_DIAG"
+RUNNER_COMPAT_MARKER_R6="PX_DCU_CORRECTNESS_RUNNER_R6_PBD_SPATIAL_SORT_DIAG"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
@@ -11,11 +26,12 @@ CASE_FILE="${CASE_FILE:-$SCRIPT_DIR/dcu_correctness_cases.tsv}"
 MODE="run"
 if [[ "${1:-}" == "--pin" ]]; then
     MODE="pin"
-    SELECTOR="${2:-all}"
-    if (( $# > 2 )); then
-        printf 'ERROR: --pin accepts at most one selector\n' >&2
+    if (( $# != 2 )); then
+        printf 'ERROR: --pin requires exactly one selector: all, BATCH, or CASE\n' >&2
+        printf 'Usage: %s --pin all|BATCH|CASE\n' "$0" >&2
         exit 2
     fi
+    SELECTOR="$2"
 else
     SELECTOR="${1:-all}"
     if (( $# > 1 )); then
@@ -37,8 +53,18 @@ TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-1800}"
 POST_HEALTH_SAMPLES="${POST_HEALTH_SAMPLES:-4}"
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-2}"
 BROADPHASE_DIAG="${PX_DCU_BROADPHASE_DIAG:-0}"
+BROADPHASE_UPDATE_DIAG="${PX_DCU_BROADPHASE_UPDATE_DIAG:-0}"
+BROADPHASE_UPDATE_COMPACT="${PX_DCU_BROADPHASE_UPDATE_COMPACT:-0}"
 PBD_PRIMITIVE_RADIX_CHUNKED="${PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED:-0}"
+PBD_PRIMITIVE_RADIX_INLINE="${PX_DCU_PBD_PRIMITIVE_RADIX_INLINE:-0}"
+PBD_PRIMITIVE_RADIX_FUSED64="${PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64:-0}"
 PBD_PRIMITIVE_RANK_DIAG="${PX_DCU_PBD_PRIMITIVE_RANK_DIAG:-0}"
+PBD_SPATIAL_RADIX_CHUNKED="${PX_DCU_PBD_SPATIAL_RADIX_CHUNKED:-0}"
+PBD_SPATIAL_RANK_DIAG="${PX_DCU_PBD_SPATIAL_RANK_DIAG:-0}"
+PBD_PARTICLE_RANGE_FUSED="${PX_DCU_PBD_PARTICLE_RANGE_FUSED:-0}"
+PBD_PARTICLE_RANGE_CHUNKED="${PX_DCU_PBD_PARTICLE_RANGE_CHUNKED:-0}"
+PBD_PARTICLE_RANGE_PARALLEL="${PX_DCU_PBD_PARTICLE_RANGE_PARALLEL:-0}"
+PBD_PARTICLE_RANGE_DIAG="${PX_DCU_PBD_PARTICLE_RANGE_DIAG:-0}"
 LOG_ROOT="${LOG_ROOT:-$SCRIPT_DIR/logs}"
 
 case_tag="${CASE_FILE##*/}"
@@ -50,11 +76,11 @@ usage()
 {
     cat <<'EOF'
 Usage: ./run_dcu_correctness.sh [--list|all|BATCH|CASE]
-       ./run_dcu_correctness.sh --pin [all|BATCH|CASE]
+       ./run_dcu_correctness.sh --pin all|BATCH|CASE
 
 Examples:
   ./run_dcu_correctness.sh --list
-  ./run_dcu_correctness.sh --pin
+  ./run_dcu_correctness.sh --pin all
   ./run_dcu_correctness.sh --pin trimesh_complex
   ./run_dcu_correctness.sh all
   ./run_dcu_correctness.sh batch2
@@ -70,8 +96,18 @@ Environment overrides:
   POST_HEALTH_SAMPLES=N       health samples after each benchmark
   HEALTH_INTERVAL=N           seconds between post-run health samples
   PX_DCU_BROADPHASE_DIAG=0|1  enable expensive broadphase diagnostics (default 0)
+  PX_DCU_BROADPHASE_UPDATE_DIAG=0|1  print broadphase updated-pairs launch shape once (default 0)
+  PX_DCU_BROADPHASE_UPDATE_COMPACT=0|1  compact one-word updated-pairs launch to 1x32 on DCU (default 0)
   PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=0|1  use opt-in chunked PBD primitive radix (default 0)
-  PX_DCU_PBD_PRIMITIVE_RANK_DIAG=0|1  compare low-32 key/rank output with host stable_sort (default 0)
+  PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=0|1  use force-inlined radix extraction with the chunked primitive radix (default 0)
+  PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=0|1  fuse the two 32-bit primitive radix stages into one 64-bit kernel (default 0)
+  PX_DCU_PBD_PRIMITIVE_RANK_DIAG=0|1  compare low-32 and final 64-bit key/rank output with host stable_sort (default 0)
+  PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=0|1  use opt-in chunked PBD spatial radix (default 0)
+  PX_DCU_PBD_SPATIAL_RANK_DIAG=0|1  compare spatial key/rank output with host stable_sort (default 0)
+  PX_DCU_PBD_PARTICLE_RANGE_FUSED=0|1  use opt-in fused PBD particle contact range scan (default 0)
+  PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=0|1  use 32-thread chunked fused particle range scan (default 0)
+  PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=0|1  use 32-thread parallel-boundary fused particle range scan (default 0)
+  PX_DCU_PBD_PARTICLE_RANGE_DIAG=0|1  validate sorted contacts and generated ranges on host (default 0)
   CASE_FILE=PATH              alternate compatible case table
   BIN_DIR=PATH                benchmark executable directory
   LOG_ROOT=PATH               parent directory for timestamped logs
@@ -105,12 +141,77 @@ if [[ ! "$BROADPHASE_DIAG" =~ ^[01]$ ]]; then
     printf 'ERROR: PX_DCU_BROADPHASE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_DIAG" >&2
     exit 2
 fi
+if [[ ! "$BROADPHASE_UPDATE_DIAG" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_BROADPHASE_UPDATE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_DIAG" >&2
+    exit 2
+fi
+if [[ ! "$BROADPHASE_UPDATE_COMPACT" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_BROADPHASE_UPDATE_COMPACT must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_COMPACT" >&2
+    exit 2
+fi
 if [[ ! "$PBD_PRIMITIVE_RADIX_CHUNKED" =~ ^[01]$ ]]; then
     printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED" >&2
     exit 2
 fi
+if [[ ! "$PBD_PRIMITIVE_RADIX_INLINE" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_INLINE must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_INLINE" >&2
+    exit 2
+fi
+if [[ "$PBD_PRIMITIVE_RADIX_INLINE" -eq 1 && "$PBD_PRIMITIVE_RADIX_CHUNKED" -ne 1 ]]; then
+    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=1 requires PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=1\n' >&2
+    exit 2
+fi
+if [[ ! "$PBD_PRIMITIVE_RADIX_FUSED64" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64 must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_FUSED64" >&2
+    exit 2
+fi
+if [[ "$PBD_PRIMITIVE_RADIX_FUSED64" -eq 1 && \
+    ( "$PBD_PRIMITIVE_RADIX_CHUNKED" -ne 1 || "$PBD_PRIMITIVE_RADIX_INLINE" -ne 1 ) ]]; then
+    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=1 requires PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=1 and PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=1\n' >&2
+    exit 2
+fi
 if [[ ! "$PBD_PRIMITIVE_RANK_DIAG" =~ ^[01]$ ]]; then
     printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RANK_DIAG" >&2
+    exit 2
+fi
+if [[ ! "$PBD_SPATIAL_RADIX_CHUNKED" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_SPATIAL_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_SPATIAL_RADIX_CHUNKED" >&2
+    exit 2
+fi
+if [[ ! "$PBD_SPATIAL_RANK_DIAG" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_SPATIAL_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_SPATIAL_RANK_DIAG" >&2
+    exit 2
+fi
+if [[ "$PBD_SPATIAL_RANK_DIAG" -eq 1 && "$PBD_SPATIAL_RADIX_CHUNKED" -ne 1 ]]; then
+    printf 'ERROR: PX_DCU_PBD_SPATIAL_RANK_DIAG=1 requires PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=1\n' >&2
+    exit 2
+fi
+if [[ ! "$PBD_PARTICLE_RANGE_FUSED" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_FUSED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_FUSED" >&2
+    exit 2
+fi
+if [[ ! "$PBD_PARTICLE_RANGE_CHUNKED" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_CHUNKED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_CHUNKED" >&2
+    exit 2
+fi
+if [[ "$PBD_PARTICLE_RANGE_CHUNKED" -eq 1 && "$PBD_PARTICLE_RANGE_FUSED" -ne 1 ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=1 requires PX_DCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
+    exit 2
+fi
+if [[ ! "$PBD_PARTICLE_RANGE_PARALLEL" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_PARALLEL" >&2
+    exit 2
+fi
+if [[ "$PBD_PARTICLE_RANGE_PARALLEL" -eq 1 && "$PBD_PARTICLE_RANGE_FUSED" -ne 1 ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=1 requires PX_DCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
+    exit 2
+fi
+if [[ "$PBD_PARTICLE_RANGE_PARALLEL" -eq 1 && "$PBD_PARTICLE_RANGE_CHUNKED" -eq 1 ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL and PX_DCU_PBD_PARTICLE_RANGE_CHUNKED are mutually exclusive\n' >&2
+    exit 2
+fi
+if [[ ! "$PBD_PARTICLE_RANGE_DIAG" =~ ^[01]$ ]]; then
+    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_DIAG must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_DIAG" >&2
     exit 2
 fi
 for value_name in MAX_PREFLIGHT_VRAM_PERCENT MAX_PREFLIGHT_HCU_PERCENT; do
@@ -396,7 +497,8 @@ fi
 
 if [[ ! -f "$BASELINE" ]]; then
     printf 'ERROR: no fingerprint baseline: %s\n' "$BASELINE" >&2
-    printf 'Complete both builds, relink all benchmark executables, then run %s --pin\n' "$0" >&2
+    printf 'Complete both builds, relink the selected benchmark executables, then run %s --pin %s\n' \
+        "$0" "$SELECTOR" >&2
     exit 3
 fi
 
@@ -447,8 +549,18 @@ write_environment()
     printf 'post_health_samples=%s\n' "$POST_HEALTH_SAMPLES"
     printf 'health_interval=%s\n' "$HEALTH_INTERVAL"
     printf 'px_dcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
+    printf 'px_dcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
+    printf 'px_dcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
     printf 'px_dcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
+    printf 'px_dcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
+    printf 'px_dcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
     printf 'px_dcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
+    printf 'px_dcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
+    printf 'px_dcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
+    printf 'px_dcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
+    printf 'px_dcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
+    printf 'px_dcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
+    printf 'px_dcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
     printf 'fingerprint_gate=%s\n' "$fingerprint_gate"
     printf 'baseline_md5='; md5sum "$BASELINE" | awk '{print $1}'
     printf '\n--- hy-smi ---\n'
@@ -456,11 +568,6 @@ write_environment()
     printf '\n--- compiler/runtime versions ---\n'
     hipcc --version 2>/dev/null || true
     g++ --version || true
-    printf '\n--- git ---\n'
-    git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true
-    git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true
-    printf 'dirty_paths=' 
-    git -C "$REPO_ROOT" status --short --untracked-files=all 2>/dev/null | wc -l || true
     printf '\n--- selected executable identity ---\n'
     local case_name target executable
     declare -A emitted=()
@@ -493,6 +600,8 @@ run_case()
     local -a case_environment=()
     local log_file="$RUN_DIR/${case_name}_repeat${iteration}.log"
     local run_exit verdict_count pass_count fatal_count capacity_count perf_required perf_count perf_line
+    local spatial_reference_count spatial_valid_count spatial_failure_count spatial_diag_gate
+    local range_valid_count range_failure_count range_diag_gate
     local post_failures sample result assignment
 
     [[ -n "$arguments_text" ]] && read -r -a arguments <<< "$arguments_text"
@@ -521,8 +630,18 @@ run_case()
         printf 'description=%s\n' "$description"
         printf 'case_environment=%s\n' "$environment_text"
         printf 'px_dcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
+        printf 'px_dcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
+        printf 'px_dcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
         printf 'px_dcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
+        printf 'px_dcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
+        printf 'px_dcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
         printf 'px_dcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
+        printf 'px_dcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
+        printf 'px_dcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
+        printf 'px_dcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
+        printf 'px_dcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
+        printf 'px_dcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
+        printf 'px_dcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
         printf 'performance_required=%s\n' "$perf_required"
         printf 'normal_exit_case=%s\n' "$normal_exit"
         printf 'repeat_index=%s/%s\n' "$iteration" "$REPEAT"
@@ -533,8 +652,18 @@ run_case()
         printf 'command='
         printf '%q ' env "HIP_VISIBLE_DEVICES=$DEVICE" "${case_environment[@]}" \
             "PX_DCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
+            "PX_DCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
+            "PX_DCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
             "PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
+            "PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
+            "PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
             "PX_DCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
+            "PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
+            "PX_DCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
+            "PX_DCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
+            "PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
+            "PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
+            "PX_DCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
             "$executable" "${arguments[@]}"
         printf '\n\n--- pre-run health ---\n'
         printf '%s\n' "$health_line"
@@ -550,14 +679,31 @@ run_case()
         capacity_count=0
         perf_count=0
         perf_line=
+        spatial_reference_count=0
+        spatial_valid_count=0
+        spatial_failure_count=0
+        spatial_diag_gate=0
+        range_valid_count=0
+        range_failure_count=0
+        range_diag_gate=0
         post_failures=0
     else
         printf '%s\n' '--- benchmark output ---' | tee -a "$log_file"
         timeout --signal=TERM --kill-after=10s "${TIMEOUT_SECONDS}s" \
             env "HIP_VISIBLE_DEVICES=$DEVICE" "${case_environment[@]}" \
             "PX_DCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
+            "PX_DCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
+            "PX_DCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
             "PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
+            "PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
+            "PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
             "PX_DCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
+            "PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
+            "PX_DCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
+            "PX_DCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
+            "PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
+            "PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
+            "PX_DCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
             stdbuf -oL -eL "$executable" "${arguments[@]}" 2>&1 | tee -a "$log_file"
         run_exit=${PIPESTATUS[0]}
 
@@ -574,6 +720,23 @@ run_case()
             perf_line="$(grep -E '^PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 ' "$log_file")"
         else
             perf_line=
+        fi
+        spatial_reference_count="$(grep -Ec '^\[DCU PBD SPATIAL SORT\].*phase=pre_sort verdict=REFERENCE_READY count=4096([[:space:]]|$)' "$log_file" || true)"
+        spatial_valid_count="$(grep -Ec '^\[DCU PBD SPATIAL SORT\].*phase=post_sort verdict=VALID count=4096([[:space:]]|$)' "$log_file" || true)"
+        spatial_failure_count="$(grep -Eic '^\[DCU PBD SPATIAL SORT\].*verdict=(INVALID|READBACK_FAILED|COUNT[^[:space:]]*)' "$log_file" || true)"
+        if [[ "$PBD_SPATIAL_RANK_DIAG" -eq 0 ]] || \
+            (( spatial_reference_count > 0 && spatial_valid_count > 0 && spatial_failure_count == 0 )); then
+            spatial_diag_gate=1
+        else
+            spatial_diag_gate=0
+        fi
+        range_valid_count="$(grep -Ec '^\[DCU PBD RANGE DIAG\].*verdict=VALID([[:space:]]|$)' "$log_file" || true)"
+        range_failure_count="$(grep -Eic '^\[DCU PBD RANGE DIAG\].*verdict=(INVALID|READBACK_FAILED|READBACK_OR_COUNT_FAILED)([[:space:]]|$)' "$log_file" || true)"
+        if [[ "$PBD_PARTICLE_RANGE_DIAG" -eq 0 ]] || \
+            (( range_valid_count > 0 && range_failure_count == 0 )); then
+            range_diag_gate=1
+        else
+            range_diag_gate=0
         fi
 
         post_failures=0
@@ -594,7 +757,7 @@ run_case()
             result=CAPACITY_LIMIT
         elif (( run_exit == 124 )); then
             result=TIMEOUT
-        elif (( run_exit != 0 || verdict_count != 1 || pass_count != 1 || fatal_count != 0 || (perf_required == 1 && perf_count != 1) || (perf_required == 0 && perf_count != 0) )); then
+        elif (( run_exit != 0 || verdict_count != 1 || pass_count != 1 || fatal_count != 0 || spatial_diag_gate != 1 || range_diag_gate != 1 || (perf_required == 1 && perf_count != 1) || (perf_required == 0 && perf_count != 0) )); then
             result=FAIL
         else
             result=PASS
@@ -610,6 +773,15 @@ run_case()
         printf 'capacity_pattern_count=%s\n' "$capacity_count"
         printf 'performance_required=%s\n' "$perf_required"
         printf 'performance_line_count=%s\n' "$perf_count"
+        printf 'spatial_diag_required=%s\n' "$PBD_SPATIAL_RANK_DIAG"
+        printf 'spatial_reference_ready_count=%s\n' "$spatial_reference_count"
+        printf 'spatial_valid_count=%s\n' "$spatial_valid_count"
+        printf 'spatial_failure_count=%s\n' "$spatial_failure_count"
+        printf 'spatial_diag_gate=%s\n' "$spatial_diag_gate"
+        printf 'range_diag_required=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
+        printf 'range_valid_count=%s\n' "$range_valid_count"
+        printf 'range_failure_count=%s\n' "$range_failure_count"
+        printf 'range_diag_gate=%s\n' "$range_diag_gate"
         printf 'post_health_failures=%s\n' "$post_failures"
         printf 'harness_result=%s\n' "$result"
     } | tee -a "$log_file"
@@ -617,9 +789,11 @@ run_case()
     if [[ -n "$perf_line" ]]; then
         printf 'performance case=%s repeat=%s %s\n' "$case_name" "$iteration" "$perf_line" | tee -a "$SUMMARY_LOG"
     fi
-    printf 'case=%s repeat=%s run_exit=%s verdict_count=%s pass_count=%s fatal_count=%s capacity_count=%s perf_required=%s perf_count=%s post_health_failures=%s result=%s log=%s\n' \
+    printf 'case=%s repeat=%s run_exit=%s verdict_count=%s pass_count=%s fatal_count=%s capacity_count=%s perf_required=%s perf_count=%s spatial_diag_required=%s spatial_reference_count=%s spatial_valid_count=%s spatial_failure_count=%s spatial_diag_gate=%s range_diag_required=%s range_valid_count=%s range_failure_count=%s range_diag_gate=%s post_health_failures=%s result=%s log=%s\n' \
         "$case_name" "$iteration" "$run_exit" "$verdict_count" "$pass_count" "$fatal_count" \
-        "$capacity_count" "$perf_required" "$perf_count" "$post_failures" "$result" "$log_file" | tee -a "$SUMMARY_LOG"
+        "$capacity_count" "$perf_required" "$perf_count" "$PBD_SPATIAL_RANK_DIAG" "$spatial_reference_count" \
+        "$spatial_valid_count" "$spatial_failure_count" "$spatial_diag_gate" "$PBD_PARTICLE_RANGE_DIAG" \
+        "$range_valid_count" "$range_failure_count" "$range_diag_gate" "$post_failures" "$result" "$log_file" | tee -a "$SUMMARY_LOG"
 
     [[ "$result" == PASS ]]
 }

@@ -50,6 +50,10 @@
 #include "stdio.h"
 
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CONTACT_PREP_O3_P59) && PX_DCU_RIGID_CONTACT_PREP_O3_P59
+extern "C" __device__ __constant__ char gPxgDcuRigidContactPrepO3P59Version[] = "PX_DCU_RIGID_CONTACT_PREP_O3_P59_GFX936_DEVICE_V1";
+#endif
+
 using namespace physx;
 
 extern "C" __host__ void initSolverKernels1() {}

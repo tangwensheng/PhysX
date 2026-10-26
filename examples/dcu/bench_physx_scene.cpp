@@ -11,6 +11,9 @@
 #include <ctime>
 #include <cstring>
 #include <algorithm>
+#if defined(__linux__)
+#include <dlfcn.h>
+#endif
 #if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #endif
@@ -22,6 +25,11 @@ struct SummaryOptions
     int steps = 300;
     int dumpEvery = 0;
     const char* summaryCsv = nullptr;
+    bool profileContactFrame = false;
+    bool traceContactFrame = false;
+    bool profileControlProbe = false;
+    int stage2IndexP54 = -1; // Explicit ordinary-rigid-only runtime ablation; default inactive.
+    bool finalSummary = false; // P46: output only after the simulation timer stops.
 };
 
 struct FrameSummary
@@ -51,9 +59,27 @@ static SummaryOptions parseArgs(int argc, char** argv)
             opt.dumpEvery = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--summary") && i + 1 < argc)
             opt.summaryCsv = argv[++i];
+        else if (!std::strcmp(argv[i], "--profile-contact-frame")) {
+            opt.profileContactFrame = true;
+            opt.traceContactFrame = true;
+        }
+        else if (!std::strcmp(argv[i], "--contact-frame-check"))
+            opt.profileContactFrame = true;
+        else if (!std::strcmp(argv[i], "--p54-stage2-index") && i + 1 < argc) {
+            const char* mode = argv[++i];
+            if (std::strcmp(mode, "0") && std::strcmp(mode, "1")) {
+                std::fprintf(stderr, "P54 stage2 index mode must be 0 or 1\n");
+                std::exit(2);
+            }
+            opt.stage2IndexP54 = mode[0] - '0';
+        }
+        else if (!std::strcmp(argv[i], "--final-summary"))
+            opt.finalSummary = true;
+        else if (!std::strcmp(argv[i], "--profile-control-probe"))
+            opt.profileControlProbe = true;
         else if (!std::strcmp(argv[i], "--help"))
         {
-            printf("Usage: bench_physx_scene [--steps N] [--dump-every N] [--summary file.csv]\n");
+            printf("Usage: bench_physx_scene [--steps N] [--dump-every N] [--summary file.csv] [--final-summary] [--p54-stage2-index 0|1] [--profile-contact-frame | --contact-frame-check]\n");
             std::exit(0);
         }
     }
@@ -63,6 +89,71 @@ static SummaryOptions parseArgs(int argc, char** argv)
         opt.dumpEvery = 0;
     return opt;
 }
+
+// Opt-in diagnostic only. Keep all original contact/solver flags; request points
+// only for sphere-involving pairs rather than for every pair in the box tower.
+struct ProfileContacts : PxSimulationEventCallback
+{
+    PxU32 pairs = 0, points = 0;
+    void reset() { pairs = points = 0; }
+    void onContact(const PxContactPairHeader&, const PxContactPair* p, PxU32 count) override
+    {
+        for (PxU32 i = 0; i < count; ++i)
+            if ((p[i].events & (PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::eNOTIFY_TOUCH_PERSISTS)) && p[i].contactCount > 0) {
+                ++pairs;
+                points += p[i].contactCount;
+            }
+    }
+    void onConstraintBreak(PxConstraintInfo*, PxU32) override {}
+    void onWake(PxActor**, PxU32) override {}
+    void onSleep(PxActor**, PxU32) override {}
+    void onTrigger(PxTriggerPair*, PxU32) override {}
+    void onAdvance(const PxRigidBody* const*, const PxTransform*, PxU32) override {}
+};
+
+static PxFilterFlags profileContactFilter(PxFilterObjectAttributes a0, PxFilterData d0,
+    PxFilterObjectAttributes a1, PxFilterData d1, PxPairFlags& flags,
+    const void* data, PxU32 size)
+{
+    PxFilterFlags result = PxDefaultSimulationFilterShader(a0, d0, a1, d1, flags, data, size);
+    if (!(result & (PxFilterFlag::eSUPPRESS | PxFilterFlag::eKILL)) && (d0.word1 == 0x50443434u || d1.word1 == 0x50443434u))
+        flags |= PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::eNOTIFY_TOUCH_PERSISTS | PxPairFlag::eNOTIFY_CONTACT_POINTS;
+    return result;
+}
+
+struct ProfileControl
+{
+    typedef void (*Control)();
+    typedef int (*StatusControl)();
+    typedef int (*GetDeviceCount)(int*);
+    Control traceStart = nullptr, traceStop = nullptr;
+    StatusControl hipStart = nullptr, hipStop = nullptr, synchronize = nullptr;
+    GetDeviceCount getCount = nullptr;
+    const char* backend = "unavailable";
+    bool resolve()
+    {
+#if defined(__linux__)
+        // Initialize HIP while tracing is OFF, allowing DTK to load its tracing
+        // library. Never dlopen a second tracer instance. The runner verifies
+        // this exact backend's off/on/off behavior with a tiny API-only probe.
+        getCount = reinterpret_cast<GetDeviceCount>(dlsym(RTLD_DEFAULT, "hipGetDeviceCount"));
+        int devices = 0;
+        if (!getCount || getCount(&devices) != 0 || devices != 1)
+            return false;
+        traceStart = reinterpret_cast<Control>(dlsym(RTLD_DEFAULT, "roctracer_start"));
+        traceStop = reinterpret_cast<Control>(dlsym(RTLD_DEFAULT, "roctracer_stop"));
+        hipStart = reinterpret_cast<StatusControl>(dlsym(RTLD_DEFAULT, "hipProfilerStart"));
+        hipStop = reinterpret_cast<StatusControl>(dlsym(RTLD_DEFAULT, "hipProfilerStop"));
+        synchronize = reinterpret_cast<StatusControl>(dlsym(RTLD_DEFAULT, "hipDeviceSynchronize"));
+#endif
+        if (traceStart && traceStop) backend = "roctracer";
+        else if (hipStart && hipStop) backend = "hipProfiler";
+        else return false;
+        return synchronize != nullptr;
+    }
+    int start() { if (traceStart && traceStop) { traceStart(); return 0; } return hipStart(); }
+    int stop() { if (traceStart && traceStop) { traceStop(); return 0; } return hipStop(); }
+};
 
 static FrameSummary computeFrameSummary(int frame, const std::vector<PxRigidDynamic*>& bodies)
 {
@@ -154,6 +245,47 @@ static void writeFrameSummary(FILE* fp, const FrameSummary& s)
 int main(int argc, char** argv)
 {
     SummaryOptions opt = parseArgs(argc, argv);
+    if (opt.stage2IndexP54 >= 0) {
+#if defined(__linux__)
+        const char* value = opt.stage2IndexP54 ? "ordinary-rigid/p54/1" : "ordinary-rigid/p54/0";
+        if (setenv("PX_DCU_RIGID_STAGE2_INDEX_P54", value, 1) != 0) return 2;
+        printf("p54_benchmark_marker=PX_DCU_RIGID_STAGE2_INDEX_P54_BENCH_V1 mode=%d scope=ordinary_rigid\n", opt.stage2IndexP54);
+#else
+        std::fprintf(stderr, "P54 requires the gfx936 DCU product\n");
+        return 2;
+#endif
+    }
+
+    ProfileControl profile;
+    ProfileContacts contacts;
+    if (opt.profileControlProbe) {
+        setvbuf(stdout, nullptr, _IOLBF, 0);
+        printf("profile_probe_marker=PX_DCU_RIGID_PROFILE_CONTROL_PROBE_P44_R2_V1\n");
+        if (!profile.resolve() || profile.stop() != 0) return 3;
+        int devices = 0;
+        if (profile.getCount(&devices) != 0 || profile.start() != 0) return 3;
+        const int insideStatus = profile.getCount(&devices);
+        const int stopStatus = profile.stop();
+        const int outsideStatus = profile.getCount(&devices);
+        if (insideStatus != 0 || stopStatus != 0 || outsideStatus != 0) return 3;
+        printf("profile_probe_gate=1 backend=%s expected_traced_hipGetDeviceCount_calls=1\n", profile.backend);
+        return 0;
+    }
+    if (opt.profileContactFrame) {
+        setvbuf(stdout, nullptr, _IOLBF, 0);
+        printf("profile_marker=PX_DCU_RIGID_MAIN_CONTACT_FRAME_P44_R2_V1\n");
+        if (opt.traceContactFrame && !profile.resolve()) {
+            fprintf(stderr, "ERROR: DTK trace control or single visible device unavailable; no physics launched\n");
+            return 3;
+        }
+        if (opt.traceContactFrame) {
+            if (profile.stop() != 0) return 3;
+            printf("profile_control_gate=1 trace_initially_off=1\n");
+            printf("profile_control_backend=%s\n", profile.backend);
+        }
+        opt.steps = 1;
+        opt.dumpEvery = 1;
+    }
     printf("========================================\n");
     printf(" PhysX Scene Benchmark — Tower Collapse\n");
     printf("========================================\n\n");
@@ -205,7 +337,9 @@ int main(int argc, char** argv)
     }
     PxDefaultCpuDispatcher* dsp = PxDefaultCpuDispatcherCreate(0);
     sd.cpuDispatcher = dsp;
-    sd.filterShader  = PxDefaultSimulationFilterShader;
+    sd.filterShader  = opt.profileContactFrame ? profileContactFilter : PxDefaultSimulationFilterShader;
+    if (opt.profileContactFrame)
+        sd.simulationEventCallback = &contacts;
     PxScene* scene = phy->createScene(sd);
 
     // ---- Build Tower ----
@@ -239,6 +373,13 @@ int main(int argc, char** argv)
     const int NSPH = 300;
     PxMaterial* matH = phy->createMaterial(0.8f, 0.8f, 0.1f);
     PxShape* sphShape = phy->createShape(PxSphereGeometry(0.6f), *matH);
+    if (opt.profileContactFrame) {
+        PxFilterData data;
+        // PxDefaultSimulationFilterShader ignores word1; word2/word3 are
+        // collision group masks and must remain unchanged.
+        data.word1 = 0x50443434u;
+        sphShape->setSimulationFilterData(data);
+    }
     srand(42);
     for (int s = 0; s < NSPH; s++) {
         float a = rand()/(float)RAND_MAX * 6.283f;
@@ -274,6 +415,7 @@ int main(int argc, char** argv)
 #if defined(__HIPCC__)
     for (int s = 0; s < 120; s++) {
         if (s % 10 == 0) printf("  step %d...\n", s);
+        if (opt.profileContactFrame) contacts.reset();
         scene->simulate(1.0f/60.0f);
         e = hipDeviceSynchronize();
         if (e != hipSuccess) {
@@ -283,8 +425,27 @@ int main(int argc, char** argv)
         scene->fetchResults(true);
     }
 #else
-    for (int s = 0; s < 120; s++) { scene->simulate(1.0f/60.0f); scene->fetchResults(true); }
+    for (int s = 0; s < 120; s++) { if (opt.profileContactFrame) contacts.reset(); scene->simulate(1.0f/60.0f); scene->fetchResults(true); }
 #endif
+
+    int contactWait = 0;
+    if (opt.profileContactFrame) {
+        // Original 120 settling steps remain untraced. Select the next frame
+        // only after real sphere contact points in a completed step. Confirm
+        // contacts independently in the captured frame; never collect a retry.
+        while (contacts.points == 0 && contactWait < 30) {
+            contacts.reset();
+            scene->simulate(1.0f/60.0f);
+            scene->fetchResults(true);
+            ++contactWait;
+        }
+        printf("PROFILE_CONTACT_READY settle_steps=120 wait_steps=%d preceding_pairs=%u preceding_points=%u\n",
+            contactWait, contacts.pairs, contacts.points);
+        if (contacts.points == 0) {
+            fprintf(stderr, "ERROR: no sphere collision contact points after settling/contact wait\n");
+            return 4;
+        }
+    }
 
     // ---- Benchmark ----
     printf("Running %d simulation steps...\n", opt.steps);
@@ -312,8 +473,35 @@ int main(int argc, char** argv)
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
     for (int f = 0; f < opt.steps; f++) {
+        if (opt.profileContactFrame) {
+            contacts.reset();
+            if (opt.traceContactFrame) {
+                if (profile.synchronize() != 0) {
+                    fprintf(stderr, "FATAL: pre-window hipDeviceSynchronize failed\n");
+                    return 5;
+                }
+                printf("PROFILE_WINDOW_BEGIN frame=1 absolute_step=%d\n", 121 + contactWait);
+                if (profile.start() != 0) {
+                    fprintf(stderr, "FATAL: profile start failed\n");
+                    return 5;
+                }
+            }
+        }
         scene->simulate(step);
         scene->fetchResults(true);
+        if (opt.profileContactFrame) {
+            if (opt.traceContactFrame) {
+                const int syncStatus = profile.synchronize();
+                const int stopStatus = profile.stop();
+                if (syncStatus != 0 || stopStatus != 0) {
+                    fprintf(stderr, "FATAL: in-window hipDeviceSynchronize failed code=%d\n", syncStatus);
+                    return 5;
+                }
+                printf("PROFILE_WINDOW_END frame=1 captured_frames=1 contact_pairs=%u contact_points=%u\n", contacts.pairs, contacts.points);
+            } else {
+                printf("CONTACT_FRAME_CHECK frame=1 contact_pairs=%u contact_points=%u\n", contacts.pairs, contacts.points);
+            }
+        }
 
         const int frame = f + 1;
         if (summaryFile || (opt.dumpEvery > 0 && frame % opt.dumpEvery == 0)) {
@@ -333,18 +521,26 @@ int main(int argc, char** argv)
 
     // ---- Stats ----
     FrameSummary finalSummary = computeFrameSummary(opt.steps, bodies);
+    if (opt.finalSummary) {
+        printf("final_summary_marker=PX_DCU_RIGID_FINAL_SUMMARY_P46_V1 timing=outside_simulation_loop\n");
+        printFrameSummary(finalSummary);
+    }
 
     printf("\n=== Results ===\n");
+    printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 simulation_ms=%.6f ms_per_step=%.6f steps_per_second=%.6f\n", elapsed * 1000.0, avgMs, 1000.0 / avgMs);
     printf("Avg frame time: %.2f ms (%.0f FPS)\n", avgMs, 1000.0f/avgMs);
     printf("Above ground:   %d / %d\n", finalSummary.above05, nTotal);
     printf("Height range:   [%.1f, %.1f]\n", finalSummary.minY, finalSummary.maxY);
     printf("NaN/Inf bodies: %d\n", finalSummary.nanCount);
     printf("State hash:     %.17g\n", finalSummary.stateHash);
+    const bool physicalPass = finalSummary.nanCount == 0 && finalSummary.belowGround == 0;
+    const bool contactPass = !opt.profileContactFrame || (contacts.pairs > 0 && contacts.points > 0);
+    printf("VERDICT: %s\n", physicalPass && contactPass ? "PASS" : "FAIL");
 
     scene->release();
     dsp->release();
     if (gpuMgr) gpuMgr->release();
     phy->release();
     fnd->release();
-    return 0;
+    return opt.profileContactFrame && !(physicalPass && contactPass) ? 5 : 0;
 }

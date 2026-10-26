@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -64,6 +64,13 @@
 #include "contactPatchUtils.cuh"
 
 using namespace physx;
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CUDABOX_O3_P42) && PX_DCU_RIGID_CUDABOX_O3_P42
+extern "C" __device__ __constant__ char gPxgDcuRigidCudaBoxO3P42Version[] = "PX_DCU_RIGID_CUDABOX_O3_P42_GFX936_DEVICE_V1";
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CUDABOX_O3_P47) && PX_DCU_RIGID_CUDABOX_O3_P47
+extern "C" __device__ __constant__ char gPxgDcuRigidCudaBoxO3P47Version[] = "PX_DCU_RIGID_CUDABOX_O3_P47_GFX936_DEVICE_V1";
+#endif
 
 extern "C" __host__ void initNarrowphaseKernels23() {}
 

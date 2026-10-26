@@ -9,6 +9,15 @@
 // forward-declare their own "struct float4".
 
 #include <hip/hip_runtime.h>
+#include <cstring>
+
+extern "C" bool pxDcuIsGfx936(int deviceOrdinal) {
+	hipDeviceProp_t properties = {};
+	if (deviceOrdinal < 0 || hipGetDeviceProperties(&properties, deviceOrdinal) != hipSuccess)
+		return false;
+	return std::strncmp(properties.gcnArchName, "gfx936", 6) == 0 &&
+			(properties.gcnArchName[6] == '\0' || properties.gcnArchName[6] == ':');
+}
 
 // ---- Stream management ----
 extern "C" CUresult cuStreamSynchronize(CUstream hStream) {

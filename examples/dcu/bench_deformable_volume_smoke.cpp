@@ -2,6 +2,7 @@
 
 #include "PxPhysicsAPI.h"
 #include "cudamanager/PxCudaContextManager.h"
+#include "cudamanager/PxCudaContext.h"
 #include "gpu/PxGpu.h"
 #include "extensions/PxDeformableVolumeExt.h"
 #include <chrono>
@@ -10,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <vector>
 
 using namespace physx;
 
@@ -25,6 +27,7 @@ int main(int argc, char** argv)
     bool addPlane = true;
     bool cleanExit = false;
     bool printAllSteps = false;
+    bool observeVertices = false;
     PxReal height = 2.0f;
     PxReal planeY = 0.0f;
     int cleanExitWaitSeconds = 5;
@@ -38,6 +41,8 @@ int main(int argc, char** argv)
             planeY = PxReal(std::atof(argv[++i]));
         } else if (std::strcmp(argv[i], "--print-all-steps") == 0) {
             printAllSteps = true;
+        } else if (std::strcmp(argv[i], "--observe-vertices") == 0) {
+            observeVertices = true;
         } else if (std::strcmp(argv[i], "--no-plane") == 0) {
             addPlane = false;
         } else if (std::strcmp(argv[i], "cleanexit") == 0 || std::strcmp(argv[i], "--cleanexit") == 0) {
@@ -143,9 +148,69 @@ int main(int argc, char** argv)
     fflush(stdout);
     scene->addActor(*volume);
 
+    const PxU32 simCount = observeVertices ? volume->getSimulationMesh()->getNbVertices() : 0;
+    const PxU32 collCount = observeVertices ? volume->getCollisionMesh()->getNbVertices() : 0;
+    std::vector<PxVec4> simPositions(simCount), collPositions(collCount);
+    bool observationOk = !observeVertices || (simCount > 0 && collCount > 0);
+    auto observe = [&](int frame) {
+        PxI32 sync = -1, simCopy = -1, collCopy = -1;
+        if (observationOk) {
+            PxScopedCudaLock lock(*gpuMgr);
+            PxCudaContext* ctx = gpuMgr->getCudaContext();
+            if (ctx) {
+                sync = PxI32(ctx->streamSynchronize(0));
+                if (sync == 0) {
+                    simCopy = PxI32(ctx->memcpyDtoH(simPositions.data(),
+                        reinterpret_cast<CUdeviceptr>(volume->getSimPositionInvMassBufferD()),
+                        size_t(simCount) * sizeof(PxVec4)));
+                    collCopy = PxI32(ctx->memcpyDtoH(collPositions.data(),
+                        reinterpret_cast<CUdeviceptr>(volume->getPositionInvMassBufferD()),
+                        size_t(collCount) * sizeof(PxVec4)));
+                }
+            }
+        }
+        if (sync != 0 || simCopy != 0 || collCopy != 0) {
+            observationOk = false;
+            printf("VERTEX_READBACK_FAILURE frame=%d sim_vertices=%u coll_vertices=%u sync=%d sim_copy=%d coll_copy=%d\n",
+                   frame, simCount, collCount, int(sync), int(simCopy), int(collCopy));
+            fflush(stdout);
+            return;
+        }
+        PxReal simMin = PX_MAX_F32, simMax = -PX_MAX_F32;
+        PxReal collMin = PX_MAX_F32, collMax = -PX_MAX_F32;
+        PxU32 bad = 0, nearPlane = 0, belowPlane = 0;
+        for (const PxVec4& p : simPositions) {
+            if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z) || !std::isfinite(p.w)) {
+                ++bad;
+                continue;
+            }
+            simMin = PxMin(simMin, p.y);
+            simMax = PxMax(simMax, p.y);
+        }
+        for (const PxVec4& p : collPositions) {
+            if (!std::isfinite(p.x) || !std::isfinite(p.y) || !std::isfinite(p.z) || !std::isfinite(p.w)) {
+                ++bad;
+                continue;
+            }
+            collMin = PxMin(collMin, p.y);
+            collMax = PxMax(collMax, p.y);
+            if (p.y >= planeY - 0.15f && p.y <= planeY + 0.15f)
+                ++nearPlane;
+            if (p.y < planeY - 0.15f)
+                ++belowPlane;
+        }
+        observationOk = observationOk && bad == 0;
+        printf("VERTEX_OBSERVATION marker=PX_DCU_VOLUME_VERTEX_OBSERVATION_P5_V1 frame=%d sim_vertices=%u coll_vertices=%u sim_y_min=%.6f sim_y_max=%.6f coll_y_min=%.6f coll_y_max=%.6f near_plane=%u below_plane=%u bad_vertices=%u sync=%d sim_copy=%d coll_copy=%d\n",
+               frame, simCount, collCount, simMin, simMax, collMin, collMax,
+               nearPlane, belowPlane, bad, int(sync), int(simCopy), int(collCopy));
+        fflush(stdout);
+    };
+
     printf("Starting simulation: steps=%d voxels=%u plane=%s height=%.3f planeY=%.3f\n",
            steps, voxels, addPlane ? "yes" : "no", height, planeY);
     fflush(stdout);
+    if (observeVertices)
+        observe(0);
     const int timingWarmupSteps = steps > 10 ? 10 : 0;
     double simulationMs = 0.0;
     for (int i = 0; i < steps; ++i) {
@@ -166,6 +231,8 @@ int main(int argc, char** argv)
         if (i >= timingWarmupSteps)
             simulationMs += simulateMs + std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - fetchStart).count();
+        if (observeVertices && observationOk)
+            observe(i + 1);
         if (printAllSteps) {
             PxBounds3 stepBounds = volume->getWorldBounds(1.0f);
             printf("Step %d bounds min=(%.6f %.6f %.6f) max=(%.6f %.6f %.6f)\n",
@@ -182,7 +249,7 @@ int main(int argc, char** argv)
            simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);
 
     PxBounds3 bounds = volume->getWorldBounds(1.0f);
-    const bool pass = bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum) && bounds.minimum.y > -5.0f && bounds.maximum.y < 6.0f;
+    const bool pass = observationOk && bounds.isValid() && finiteVec(bounds.minimum) && finiteVec(bounds.maximum) && bounds.minimum.y > -5.0f && bounds.maximum.y < 6.0f;
     printf("Volume bounds min=(%.6f %.6f %.6f) max=(%.6f %.6f %.6f)\n",
            bounds.minimum.x, bounds.minimum.y, bounds.minimum.z, bounds.maximum.x, bounds.maximum.y, bounds.maximum.z);
     printf("VERDICT: %s\n", pass ? "PASS" : "FAIL");

@@ -60,6 +60,9 @@
 
 #include "PxgKernelLauncher.h"
 
+#include <cstdio>
+#include <cstdlib>
+
 // PT: TODO:
 // - most of these functions don't need to be member functions
 
@@ -89,6 +92,26 @@
 #endif
 
 using namespace physx;
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+static bool dcuBroadPhaseDiagnosticsEnabled()
+{
+	const char* value = std::getenv("PX_DCU_BROADPHASE_DIAG");
+	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
+}
+
+static bool dcuBroadPhaseUpdateDiagnosticsEnabled()
+{
+	const char* value = std::getenv("PX_DCU_BROADPHASE_UPDATE_DIAG");
+	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
+}
+
+static bool dcuBroadPhaseUpdateCompactEnabled()
+{
+	const char* value = std::getenv("PX_DCU_BROADPHASE_UPDATE_COMPACT");
+	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
+}
+#endif
 
 PX_IMPLEMENT_OUTPUT_ERROR
 
@@ -425,10 +448,12 @@ void PxgCudaBroadPhaseSap::runCopyResultsKernel(PxgBroadPhaseDesc& /*desc*/)
 #endif
 	}
 
+	#if !defined(PX_DCU_PORT) || !PX_DCU_PORT
 	{
 		KERNEL_PARAM_TYPE kernelParams[] = { CUDA_KERNEL_PARAM(bpBuff) };
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_COPY_REPORTS, PxgBPKernelGridDim::BP_COPY_REPORTS, 1, 1, PxgBPKernelBlockDim::BP_COPY_REPORTS, 1, 1, 0, EPILOG);
 	}
+	#endif
 }
 
 void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
@@ -480,11 +505,25 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 	mRegionAccumTotal = desc.regionAccumTotal;
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 foundActorPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedFoundPairIndex) - desc.sharedFoundAggPairIndex;
+	const PxU32 lostActorPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedLostPairIndex) - desc.sharedLostAggPairIndex;
+	if(!mCudaContext->isInAbortMode())
+	{
+		// PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK
+		// gfx936 can leave a partial result when copyReports writes directly to
+		// host-mapped memory. Keep report classification on the device, then copy
+		// the compact actor lists through the driver's device-to-host path.
+		if(foundActorPairTotal)
+			mCudaContext->memcpyDtoH(mFoundActorPairs.begin(), mFoundActorBuf.getDevicePtr(), foundActorPairTotal * sizeof(PxgBroadPhasePair));
+		if(lostActorPairTotal)
+			mCudaContext->memcpyDtoH(mLostActorPairs.begin(), mLostActorBuf.getDevicePtr(), lostActorPairTotal * sizeof(PxgBroadPhasePair));
+	}
+
+	if(dcuBroadPhaseDiagnosticsEnabled())
 	{
 		const PxU32 maxDiagnosticPairs = 64;
 		const PxU32 rawFoundPairCount = PxMin(PxMin(desc.sharedFoundPairIndex, mMaxFoundLostPairs), maxDiagnosticPairs);
-		const PxU32 actorFoundPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedFoundPairIndex) - desc.sharedFoundAggPairIndex;
-		const PxU32 actorFoundPairCount = PxMin(actorFoundPairTotal, maxDiagnosticPairs);
+		const PxU32 actorFoundPairCount = PxMin(foundActorPairTotal, maxDiagnosticPairs);
 		PxgBroadPhasePair rawFoundPairs[maxDiagnosticPairs];
 		PxgBroadPhasePair actorFoundPairs[maxDiagnosticPairs];
 
@@ -517,10 +556,24 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 			}
 		}
 
+		PxU32 readbackSelfPairs = 0;
+		PxU32 firstReadbackSelfPair = PX_INVALID_U32;
+		const PxgBroadPhasePair* readbackFoundPairs = mFoundActorPairs.begin();
+		for(PxU32 i = 0; i < foundActorPairTotal; ++i)
+		{
+			if(readbackFoundPairs[i].mVolA == readbackFoundPairs[i].mVolB)
+			{
+				++readbackSelfPairs;
+				if(firstReadbackSelfPair == PX_INVALID_U32)
+					firstReadbackSelfPair = i;
+			}
+		}
+
 		PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-			"DCU GPU broadphase report-stage diagnostic: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u\n",
+			"DCU GPU broadphase report-stage diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN] [PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK]: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u readbackTotal=%u readbackSelfPairs=%u firstReadbackSelfPair=%u\n",
 			desc.sharedFoundPairIndex, rawFoundPairCount, rawSelfPairs, firstRawSelfPair,
-			desc.sharedFoundAggPairIndex, actorFoundPairTotal, actorFoundPairCount, actorSelfPairs, firstActorSelfPair);
+			desc.sharedFoundAggPairIndex, foundActorPairTotal, actorFoundPairCount, actorSelfPairs, firstActorSelfPair,
+			foundActorPairTotal, readbackSelfPairs, firstReadbackSelfPair);
 
 		if(firstRawSelfPair != PX_INVALID_U32)
 		{
@@ -565,7 +618,12 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 	PX_CATCH_UNDEFINED_ENABLE_SIM_STATS
 #endif
 
-	if (desc.found_lost_pairs_overflow_flags)
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const bool foundLostPairsOverflow = desc.sharedFoundPairIndex > mMaxFoundLostPairs || desc.sharedLostPairIndex > mMaxFoundLostPairs;
+#else
+	const bool foundLostPairsOverflow = desc.found_lost_pairs_overflow_flags;
+#endif
+	if (foundLostPairsOverflow)
 	{
 		PxGetFoundation().error(PxErrorCode::eINVALID_PARAMETER, PX_FL,
 			"The application needs to increase PxGpuDynamicsMemoryConfig::foundLostPairsCapacity to %i, otherwise, the simulation will miss interactions\n", foundLostPairsNeeded);
@@ -733,8 +791,14 @@ void PxgCudaBroadPhaseSap::runRadixSort(const PxU32 numOfKeys, CUdeviceptr radix
 
 		KERNEL_PARAM_TYPE kernelParams[] = { CUDA_KERNEL_PARAM(rsDesc), CUDA_KERNEL_PARAM(numOfKeys), CUDA_KERNEL_PARAM(startBit) };
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		// gfx936 faults in the generic warp/LDS rank path for broadphase-sized
+		// projection sets. Each axis performs an equivalent stable counting pass.
+		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_BP_SERIAL_COUNTING_PASS_DCU_V3, 1, 3, 1, 1, 1, 1, 0, EPILOG);
+#else
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_MULTIBLOCK_COUNT, PxgRadixSortKernelGridDim::RADIX_SORT, 3, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, EPILOG);
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_CALCULATERANKS_MULTIBLOCK_COUNT, PxgRadixSortKernelGridDim::RADIX_SORT, 3, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, EPILOG);
+#endif
 
 		startBit+=4;
 	}
@@ -870,6 +934,36 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 {
 	PX_PROFILE_ZONE("PxgCudaBroadPhaseSap.markUpdatedPairsKernel", mContextID);
 
+	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	const PxU32 wordCount = mBpDesc->aabbMngr_changedHandleBitMapWordCounts;
+	const bool compactRequested = dcuBroadPhaseUpdateCompactEnabled();
+	const bool compactActivated = compactRequested && wordCount == 1;
+	static bool updateDiagnosticPrinted = false;
+	if(dcuBroadPhaseUpdateDiagnosticsEnabled() && !updateDiagnosticPrinted)
+	{
+		std::printf("[DCU BP UPDATE] marker=PX_DCU_BP_UPDATE_DIAG_V1 word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+			wordCount, wordCount * 32u,
+			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
+			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);
+		std::fflush(stdout);
+		updateDiagnosticPrinted = true;
+	}
+
+	static bool compactStatusPrinted = false;
+	if(!compactStatusPrinted)
+	{
+		const char* mode = compactActivated ? "compact_1x32" : "default_32x256";
+		const char* reason = compactActivated ? "activated" :
+			(compactRequested ? "word_count_not_one" : "opt_in_disabled");
+		std::printf("[DCU BP UPDATE COMPACT] host_marker=PX_DCU_BP_UPDATE_COMPACT_V1_OPT_IN requested=%u mode=%s reason=%s word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+			compactRequested ? 1u : 0u, mode, reason, wordCount, wordCount * 32u,
+			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
+			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);
+		std::fflush(stdout);
+		compactStatusPrinted = true;
+	}
+	#endif
+
 	//if(mUpdatedHandleSize != 0)	// PT: TODO: why was this removed? ==> probably because the GPU code started reading from the AABB manager bitmap directly (which created the "evil coupling" we found before)
 	{
 		CUdeviceptr bpDescd = mBPDescBuf.getDevicePtr();
@@ -881,6 +975,11 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 			_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_UPDATE_UPDATEDPAIRS2, PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS2, 1, 1, PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS2, 1, 1, 0, EPILOG);
 		else
 #endif
+		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		if(compactActivated)
+			_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_UPDATE_UPDATEDPAIRS, 1, 1, 1, 32, 1, 1, 0, EPILOG);
+		else
+		#endif
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_UPDATE_UPDATEDPAIRS, PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS, 1, 1, PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS, 1, 1, 0, EPILOG);
 	}
 }

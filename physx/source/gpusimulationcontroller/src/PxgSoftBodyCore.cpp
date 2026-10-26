@@ -57,6 +57,12 @@
 
 #include "cudamanager/PxCudaContext.h"
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#include <cstdio>
+#include <cstdlib>
+extern "C" bool pxDcuIsGfx936(int deviceOrdinal);
+#endif
+
 #define SB_GPU_DEBUG 0
 #define DRAW_GRID	0
 
@@ -157,9 +163,15 @@ namespace physx
 			const CUfunction GMPreIntegrateKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::SB_SIM_PREINTEGRATION);
 
 			const PxU32 numThreadsPerWarp = 32;
-			const PxU32 numWarpsPerBlock = PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION / numThreadsPerWarp;
+			const PxU32 numThreadsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				256;
+#else
+				PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+#endif
+			const PxU32 numWarpsPerBlock = numThreadsPerBlock / numThreadsPerWarp;
 		
-			const PxU32 numBlocks = (maxVerts + PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION - 1) / PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+			const PxU32 numBlocks = (maxVerts + numThreadsPerBlock - 1) / numThreadsPerBlock;
 
 			{
 				PxCudaKernelParam kernelParams[] =
@@ -175,13 +187,20 @@ namespace physx
 
 				CUresult result = mCudaContext->launchKernel(GMPreIntegrateKernelFunction, numBlocks, nbActiveSoftBodies, 1, numThreadsPerWarp, numWarpsPerBlock, 1, 0, bpStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+				{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU preIntegrateSystem kernel fail! PX_DCU_SOFTBODY_PREINTEGRATE_V1_256_THREADS\n");
+#else
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU preIntegrateSystem kernel fail!\n");
+#endif
+				}
 
 #if SB_GPU_DEBUG
 				result = mCudaContext->streamSynchronize(bpStream);
 				PX_ASSERT(result == CUDA_SUCCESS);
 				if (result != CUDA_SUCCESS)
-					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU preIntegrateSystem kernel fail!\n");
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU preIntegrateSystem kernel execution fail!\n");
 #endif
 			}
 
@@ -435,6 +454,12 @@ namespace physx
 
 	void PxgSoftBodyCore::sortContacts(const PxU32 nbActiveSoftbodies)
 	{
+		const PxU32 radixCopyBlockDim =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			256;
+#else
+			PxgRadixSortKernelBlockDim::RADIX_SORT;
+#endif
 
 		//We need 2x rsDesc on the host soft body system. The reason for this is that, while the sorting occurs synchronously on the 
 		//same stream on the device, the host-side buffers could get changed prior to the DMAs having occurred due to device latency
@@ -551,9 +576,15 @@ namespace physx
 				PX_CUDA_KERNEL_PARAM(totalRSContactCountsd)
 			};
 		
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if (resultR != CUDA_SUCCESS)
+			{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopyBits fail to launch kernel!! PX_DCU_SOFTBODY_RADIX_COPY_V4_256_THREADS\n");
+#else
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopyBits fail to launch kernel!!\n");
+#endif
+			}
 		
 #if SB_GPU_DEBUG
 			resultR = mCudaContext->streamSynchronize(mStream);
@@ -606,7 +637,7 @@ namespace physx
 				PX_CUDA_KERNEL_PARAM(totalRSContactCountsd)
 			};
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopy fail to launch kernel!!\n");
 
@@ -637,7 +668,7 @@ namespace physx
 				PX_CUDA_KERNEL_PARAM(totalSPContactCountsd)
 			};
 
-			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
+			CUresult resultR = mCudaContext->launchKernel(copyFunction, 32, 1, 1, radixCopyBlockDim, 1, 1, 0, mStream, copyKernelParams, sizeof(copyKernelParams), 0, PX_FL);
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopyBits fail to launch kernel!!\n");
 
@@ -816,8 +847,19 @@ namespace physx
 		{
 			//original tet model
 			const PxU32 maxTetraVerts = core->getMaxTetraVerts();
-			const PxU32 numThreadsPerBlock = PxgSoftBodyKernelBlockDim::SB_SOLVETETRA;
-			const PxU32 numBlocks = (maxTetraVerts + numThreadsPerBlock - 1) / numThreadsPerBlock;
+			const PxU32 numVertsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				256;
+#else
+				PxgSoftBodyKernelBlockDim::SB_SOLVETETRA;
+#endif
+			const PxU32 numThreadsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				256;
+#else
+				PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+#endif
+			const PxU32 numBlocks = (maxTetraVerts + numVertsPerBlock - 1) / numVertsPerBlock;
 
 			//const PxU32 numBlocks = nbActiveSoftbodies * NUM_BLOCK_PER_SOFTBODY_SOLVE_TETRA;
 			{
@@ -830,9 +872,16 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(activeSoftbodiesd)
 				};
 
-				CUresult result = mCudaContext->launchKernel(updateTetModelKernelFunction, numBlocks, nbActiveSoftbodies, 1, PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION, 1, 1, 0, updateStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+				CUresult result = mCudaContext->launchKernel(updateTetModelKernelFunction, numBlocks, nbActiveSoftbodies, 1, numThreadsPerBlock, 1, 1, 0, updateStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+				{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_updateTetModelVertsLaunch kernel fail! PX_DCU_SOFTBODY_UPDATE_TET_VERTS_V2_256_THREADS\n");
+#else
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_updateTetModelVertsLaunch kernel fail!\n");
+#endif
+				}
 
 #if SB_GPU_DEBUG
 				result = mCudaContext->streamSynchronize(updateStream);
@@ -908,12 +957,23 @@ namespace physx
 
 			const PxU32 totalSoftBodies = mSimController->getBodySimManager().mTotalNumSoftBodies;
 
-			const PxU32 numThreadsPerBlock = PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+			const PxU32 finalizeThreadsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				256;
+#else
+				PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+#endif
+			const PxU32 sleepingThreadsPerBlock =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				256;
+#else
+				PxgSoftBodyKernelBlockDim::SB_PREINTEGRATION;
+#endif
 
 			const bool alwaysRunVelocityAveraging = isTGS && !mGpuContext->isExternalForcesEveryTgsIterationEnabled();
 
 			{
-				const PxU32 numBlocks = (maxVerts + numThreadsPerBlock - 1) / numThreadsPerBlock;
+				const PxU32 numBlocks = (maxVerts + finalizeThreadsPerBlock - 1) / finalizeThreadsPerBlock;
 				CUfunction finalizeVelocitiesKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::SB_GM_FINALIZE_VELOCITIES);
 
 				PxCudaKernelParam kernelParams[] =
@@ -926,9 +986,16 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(alwaysRunVelocityAveraging)
 				};
 
-				CUresult result = mCudaContext->launchKernel(finalizeVelocitiesKernelFunction, numBlocks, nbActiveSoftbodies, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+				CUresult result = mCudaContext->launchKernel(finalizeVelocitiesKernelFunction, numBlocks, nbActiveSoftbodies, 1, finalizeThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+				{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_gm_finalizeVelocitiesLaunch kernel fail! PX_DCU_SOFTBODY_FINALIZE_VELOCITIES_V5_256_THREADS\n");
+#else
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_gm_finalizeVelocitiesLaunch kernel fail!\n");
+#endif
+				}
 
 #if SB_GPU_DEBUG
 				result = mCudaContext->streamSynchronize(mStream);
@@ -941,7 +1008,7 @@ namespace physx
 
 			{
 				const PxReal resetCounter = 0.4f;
-				const PxU32 numBlocks = (nbActiveSoftbodies + numThreadsPerBlock - 1) / numThreadsPerBlock;
+				const PxU32 numBlocks = (nbActiveSoftbodies + sleepingThreadsPerBlock - 1) / sleepingThreadsPerBlock;
 				CUfunction softBodySleepingFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::SB_SLEEPING);
 
 				PxU32* stateChanged = core->getActiveSBStateChangedMap().getWords();
@@ -959,9 +1026,16 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(stateChanged)
 				};
 
-				CUresult result = mCudaContext->launchKernel(softBodySleepingFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+				CUresult result = mCudaContext->launchKernel(softBodySleepingFunction, numBlocks, 1, 1, sleepingThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 				PX_ASSERT(result == CUDA_SUCCESS);
-				PX_UNUSED(result);
+				if (result != CUDA_SUCCESS)
+				{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_sleeping kernel fail! PX_DCU_SOFTBODY_SLEEPING_V6_256_THREADS\n");
+#else
+					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_sleeping kernel fail!\n");
+#endif
+				}
 
 #if SB_GPU_DEBUG
 				result = mCudaContext->streamSynchronize(mStream);
@@ -1162,7 +1236,21 @@ namespace physx
 	void PxgSoftBodyCore::solveCorotationalFEM(PxgSoftBody* softbodies, PxgSoftBody* softbodiesd, PxgDevicePointer<PxU32> activeSoftbodiesd,
 		const PxU32 nbActiveSoftbodies, const PxReal dt, CUstream stream, const bool isTGS, const bool isFirstIteration) 
 	{
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		const bool partitionDiag = std::getenv("PX_DCU_SOFTBODY_PARTITION_DIAG") != NULL;
+		static PxU64 partitionDiagCall = 0;
+		const PxU64 diagCall = partitionDiag ? ++partitionDiagCall : 0;
+		const char* partitionDiagCallText = std::getenv("PX_DCU_SOFTBODY_PARTITION_DIAG_CALL");
+		const char* partitionDiagPartitionText = std::getenv("PX_DCU_SOFTBODY_PARTITION_DIAG_PARTITION");
+		const char* partitionDiagStageText = std::getenv("PX_DCU_SOFTBODY_PARTITION_DIAG_STAGE");
+		const PxU64 partitionDiagTargetCall = partitionDiagCallText ? PxU64(std::strtoull(partitionDiagCallText, NULL, 10)) : 0;
+		const PxU32 partitionDiagTargetPartition = partitionDiagPartitionText ? PxU32(std::strtoul(partitionDiagPartitionText, NULL, 10)) : 0xffffffffu;
+		const PxU32 partitionDiagStage = partitionDiagStageText ? PxU32(std::strtoul(partitionDiagStageText, NULL, 10)) : 0;
+		const bool partitionDiagThisCall = partitionDiag &&
+			(partitionDiagTargetCall == 0 || partitionDiagTargetCall == diagCall);
+#else
 		PX_UNUSED(softbodies);
+#endif
 
 		PxgSimulationCore* core = mSimController->getSimulationCore();
 
@@ -1177,7 +1265,8 @@ namespace physx
 
 			//multiple blocks solve one of the soft bodies
 			{
-				PxU32 maxPartitions = core->getGMMaxTetraPartitions();
+				const PxU32 rawMaxPartitions = core->getGMMaxTetraPartitions();
+				PxU32 maxPartitions = rawMaxPartitions;
 
 				bool hasExtraJacobi = maxPartitions > SB_PARTITION_LIMIT; // 8th partition is for Jacobi-style update.
 				maxPartitions = PxMin(maxPartitions, PxU32(SB_PARTITION_LIMIT));
@@ -1188,11 +1277,322 @@ namespace physx
 				{
 					const PxU32 numThreadsPerBlock = PxgSoftBodyKernelBlockDim::SB_SOLVETETRA_LOW;
 					const PxU32 maxTetetrahedronsPerPartitions = core->getGMMaxTetrahedronsPerPartition();
-					const PxU32 numBlocks = (maxTetetrahedronsPerPartitions + numThreadsPerBlock - 1) / numThreadsPerBlock;
+					const PxU32 numBlocks =
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						// Avoid concurrent workgroups in the gfx936 high-private-memory solve kernel.
+						1;
+#else
+						(maxTetetrahedronsPerPartitions + numThreadsPerBlock - 1) / numThreadsPerBlock;
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					// Only the measured five-tet shape is eligible; mixed scenes use the original kernel.
+					bool useFiveTetDcuP4 = false;
+					const char* fiveTetOptIn = std::getenv("PX_DCU_SOFTBODY_FIVE_TET_P4");
+					if (fiveTetOptIn && fiveTetOptIn[0] == '1' && fiveTetOptIn[1] == '\0' &&
+						nbActiveSoftbodies > 0 && softbodies)
+					{
+						static thread_local int checkedDevice = -1;
+						static thread_local bool isGfx936 = false;
+						const int device = mCudaContextManager->getDevice();
+						if (device != checkedDevice)
+						{
+							isGfx936 = pxDcuIsGfx936(device);
+							checkedDevice = device;
+						}
+						if (isGfx936)
+						{
+							useFiveTetDcuP4 = true;
+							const PxU32* activeIds = mSimController->getActiveSoftBodies();
+							if (!activeIds)
+								useFiveTetDcuP4 = false;
+							else
+								for (PxU32 slot = 0; slot < nbActiveSoftbodies; ++slot)
+									if (softbodies[activeIds[slot]].mNumTetsPerElement != 5)
+									{
+										useFiveTetDcuP4 = false;
+										break;
+									}
+						}
+					}
+					if (useFiveTetDcuP4)
+					{
+						static thread_local bool activationReported = false;
+						if (!activationReported)
+						{
+							std::printf("PX_DCU_SOFTBODY_FIVE_TET_P4_GFX936_SELECTED active=%u\n", nbActiveSoftbodies);
+							activationReported = true;
+						}
+					}
+					const char* sixtyFourOptIn = std::getenv("PX_DCU_SOFTBODY_64_THREAD_P18");
+					const bool useSixtyFourDcuP18 = useFiveTetDcuP4 && sixtyFourOptIn &&
+						sixtyFourOptIn[0] == '1' && sixtyFourOptIn[1] == '\0' && nbActiveSoftbodies == 1;
+					const char* copy2OptIn = std::getenv("PX_DCU_SOFTBODY_64_COPY2_P23");
+					const bool useCopy2DcuP23 = useSixtyFourDcuP18 && copy2OptIn &&
+						copy2OptIn[0] == '1' && copy2OptIn[1] == '\0';
+					const char* noPerElementSyncOptIn = std::getenv("PX_DCU_SOFTBODY_64_NO_PER_ELEMENT_SYNC_P27");
+					const bool useNoPerElementSyncDcuP27 = useSixtyFourDcuP18 && !useCopy2DcuP23 && noPerElementSyncOptIn &&
+						noPerElementSyncOptIn[0] == '1' && noPerElementSyncOptIn[1] == '\0';
+					const char* flatFiveTetOptIn = std::getenv("PX_DCU_SOFTBODY_64_FLAT_FIVE_TET_P31");
+					const bool useFlatFiveTetDcuP31 = useSixtyFourDcuP18 && !useCopy2DcuP23 &&
+						!useNoPerElementSyncDcuP27 && flatFiveTetOptIn &&
+						flatFiveTetOptIn[0] == '1' && flatFiveTetOptIn[1] == '\0';
+					if (useSixtyFourDcuP18)
+					{
+						static thread_local bool sixtyFourReported = false;
+						if (!sixtyFourReported)
+						{
+							std::printf("PX_DCU_SOFTBODY_64_THREAD_P18_GFX936_SELECTED active=%u blocks=1 threads=64\n", nbActiveSoftbodies);
+							sixtyFourReported = true;
+						}
+					}
+					if (useCopy2DcuP23)
+					{
+						static thread_local bool copy2Reported = false;
+						if (!copy2Reported)
+						{
+							std::printf("PX_DCU_SOFTBODY_64_COPY2_P23_GFX936_SELECTED active=%u blocks=1 threads=64\n", nbActiveSoftbodies);
+							copy2Reported = true;
+						}
+					}
+					if (useNoPerElementSyncDcuP27)
+					{
+						static thread_local bool noPerElementSyncReported = false;
+						if (!noPerElementSyncReported)
+						{
+							std::printf("PX_DCU_SOFTBODY_64_NO_PER_ELEMENT_SYNC_P27_GFX936_SELECTED active=%u blocks=1 threads=64\n", nbActiveSoftbodies);
+							noPerElementSyncReported = true;
+						}
+					}
+					const char* twoBlockOptIn = std::getenv("PX_DCU_SOFTBODY_TWO_BLOCK_P12");
+					if (useFlatFiveTetDcuP31)
+					{
+						static thread_local bool flatFiveTetReported = false;
+						if (!flatFiveTetReported)
+						{
+							std::printf("PX_DCU_SOFTBODY_64_FLAT_FIVE_TET_P31_GFX936_SELECTED active=%u blocks=1 threads=64\n", nbActiveSoftbodies);
+							flatFiveTetReported = true;
+						}
+					}
+					const bool useTwoBlockDcuP12 = useFiveTetDcuP4 && !useSixtyFourDcuP18 && twoBlockOptIn &&
+						twoBlockOptIn[0] == '1' && twoBlockOptIn[1] == '\0' &&
+						nbActiveSoftbodies == 1 && maxTetetrahedronsPerPartitions >= 64;
+					if (useTwoBlockDcuP12)
+					{
+						static thread_local bool twoBlockReported = false;
+						if (!twoBlockReported)
+						{
+							std::printf("PX_DCU_SOFTBODY_TWO_BLOCK_P12_GFX936_SELECTED active=%u blocks=2\n", nbActiveSoftbodies);
+							twoBlockReported = true;
+						}
+					}
+					if (partitionDiagThisCall)
+					{
+						std::printf("[DCU SOFTBODY PARTITION] marker=PX_DCU_SOFTBODY_PARTITION_DIAG_V3_TARGETED_STAGE call=%llu targetCall=%llu targetPartition=%u stage=%u phase=entry_pre maxTetrahedrons=%u rawMaxPartitions=%u maxPartitions=%u maxTetrahedronsPerPartition=%u numBlocks=%u numThreadsPerBlock=%u nbActiveSoftbodies=%u isTGS=%u isFirstIteration=%u\n",
+							static_cast<unsigned long long>(diagCall), static_cast<unsigned long long>(partitionDiagTargetCall),
+							partitionDiagTargetPartition, partitionDiagStage, maxTetrahedrons, rawMaxPartitions, maxPartitions,
+							maxTetetrahedronsPerPartitions, numBlocks, numThreadsPerBlock, nbActiveSoftbodies,
+							PxU32(isTGS), PxU32(isFirstIteration));
+						std::fflush(stdout);
+
+						const CUresult entrySync = mCudaContext->streamSynchronize(stream);
+						std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=entry_post sync=%d\n",
+							static_cast<unsigned long long>(diagCall), int(entrySync));
+						std::fflush(stdout);
+						if (entrySync != CUDA_SUCCESS)
+							return;
+
+						const PxU32* activeSoftbodies = mSimController->getActiveSoftBodies();
+						for (PxU32 activeSlot = 0; activeSlot < nbActiveSoftbodies; ++activeSlot)
+						{
+							const PxU32 softbodyId = activeSoftbodies[activeSlot];
+							const PxgSoftBody& softbody = softbodies[softbodyId];
+							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=softbody activeSlot=%u softbodyId=%u numTetsGM=%u numPartitionsGM=%u numTetsPerElement=%u numJacobiVertices=%u\n",
+								static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, softbody.mNumTetsGM,
+								softbody.mNumPartitionsGM, softbody.mNumTetsPerElement, softbody.mNumJacobiVertices);
+
+							if (softbody.mNumPartitionsGM > 0 && softbody.mSimAccumulatedPartitionsCP)
+							{
+								PxArray<PxU32> accumulatedPartitions;
+								accumulatedPartitions.resize(softbody.mNumPartitionsGM);
+								const CUresult copyResult = mCudaContext->memcpyDtoH(accumulatedPartitions.begin(),
+									reinterpret_cast<CUdeviceptr>(softbody.mSimAccumulatedPartitionsCP),
+									softbody.mNumPartitionsGM * sizeof(PxU32));
+								std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_copy activeSlot=%u softbodyId=%u copy=%d\n",
+									static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, int(copyResult));
+								if (copyResult == CUDA_SUCCESS)
+								{
+									PxU32 start = 0;
+									for (PxU32 partition = 0; partition < softbody.mNumPartitionsGM; ++partition)
+									{
+										const PxU32 end = accumulatedPartitions[partition];
+										std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_range activeSlot=%u softbodyId=%u partition=%u start=%u end=%u count=%u\n",
+											static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, partition,
+											start, end, end >= start ? end - start : 0);
+										start = end;
+									}
+
+								const char* ownershipOptIn = std::getenv("PX_DCU_SOFTBODY_GS_OWNERSHIP_P14");
+									if (ownershipOptIn && ownershipOptIn[0] == '1' && ownershipOptIn[1] == '\0' &&
+									partitionDiagTargetPartition == 0xffffffffu && softbody.mNumTetsPerElement == 5 &&
+									softbody.mSimPullIndices && softbody.mNumTetsGM % 5 == 0)
+								{
+									const PxU32 numElements = softbody.mNumTetsGM / 5;
+									PxArray<uint4> pullIndices;
+									pullIndices.resize(numElements * 2);
+									const CUresult pullCopy = mCudaContext->memcpyDtoH(pullIndices.begin(),
+										reinterpret_cast<CUdeviceptr>(softbody.mSimPullIndices), pullIndices.size() * sizeof(uint4));
+									PxU32 previous = 0;
+									const PxU32 gsCount = PxMin(softbody.mNumPartitionsGM, PxU32(SB_PARTITION_LIMIT));
+									for (PxU32 partition = 0; partition < gsCount; ++partition)
+									{
+										const PxU32 end = accumulatedPartitions[partition];
+										PxU32 invalid = 0, duplicates = 0;
+										PxArray<PxU8> seen;
+										seen.resize(softbody.mNumVertsGM);
+										for (PxU32 v = 0; v < seen.size(); ++v)
+											seen[v] = 0;
+										if (pullCopy == CUDA_SUCCESS && previous <= end && end <= numElements)
+											for (PxU32 element = previous; element < end; ++element)
+											{
+												uint4 indices[2] = { pullIndices[element], pullIndices[element + numElements] };
+												indices[0].x &= 0x7fffffffu;
+												const PxU32* vertices = &indices[0].x;
+												for (PxU32 v = 0; v < 8; ++v)
+												{
+													const PxU32 vertex = vertices[v];
+													if (vertex >= seen.size()) ++invalid;
+													else if (seen[vertex]) ++duplicates;
+													else seen[vertex] = 1;
+												}
+											}
+										const bool valid = pullCopy == CUDA_SUCCESS && previous <= end && end <= numElements &&
+											invalid == 0 && duplicates == 0;
+										std::printf("[DCU SOFTBODY OWNERSHIP] marker=PX_DCU_SOFTBODY_GS_OWNERSHIP_P14_V1 partition=%u start=%u end=%u numElements=%u numVerts=%u copy=%d invalid=%u duplicates=%u verdict=%s\n",
+											partition, previous, end, numElements, softbody.mNumVertsGM, int(pullCopy), invalid,
+											duplicates, valid ? "VALID" : "INVALID");
+										previous = end;
+									}
+									}
+
+								const char* materialBoundsOptIn = std::getenv("PX_DCU_SOFTBODY_GS_MATERIAL_BOUNDS_P16");
+								if (materialBoundsOptIn && materialBoundsOptIn[0] == '1' && materialBoundsOptIn[1] == '\0' &&
+									partitionDiagTargetPartition == 0xffffffffu && softbody.mNumTetsPerElement == 5 &&
+									softbody.mOrderedMaterialIndices && softbody.mNumTetsGM % 5 == 0)
+								{
+									const PxU32 numElements = softbody.mNumTetsGM / 5;
+									const PxU64 materialBytes = npCore->mGpuFEMMaterialManager.mGpuMaterialBuffer.getSize();
+									const PxU64 materialCapacity = materialBytes / sizeof(PxsDeformableVolumeMaterialData);
+									PxArray<PxU16> indices;
+									indices.resize(numElements);
+									const CUresult copy = mCudaContext->memcpyDtoH(indices.begin(),
+										reinterpret_cast<CUdeviceptr>(softbody.mOrderedMaterialIndices),
+										indices.size() * sizeof(PxU16));
+									PxU32 previous = 0;
+									const PxU32 gsCount = PxMin(softbody.mNumPartitionsGM, PxU32(SB_PARTITION_LIMIT));
+									for (PxU32 partition = 0; partition < gsCount; ++partition)
+									{
+										const PxU32 end = accumulatedPartitions[partition];
+										PxU32 invalid = 0, minIndex = 0xffffu, maxIndex = 0;
+										if (copy == CUDA_SUCCESS && previous <= end && end <= numElements)
+											for (PxU32 element = previous; element < end; ++element)
+											{
+												const PxU32 index = indices[element];
+												minIndex = PxMin(minIndex, index);
+												maxIndex = PxMax(maxIndex, index);
+												if (index >= materialCapacity) ++invalid;
+											}
+										const bool valid = copy == CUDA_SUCCESS && previous < end && end <= numElements &&
+											materialCapacity > 0 && invalid == 0;
+										std::printf("[DCU SOFTBODY MATERIAL BOUNDS] marker=PX_DCU_SOFTBODY_GS_MATERIAL_BOUNDS_P16_V1 partition=%u start=%u end=%u numElements=%u allocatedIndices=%u materialBytes=%llu materialCapacity=%llu copy=%d minIndex=%u maxIndex=%u invalid=%u verdict=%s\n",
+											partition, previous, end, numElements, softbody.mNumTetsGM,
+											static_cast<unsigned long long>(materialBytes), static_cast<unsigned long long>(materialCapacity),
+											int(copy), minIndex, maxIndex, invalid, valid ? "VALID" : "INVALID");
+										previous = end;
+									}
+								}
+
+								if (partitionDiagTargetPartition < softbody.mNumPartitionsGM &&
+									softbody.mNumTetsPerElement > 1 && softbody.mSimPullIndices &&
+									softbody.mSimPosition_InvMass && softbody.mSimVelocity_InvMass)
+									{
+										const PxU32 numElements = softbody.mNumTetsGM / softbody.mNumTetsPerElement;
+										const PxU32 start = partitionDiagTargetPartition > 0 ?
+											accumulatedPartitions[partitionDiagTargetPartition - 1] : 0;
+										const PxU32 end = accumulatedPartitions[partitionDiagTargetPartition];
+										PxArray<uint4> pullIndices;
+										PxArray<float4> positions;
+										PxArray<float4> velocities;
+										pullIndices.resize(numElements * 2);
+										positions.resize(softbody.mNumVertsGM);
+										velocities.resize(softbody.mNumVertsGM);
+
+										const CUresult pullCopy = mCudaContext->memcpyDtoH(pullIndices.begin(),
+											reinterpret_cast<CUdeviceptr>(softbody.mSimPullIndices),
+											pullIndices.size() * sizeof(uint4));
+										const CUresult positionCopy = mCudaContext->memcpyDtoH(positions.begin(),
+											reinterpret_cast<CUdeviceptr>(softbody.mSimPosition_InvMass),
+											positions.size() * sizeof(float4));
+										const CUresult velocityCopy = mCudaContext->memcpyDtoH(velocities.begin(),
+											reinterpret_cast<CUdeviceptr>(softbody.mSimVelocity_InvMass),
+											velocities.size() * sizeof(float4));
+
+										PxU32 invalidIndices = 0;
+										PxU32 nonFiniteValues = 0;
+										if (pullCopy == CUDA_SUCCESS && positionCopy == CUDA_SUCCESS && velocityCopy == CUDA_SUCCESS &&
+											start <= end && end <= numElements)
+										{
+											for (PxU32 element = start; element < end; ++element)
+											{
+												uint4 indices[2] = { pullIndices[element], pullIndices[element + numElements] };
+												indices[0].x &= 0x7fffffffu;
+												const PxU32* index = &indices[0].x;
+												for (PxU32 localVertex = 0; localVertex < 8; ++localVertex)
+												{
+													if (index[localVertex] >= softbody.mNumVertsGM)
+													{
+														++invalidIndices;
+														continue;
+													}
+													const float4& p = positions[index[localVertex]];
+													const float4& v = velocities[index[localVertex]];
+													if (!PxIsFinite(p.x) || !PxIsFinite(p.y) || !PxIsFinite(p.z) || !PxIsFinite(p.w) ||
+														!PxIsFinite(v.x) || !PxIsFinite(v.y) || !PxIsFinite(v.z) || !PxIsFinite(v.w))
+														++nonFiniteValues;
+												}
+											}
+										}
+										std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=input_validation activeSlot=%u softbodyId=%u partition=%u start=%u end=%u numElements=%u numVerts=%u pullCopy=%d positionCopy=%d velocityCopy=%d invalidIndices=%u nonFiniteValues=%u verdict=%s\n",
+											static_cast<unsigned long long>(diagCall), activeSlot, softbodyId,
+											partitionDiagTargetPartition, start, end, numElements, softbody.mNumVertsGM,
+											int(pullCopy), int(positionCopy), int(velocityCopy), invalidIndices, nonFiniteValues,
+											pullCopy == CUDA_SUCCESS && positionCopy == CUDA_SUCCESS && velocityCopy == CUDA_SUCCESS &&
+											start <= end && end <= numElements && invalidIndices == 0 && nonFiniteValues == 0 ? "VALID" : "INVALID");
+									}
+								}
+							}
+						}
+						std::fflush(stdout);
+					}
+#endif
 
 					for (PxU32 i = 0; i < maxPartitions; ++i)
 					{
-						const CUfunction GMCPSolveTetraKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::SB_GM_CP_SOLVE_TETRA);
+						const CUfunction GMCPSolveTetraKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+							useCopy2DcuP23 ? PxgKernelIds::SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_COPY2_DCU_P23 :
+							useNoPerElementSyncDcuP27 ? PxgKernelIds::SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_NO_PER_ELEMENT_SYNC_DCU_P27 :
+							useFlatFiveTetDcuP31 ? PxgKernelIds::SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_FLAT_DCU_P31 :
+							useSixtyFourDcuP18 ? PxgKernelIds::SB_GM_CP_SOLVE_TETRA_FIVE_TET_64_DCU_P17 :
+							useFiveTetDcuP4 ? PxgKernelIds::SB_GM_CP_SOLVE_TETRA_FIVE_TET_DCU_P3 :
+#endif
+							PxgKernelIds::SB_GM_CP_SOLVE_TETRA);
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						const bool partitionDiagThisLaunch = partitionDiagThisCall &&
+							(partitionDiagTargetPartition == 0xffffffffu || partitionDiagTargetPartition == i);
+						const PxU32 dcuDiagStage = partitionDiagThisLaunch ? partitionDiagStage : 0;
+#endif
 
 						PxCudaKernelParam kernelParams[] =
 						{
@@ -1204,11 +1604,68 @@ namespace physx
 							PX_CUDA_KERNEL_PARAM(isTGS),
 							PX_CUDA_KERNEL_PARAM(isFirstIteration),
 							PX_CUDA_KERNEL_PARAM(materials)
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+							, PX_CUDA_KERNEL_PARAM(dcuDiagStage)
+#endif
 						};
 
-						CUresult result = mCudaContext->launchKernel(GMCPSolveTetraKernelFunction, numBlocks, nbActiveSoftbodies, 1, numThreadsPerBlock, 1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
-						PX_ASSERT(result == CUDA_SUCCESS);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						if (partitionDiagThisLaunch)
+						{
+							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_pre partition=%u\n",
+								static_cast<unsigned long long>(diagCall), i);
+							std::fflush(stdout);
+						}
+#endif
+
+						CUresult result = mCudaContext->launchKernel(GMCPSolveTetraKernelFunction,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+							useTwoBlockDcuP12 ? 2 : numBlocks,
+#else
+							numBlocks,
+#endif
+							nbActiveSoftbodies, 1,
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+							useSixtyFourDcuP18 ? 64 : numThreadsPerBlock,
+#else
+							numThreadsPerBlock,
+#endif
+							1, 1, 0, stream, kernelParams, sizeof(kernelParams), 0, PX_FL);
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						if (result != CUDA_SUCCESS)
+							PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_gm_cp_solveTetrahedronsPartitionLaunch fail! PX_DCU_SOFTBODY_PARTITION_LAUNCH_V5_SINGLE_BLOCK_GRID_STRIDE\n");
+#else
 						PX_UNUSED(result);
+#endif
+
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+						if (partitionDiagThisLaunch)
+						{
+							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_launch partition=%u launch=%d\n",
+								static_cast<unsigned long long>(diagCall), i, int(result));
+							std::fflush(stdout);
+							if (result == CUDA_SUCCESS)
+							{
+								const CUresult partitionSync = mCudaContext->streamSynchronize(stream);
+								std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_post partition=%u sync=%d\n",
+									static_cast<unsigned long long>(diagCall), i, int(partitionSync));
+								std::fflush(stdout);
+								if (partitionDiagStage > 0)
+								{
+									std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=stage_complete partition=%u stage=%u sync=%d exit=%d\n",
+										static_cast<unsigned long long>(diagCall), i, partitionDiagStage, int(partitionSync),
+										partitionSync == CUDA_SUCCESS ? 96 : 98);
+									std::fflush(stdout);
+									std::_Exit(partitionSync == CUDA_SUCCESS ? 96 : 98);
+								}
+								if (partitionSync != CUDA_SUCCESS)
+									return;
+							}
+						}
+						else
+							PX_UNUSED(result);
+#endif
+						PX_ASSERT(result == CUDA_SUCCESS);
 					}
 
 #if SB_GPU_DEBUG

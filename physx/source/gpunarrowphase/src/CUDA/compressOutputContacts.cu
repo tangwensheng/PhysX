@@ -48,6 +48,11 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels17() {}
 
+#if defined(PX_DCU_PORT) && PX_DCU_PORT
+extern "C" __device__ __constant__ char gPxgDcuFrictionPatchAbiVersion[] =
+	"PX_DCU_NARROWPHASE_STAGE_V56_FRICTION_ABI4_NULL_SAFE";
+#endif
+
 extern "C" __global__ void compressContactStage1(
 	PxsContactManagerOutput*	outputData,					//input
 	PxU32						numTotalPairs,				//input
@@ -282,24 +287,14 @@ extern "C" __global__ void updateFrictionPatches(
 	const PxU32								pairCount,				//input
 	const PxU8* PX_RESTRICT					startContactPatches,	//input
 	PxU8* PX_RESTRICT						startFrictionPatches,	//input (but we need it non-const)
-	PxsContactManagerOutput* PX_RESTRICT	outputs,					//input/output
-	const PxU32								diagnosticMode
+	PxsContactManagerOutput* PX_RESTRICT	outputs					//input/output
 )
 {
 	const PxU32 threadIndex = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (threadIndex < pairCount)
 	{
-		if (diagnosticMode == 2)
-			return;
-
 		PxsContactManagerOutput& output = outputs[threadIndex];
-		if (diagnosticMode == 1)
-		{
-			output.frictionPatches = NULL;
-			return;
-		}
-
 		if (output.nbPatches && output.contactPatches)
 		{
 			const uintptr_t contactPatchAddress = reinterpret_cast<uintptr_t>(output.contactPatches);
