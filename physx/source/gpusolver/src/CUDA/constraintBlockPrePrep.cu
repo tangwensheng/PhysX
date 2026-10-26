@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "foundation/PxVec4.h"
 
@@ -913,7 +914,7 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 		const PxU32 globalFirstStaticBatch = globalTotalBatches - globalNumStaticBatches;
 		const PxgConstraintBatchHeader sharedHeader = numStaticBatches ? shDesc.mBatchHeaders[firstStaticBatch] : PxgConstraintBatchHeader();
 		const PxgConstraintBatchHeader globalHeader = globalNumStaticBatches ? gDesc->mBatchHeaders[globalFirstStaticBatch] : PxgConstraintBatchHeader();
-		printf("[DCU PREPREP INPUT] batches=(dynamic=%u static=%u arti=%u artiStatic=%u artiSelf=%u total=%u) firstStatic=%u sharedHeader=(stride=%u type=%u index=%u start=%u mask=0x%08x) global=(static=%u total=%u firstStatic=%u header=(stride=%u type=%u index=%u start=%u mask=0x%08x)) ptrs=(sharedHeaders=%p globalHeaders=%p blocks=%p)\n",
+		printf("[HCU PREPREP INPUT] batches=(dynamic=%u static=%u arti=%u artiStatic=%u artiSelf=%u total=%u) firstStatic=%u sharedHeader=(stride=%u type=%u index=%u start=%u mask=0x%08x) global=(static=%u total=%u firstStatic=%u header=(stride=%u type=%u index=%u start=%u mask=0x%08x)) ptrs=(sharedHeaders=%p globalHeaders=%p blocks=%p)\n",
 			numBatches, numStaticBatches, numArtiBatches, numArtiStaticBatches, numArtiSelfBatches, totalBatches,
 			firstStaticBatch, PxU32(sharedHeader.mDescStride), PxU32(sharedHeader.constraintType), sharedHeader.mConstraintBatchIndex,
 			sharedHeader.mStartPartitionIndex, sharedHeader.mask, globalNumStaticBatches, globalTotalBatches, globalFirstStaticBatch,
@@ -950,7 +951,7 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 			batch.mask = batchHeader.mask;
 			if(diagnosticMode && a == firstStaticBatch && threadIndexInWarp == 0)
 			{
-				printf("[DCU PREPREP OUTPUT META] batch=%u stride=%u type=%u index=%u mask=0x%08x\n",
+				printf("[HCU PREPREP OUTPUT META] batch=%u stride=%u type=%u index=%u mask=0x%08x\n",
 					a, PxU32(batch.mDescStride), PxU32(batch.constraintType), batch.mConstraintBatchIndex, batch.mask);
 			}
 
@@ -1204,7 +1205,7 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 
 		if(diagnosticMode && a == firstStaticBatch && threadIndexInWarp == 0)
 		{
-			printf("[DCU PREPREP OUTPUT] batch=%u stride=%u type=%u index=%u mask=0x%08x starts=(partition=%u constraint=%u friction=%u blockContact=%u)\n",
+			printf("[HCU PREPREP OUTPUT] batch=%u stride=%u type=%u index=%u mask=0x%08x starts=(partition=%u constraint=%u friction=%u blockContact=%u)\n",
 				a, PxU32(batch.mDescStride), PxU32(batch.constraintType), batch.mConstraintBatchIndex, batch.mask,
 				batch.mStartPartitionIndex, batch.startConstraintIndex, batch.startFrictionIndex, batch.blockContactIndex);
 		}
@@ -1228,7 +1229,7 @@ static PX_FORCE_INLINE __device__  void constraint1DPrePrep(PxU32 jointDataIndex
 	const PxgConstraintPrePrep& constraintPrePre = constraintPrePrepEntries[jointDataIndex];
 
 #if defined(__HIPCC__)
-	// DCU port: these flags are from a newer PhysX version, not available yet
+	// HCU port: these flags are from a newer PhysX version, not available yet
 	const bool disableConstraints = false;
 	const bool useExtendedLimits = false;
 #else
@@ -1915,7 +1916,7 @@ void rigidSumInternalContactAndJointBatches2(
 			island.mStaticRigidBatchCount = totalNumStaticBatches;
 			if (diagnosticMode)
 			{
-				printf("[DCU PREPREP STATIC COUNT] contact=%u joint=%u total=%u offsets=(batch=%u contactUnique=%u jointUnique=%u staticContact=%u staticJoint=%u)\n",
+				printf("[HCU PREPREP STATIC COUNT] contact=%u joint=%u total=%u offsets=(batch=%u contactUnique=%u jointUnique=%u staticContact=%u staticJoint=%u)\n",
 					contactHeaderOffset, jointHeaderOffset, totalNumStaticBatches, batchOffset, contactUniqueIndexOffset,
 					jointUniqueIndexOffset, staticContactBatchOffset, staticJointBatchOffset);
 			}
@@ -2158,7 +2159,7 @@ void rigidSumInternalContactAndJointBatches2(
 				contactConstraintBatchIndices[contactBlockOffset + numContactBatches + i] = blockOffset;// -numArtiBatches;
 				if (printFirstStaticHeader)
 				{
-					printf("[DCU PREPREP STATIC HEADER] work=%u firstLane=%u firstWork=%u firstCount=%u maxContact=%u contactOffset=%u blockOffset=%u mask=0x%08x stride=%u header=(type=%u index=%u start=%u mask=0x%08x)\n",
+					printf("[HCU PREPREP STATIC HEADER] work=%u firstLane=%u firstWork=%u firstCount=%u maxContact=%u contactOffset=%u blockOffset=%u mask=0x%08x stride=%u header=(type=%u index=%u start=%u mask=0x%08x)\n",
 						workIndex, firstLane, firstWorkIndex, firstContactCount, maxContact, contactOffset, blockOffset,
 						mask, stride, PxU32(header.constraintType), header.mConstraintBatchIndex,
 						header.mStartPartitionIndex, header.mask);
@@ -2291,7 +2292,7 @@ void rigidSumInternalContactAndJointBatches2(
 			}
 		}
 
-		printf("[DCU PREPREP STATIC AGG] bodies=%u active=%u refs=%u max_per_body=%u batches=%u/%u errors=%u/%u/%u/%u/%u/%u\n",
+		printf("[HCU PREPREP STATIC AGG] bodies=%u active=%u refs=%u max_per_body=%u batches=%u/%u errors=%u/%u/%u/%u/%u/%u\n",
 			nbBodies, activeBodies, totalContactRefs, maxContactsPerBody,
 			constraintPrepDesc->numStaticContactBatches, constraintPrepDesc->numStaticBatches,
 			startRangeErrors, headerTypeErrors, headerMaskErrors, headerStrideErrors,
@@ -2308,7 +2309,7 @@ void rigidSumInternalContactAndJointBatches2(
 				chunkActive += PxU32(count != 0);
 				chunkRefs += count;
 			}
-			printf("[DCU PREPREP STATIC CHUNK] chunk=%u active=%u refs=%u\n", chunk, chunkActive, chunkRefs);
+			printf("[HCU PREPREP STATIC CHUNK] chunk=%u active=%u refs=%u\n", chunk, chunkActive, chunkRefs);
 		}
 	}
 #endif

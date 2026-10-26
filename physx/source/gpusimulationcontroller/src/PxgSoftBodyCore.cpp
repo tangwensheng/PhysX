@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgNarrowphaseCore.h"
 #include "PxgNphaseImplementationContext.h"
@@ -1388,7 +1389,7 @@ namespace physx
 					}
 					if (partitionDiagThisCall)
 					{
-						std::printf("[DCU SOFTBODY PARTITION] marker=PX_DCU_SOFTBODY_PARTITION_DIAG_V3_TARGETED_STAGE call=%llu targetCall=%llu targetPartition=%u stage=%u phase=entry_pre maxTetrahedrons=%u rawMaxPartitions=%u maxPartitions=%u maxTetrahedronsPerPartition=%u numBlocks=%u numThreadsPerBlock=%u nbActiveSoftbodies=%u isTGS=%u isFirstIteration=%u\n",
+						std::printf("[HCU SOFTBODY PARTITION] marker=PX_DCU_SOFTBODY_PARTITION_DIAG_V3_TARGETED_STAGE call=%llu targetCall=%llu targetPartition=%u stage=%u phase=entry_pre maxTetrahedrons=%u rawMaxPartitions=%u maxPartitions=%u maxTetrahedronsPerPartition=%u numBlocks=%u numThreadsPerBlock=%u nbActiveSoftbodies=%u isTGS=%u isFirstIteration=%u\n",
 							static_cast<unsigned long long>(diagCall), static_cast<unsigned long long>(partitionDiagTargetCall),
 							partitionDiagTargetPartition, partitionDiagStage, maxTetrahedrons, rawMaxPartitions, maxPartitions,
 							maxTetetrahedronsPerPartitions, numBlocks, numThreadsPerBlock, nbActiveSoftbodies,
@@ -1396,7 +1397,7 @@ namespace physx
 						std::fflush(stdout);
 
 						const CUresult entrySync = mCudaContext->streamSynchronize(stream);
-						std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=entry_post sync=%d\n",
+						std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=entry_post sync=%d\n",
 							static_cast<unsigned long long>(diagCall), int(entrySync));
 						std::fflush(stdout);
 						if (entrySync != CUDA_SUCCESS)
@@ -1407,7 +1408,7 @@ namespace physx
 						{
 							const PxU32 softbodyId = activeSoftbodies[activeSlot];
 							const PxgSoftBody& softbody = softbodies[softbodyId];
-							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=softbody activeSlot=%u softbodyId=%u numTetsGM=%u numPartitionsGM=%u numTetsPerElement=%u numJacobiVertices=%u\n",
+							std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=softbody activeSlot=%u softbodyId=%u numTetsGM=%u numPartitionsGM=%u numTetsPerElement=%u numJacobiVertices=%u\n",
 								static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, softbody.mNumTetsGM,
 								softbody.mNumPartitionsGM, softbody.mNumTetsPerElement, softbody.mNumJacobiVertices);
 
@@ -1418,7 +1419,7 @@ namespace physx
 								const CUresult copyResult = mCudaContext->memcpyDtoH(accumulatedPartitions.begin(),
 									reinterpret_cast<CUdeviceptr>(softbody.mSimAccumulatedPartitionsCP),
 									softbody.mNumPartitionsGM * sizeof(PxU32));
-								std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_copy activeSlot=%u softbodyId=%u copy=%d\n",
+								std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=partition_copy activeSlot=%u softbodyId=%u copy=%d\n",
 									static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, int(copyResult));
 								if (copyResult == CUDA_SUCCESS)
 								{
@@ -1426,7 +1427,7 @@ namespace physx
 									for (PxU32 partition = 0; partition < softbody.mNumPartitionsGM; ++partition)
 									{
 										const PxU32 end = accumulatedPartitions[partition];
-										std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_range activeSlot=%u softbodyId=%u partition=%u start=%u end=%u count=%u\n",
+										std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=partition_range activeSlot=%u softbodyId=%u partition=%u start=%u end=%u count=%u\n",
 											static_cast<unsigned long long>(diagCall), activeSlot, softbodyId, partition,
 											start, end, end >= start ? end - start : 0);
 										start = end;
@@ -1468,7 +1469,7 @@ namespace physx
 											}
 										const bool valid = pullCopy == CUDA_SUCCESS && previous <= end && end <= numElements &&
 											invalid == 0 && duplicates == 0;
-										std::printf("[DCU SOFTBODY OWNERSHIP] marker=PX_DCU_SOFTBODY_GS_OWNERSHIP_P14_V1 partition=%u start=%u end=%u numElements=%u numVerts=%u copy=%d invalid=%u duplicates=%u verdict=%s\n",
+										std::printf("[HCU SOFTBODY OWNERSHIP] marker=PX_DCU_SOFTBODY_GS_OWNERSHIP_P14_V1 partition=%u start=%u end=%u numElements=%u numVerts=%u copy=%d invalid=%u duplicates=%u verdict=%s\n",
 											partition, previous, end, numElements, softbody.mNumVertsGM, int(pullCopy), invalid,
 											duplicates, valid ? "VALID" : "INVALID");
 										previous = end;
@@ -1504,7 +1505,7 @@ namespace physx
 											}
 										const bool valid = copy == CUDA_SUCCESS && previous < end && end <= numElements &&
 											materialCapacity > 0 && invalid == 0;
-										std::printf("[DCU SOFTBODY MATERIAL BOUNDS] marker=PX_DCU_SOFTBODY_GS_MATERIAL_BOUNDS_P16_V1 partition=%u start=%u end=%u numElements=%u allocatedIndices=%u materialBytes=%llu materialCapacity=%llu copy=%d minIndex=%u maxIndex=%u invalid=%u verdict=%s\n",
+										std::printf("[HCU SOFTBODY MATERIAL BOUNDS] marker=PX_DCU_SOFTBODY_GS_MATERIAL_BOUNDS_P16_V1 partition=%u start=%u end=%u numElements=%u allocatedIndices=%u materialBytes=%llu materialCapacity=%llu copy=%d minIndex=%u maxIndex=%u invalid=%u verdict=%s\n",
 											partition, previous, end, numElements, softbody.mNumTetsGM,
 											static_cast<unsigned long long>(materialBytes), static_cast<unsigned long long>(materialCapacity),
 											int(copy), minIndex, maxIndex, invalid, valid ? "VALID" : "INVALID");
@@ -1562,7 +1563,7 @@ namespace physx
 												}
 											}
 										}
-										std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=input_validation activeSlot=%u softbodyId=%u partition=%u start=%u end=%u numElements=%u numVerts=%u pullCopy=%d positionCopy=%d velocityCopy=%d invalidIndices=%u nonFiniteValues=%u verdict=%s\n",
+										std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=input_validation activeSlot=%u softbodyId=%u partition=%u start=%u end=%u numElements=%u numVerts=%u pullCopy=%d positionCopy=%d velocityCopy=%d invalidIndices=%u nonFiniteValues=%u verdict=%s\n",
 											static_cast<unsigned long long>(diagCall), activeSlot, softbodyId,
 											partitionDiagTargetPartition, start, end, numElements, softbody.mNumVertsGM,
 											int(pullCopy), int(positionCopy), int(velocityCopy), invalidIndices, nonFiniteValues,
@@ -1612,7 +1613,7 @@ namespace physx
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 						if (partitionDiagThisLaunch)
 						{
-							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_pre partition=%u\n",
+							std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=partition_pre partition=%u\n",
 								static_cast<unsigned long long>(diagCall), i);
 							std::fflush(stdout);
 						}
@@ -1641,18 +1642,18 @@ namespace physx
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 						if (partitionDiagThisLaunch)
 						{
-							std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_launch partition=%u launch=%d\n",
+							std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=partition_launch partition=%u launch=%d\n",
 								static_cast<unsigned long long>(diagCall), i, int(result));
 							std::fflush(stdout);
 							if (result == CUDA_SUCCESS)
 							{
 								const CUresult partitionSync = mCudaContext->streamSynchronize(stream);
-								std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=partition_post partition=%u sync=%d\n",
+								std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=partition_post partition=%u sync=%d\n",
 									static_cast<unsigned long long>(diagCall), i, int(partitionSync));
 								std::fflush(stdout);
 								if (partitionDiagStage > 0)
 								{
-									std::printf("[DCU SOFTBODY PARTITION] call=%llu phase=stage_complete partition=%u stage=%u sync=%d exit=%d\n",
+									std::printf("[HCU SOFTBODY PARTITION] call=%llu phase=stage_complete partition=%u stage=%u sync=%d exit=%d\n",
 										static_cast<unsigned long long>(diagCall), i, partitionDiagStage, int(partitionSync),
 										partitionSync == CUDA_SUCCESS ? 96 : 98);
 									std::fflush(stdout);

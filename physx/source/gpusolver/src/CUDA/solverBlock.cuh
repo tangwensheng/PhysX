@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #ifndef __SOLVER_BLOCK_CUH__
 #define __SOLVER_BLOCK_CUH__
@@ -583,7 +584,7 @@ static __device__ void solveContactBlock(const PxgBlockConstraintBatch& batch, P
 }
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-// The static DCU solver consumes a small contact set. Read each constraint only
+// The static HCU solver consumes a small contact set. Read each constraint only
 // when it is solved so no address from the next contact array is formed early.
 static __device__ void solveStaticContactBlockDcu(const PxgBlockConstraintBatch& batch,
 	PxVec3& b0LinVel, PxVec3& b0AngVel, PxVec3& b1LinVel, PxVec3& b1AngVel, bool doFriction,

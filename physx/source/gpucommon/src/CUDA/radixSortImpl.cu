@@ -23,6 +23,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "RadixSort.cuh"
 #include "PxgRadixSortDesc.h"

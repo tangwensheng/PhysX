@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 
 #include "foundation/PxVec3.h"
@@ -439,7 +440,7 @@ template <PxU32 NumWarps>
 struct TempBoxBoxBuffer
 {
 	// space for 3 contacts per thread for all threads in the block
-	PxVec4 tempBuff[NumWarps * 64 * 3]; // DCU: WARP_SIZE=64, 2x buffer for 128-thread block
+	PxVec4 tempBuff[NumWarps * 64 * 3]; // HCU: WARP_SIZE=64, 2x buffer for 128-thread block
 };
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT

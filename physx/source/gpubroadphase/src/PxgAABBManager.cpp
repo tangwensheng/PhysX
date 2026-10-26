@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgAABBManager.h"
 #include "PxgAggregate.h"
@@ -916,7 +917,7 @@ void PxgAABBManager::processFoundPairs()
 					firstMalformedPair = i;
 			}
 			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"DCU GPU broadphase found-pair diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN]: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
+				"HCU device broadphase found-pair diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN]: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
 				nbCreatePairs, volumeDataSize, diagnosticPairCount, invalidHandlePairs,
 				nullUserDataPairs, selfPairs, firstMalformedPair);
 			for (PxU32 i = 0; i < diagnosticPairCount; ++i)
@@ -929,7 +930,7 @@ void PxgAABBManager::processFoundPairs()
 				const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
 				const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
 				PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-					"DCU GPU broadphase found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
+					"HCU device broadphase found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
 					i, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
 					pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
 			}
@@ -943,7 +944,7 @@ void PxgAABBManager::processFoundPairs()
 				const PxU32 volumeTypeA = validA ? PxU32(mVolumeData[pair.mVolA].getVolumeType()) : PX_INVALID_U32;
 				const PxU32 volumeTypeB = validB ? PxU32(mVolumeData[pair.mVolB].getVolumeType()) : PX_INVALID_U32;
 				PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-					"DCU GPU broadphase first malformed found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
+					"HCU device broadphase first malformed found pair[%u]: volA=%u validA=%u userA=%p typeA=%u volB=%u validB=%u userB=%p typeB=%u self=%u\n",
 					firstMalformedPair, pair.mVolA, PxU32(validA), userDataA, volumeTypeA,
 					pair.mVolB, PxU32(validB), userDataB, volumeTypeB, PxU32(pair.mVolA == pair.mVolB));
 			}

@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved. 
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "foundation/PxAllocator.h"
 #include "foundation/PxTime.h"
@@ -471,7 +472,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		//resultR = mCudaContext->streamSynchronize(mStream);
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// DCU: writing the completion flag through host-mapped memory issues a PCIe
+		// HCU: writing the completion flag through host-mapped memory issues a PCIe
 		// AtomicOp that this platform rejects (UR_ATOMIC_OPCODE), so skip the signal
 		// kernel entirely and rely on streamSynchronize below.
 		mCudaContext->streamFlush(mStream);
@@ -489,7 +490,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		PX_PROFILE_ZONE("PxgCudaBroadPhaseSap.Synchronize", mContextID);
 		//mCudaContext->streamSynchronize(mStream);
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// DCU: no host-mapped completion flag is written (see above), so synchronize
+		// HCU: no host-mapped completion flag is written (see above), so synchronize
 		// directly instead of spinning on it.
 		mCudaContext->streamSynchronize(mStream);
 #else
@@ -570,7 +571,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		}
 
 		PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-			"DCU GPU broadphase report-stage diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN] [PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK]: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u readbackTotal=%u readbackSelfPairs=%u firstReadbackSelfPair=%u\n",
+			"HCU device broadphase report-stage diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN] [PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK]: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u readbackTotal=%u readbackSelfPairs=%u firstReadbackSelfPair=%u\n",
 			desc.sharedFoundPairIndex, rawFoundPairCount, rawSelfPairs, firstRawSelfPair,
 			desc.sharedFoundAggPairIndex, foundActorPairTotal, actorFoundPairCount, actorSelfPairs, firstActorSelfPair,
 			foundActorPairTotal, readbackSelfPairs, firstReadbackSelfPair);
@@ -579,14 +580,14 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		{
 			const PxgBroadPhasePair& pair = rawFoundPairs[firstRawSelfPair];
 			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"DCU GPU broadphase first raw self pair[%u]: volA=%u volB=%u\n",
+				"HCU device broadphase first raw self pair[%u]: volA=%u volB=%u\n",
 				firstRawSelfPair, pair.mVolA, pair.mVolB);
 		}
 		if(firstActorSelfPair != PX_INVALID_U32)
 		{
 			const PxgBroadPhasePair& pair = actorFoundPairs[firstActorSelfPair];
 			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"DCU GPU broadphase first actor self pair[%u]: volA=%u volB=%u\n",
+				"HCU device broadphase first actor self pair[%u]: volA=%u volB=%u\n",
 				firstActorSelfPair, pair.mVolA, pair.mVolB);
 		}
 	}
@@ -941,7 +942,7 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 	static bool updateDiagnosticPrinted = false;
 	if(dcuBroadPhaseUpdateDiagnosticsEnabled() && !updateDiagnosticPrinted)
 	{
-		std::printf("[DCU BP UPDATE] marker=PX_DCU_BP_UPDATE_DIAG_V1 word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+		std::printf("[HCU BP UPDATE] marker=PX_DCU_BP_UPDATE_DIAG_V1 word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
 			wordCount, wordCount * 32u,
 			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
 			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);
@@ -955,7 +956,7 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 		const char* mode = compactActivated ? "compact_1x32" : "default_32x256";
 		const char* reason = compactActivated ? "activated" :
 			(compactRequested ? "word_count_not_one" : "opt_in_disabled");
-		std::printf("[DCU BP UPDATE COMPACT] host_marker=PX_DCU_BP_UPDATE_COMPACT_V1_OPT_IN requested=%u mode=%s reason=%s word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+		std::printf("[HCU BP UPDATE COMPACT] host_marker=PX_DCU_BP_UPDATE_COMPACT_V1_OPT_IN requested=%u mode=%s reason=%s word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
 			compactRequested ? 1u : 0u, mode, reason, wordCount, wordCount * 32u,
 			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
 			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);

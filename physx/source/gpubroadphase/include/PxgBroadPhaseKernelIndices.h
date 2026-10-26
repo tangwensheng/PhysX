@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #ifndef PXG_BP_KERNEL_INDICES_H
 #define PXG_BP_KERNEL_INDICES_H
@@ -57,9 +58,9 @@ struct PxgBPKernelBlockDim
 
 		BP_WRITEOUT_ACTIVE_HISTOGRAM			= 256,
 #if defined(PX_DCU_PORT)
-		// DCU builds currently compile this kernel with a 256-thread launch bound.
+		// HCU builds currently compile this kernel with a 256-thread launch bound.
 		// Launching the CUDA default 512-thread block trips the HIP runtime before
-		// the broadphase can run, so keep the DCU block size within the bound.
+		// the broadphase can run, so keep the HCU block size within the bound.
 		BP_COMPUTE_ACTIVE_HISTOGRAM				= 256,
 #else
 		BP_COMPUTE_ACTIVE_HISTOGRAM				= 512,

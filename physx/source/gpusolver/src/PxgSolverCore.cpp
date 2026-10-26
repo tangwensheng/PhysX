@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgSolverCore.h"
 #include "cudamanager/PxCudaContextManager.h"
@@ -543,7 +544,7 @@ void PxgSolverCore::constraintPrePrepParallel(PxU32 nbConstraintBatches, PxU32 n
 	if (prePrepDiagnosticMode && prePrepDiagnosticFirstActive)
 	{
 		sPrePrepFirstActiveTriggered = true;
-		std::printf("[DCU PREPREP TARGET V46] call=%u batches=%u joints=%u bodies=%u marker=PX_DCU_SOLVER_STAGE_V46_FIRST_ACTIVE_PREPREP_TARGET\n",
+		std::printf("[HCU PREPREP TARGET V46] call=%u batches=%u joints=%u bodies=%u marker=PX_DCU_SOLVER_STAGE_V46_FIRST_ACTIVE_PREPREP_TARGET\n",
 			prePrepDiagnosticCall, nbConstraintBatches, nbD6Joints, numBodies);
 		std::fflush(stdout);
 	}

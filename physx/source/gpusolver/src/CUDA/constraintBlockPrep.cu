@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgBodySim.h"
 #include "PxgArticulation.h"
@@ -336,7 +337,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 		PxMat33 invInertia1;
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// Avoid reusing LDS between the A and B tensors. On DCU __syncwarp is a
+		// Avoid reusing LDS between the A and B tensors. On HCU __syncwarp is a
 		// memory fence, so each active lane loads the two tensors it consumes.
 		if (threadIndexInWarp < descStride)
 		{

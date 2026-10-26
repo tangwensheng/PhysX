@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgCudaMemoryAllocator.h"
 #include "PxgPBDParticleSystemCore.h"
@@ -83,7 +84,7 @@ namespace physx
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[DCU PBD PIPELINE] marker=PX_DCU_PBD_PIPELINE_DIAG_V1 seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PIPELINE] marker=PX_DCU_PBD_PIPELINE_DIAG_V1 seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
@@ -103,7 +104,7 @@ namespace physx
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[DCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=sort seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=sort seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
@@ -193,7 +194,7 @@ namespace physx
 		static std::atomic<bool> printed(false);
 		if (!printed.exchange(true, std::memory_order_relaxed))
 		{
-			std::printf("[DCU PBD RANGE] host_marker=%s mode=%s device_marker=%s scans_per_frame=%u first_launch_grid=%ux%ux%u second_launch_grid=%ux%ux%u second_launch_block=%ux%ux%u\n",
+			std::printf("[HCU PBD RANGE] host_marker=%s mode=%s device_marker=%s scans_per_frame=%u first_launch_grid=%ux%ux%u second_launch_grid=%ux%ux%u second_launch_block=%ux%ux%u\n",
 				parallel ? "PX_DCU_PBD_PARTICLE_RANGE_HOST_V62_PARALLEL_OPT_IN" : (chunked ? "PX_DCU_PBD_PARTICLE_RANGE_HOST_V61_CHUNKED_OPT_IN" : "PX_DCU_PBD_PARTICLE_RANGE_HOST_V60_OPT_IN"),
 				parallel ? "parallel_v62" : (chunked ? "chunked_v61" : (fused ? "fused_v60" : "two_scan_v59")),
 				parallel ? "PX_DCU_PBD_PARTICLE_RANGE_V62_PARALLEL_BOUNDARY_32" : (chunked ? "PX_DCU_PBD_PARTICLE_RANGE_V61_CHUNKED_SINGLE_SCAN" : (fused ? "PX_DCU_PBD_PARTICLE_RANGE_V60_FUSED_SINGLE_SCAN" : "PX_DCU_PARTICLE_CONTACT_RANGE_V59_DETERMINISTIC_LARGE")),
@@ -221,7 +222,7 @@ namespace physx
 		if (syncResult != CUDA_SUCCESS || contactCountResult != CUDA_SUCCESS || pairCountResult != CUDA_SUCCESS ||
 			contactCount > maxContacts || pairCount > contactCount)
 		{
-			std::printf("[DCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_OR_COUNT_FAILED sync=%d contact_copy=%d pair_copy=%d contacts=%u pairs=%u max_contacts=%u\n",
+			std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_OR_COUNT_FAILED sync=%d contact_copy=%d pair_copy=%d contacts=%u pairs=%u max_contacts=%u\n",
 				int(syncResult), int(contactCountResult), int(pairCountResult), contactCount, pairCount, maxContacts);
 			std::fflush(stdout);
 			return false;
@@ -244,7 +245,7 @@ namespace physx
 
 		if (contactsResult != CUDA_SUCCESS || startsResult != CUDA_SUCCESS || endsResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_FAILED contacts_copy=%d starts_copy=%d ends_copy=%d contacts=%u pairs=%u\n",
+			std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_FAILED contacts_copy=%d starts_copy=%d ends_copy=%d contacts=%u pairs=%u\n",
 				int(contactsResult), int(startsResult), int(endsResult), contactCount, pairCount);
 			std::fflush(stdout);
 			return false;
@@ -292,7 +293,7 @@ namespace physx
 		const PxU32 expectedEnd = firstMismatch == 0xffffffffu ? 0xffffffffu : expectedEnds[firstMismatch];
 		const PxU32 actualStart = firstMismatch == 0xffffffffu ? 0xffffffffu : rangeStarts[firstMismatch];
 		const PxU32 actualEnd = firstMismatch == 0xffffffffu ? 0xffffffffu : rangeEnds[firstMismatch];
-		std::printf("[DCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 contacts=%u pairs=%u expected_pairs=%u pair_count_mismatch=%u start_mismatches=%u end_mismatches=%u particle_order_violations=%u first_mismatch=%u expected_start=%u expected_end=%u actual_start=%u actual_end=%u verdict=%s\n",
+		std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 contacts=%u pairs=%u expected_pairs=%u pair_count_mismatch=%u start_mismatches=%u end_mismatches=%u particle_order_violations=%u first_mismatch=%u expected_start=%u expected_end=%u actual_start=%u actual_end=%u verdict=%s\n",
 			contactCount, pairCount, expectedPairs, pairCountMismatch, startMismatches, endMismatches, orderViolations, firstMismatch,
 			expectedStart, expectedEnd, actualStart, actualEnd, valid ? "VALID" : "INVALID");
 		std::fflush(stdout);
@@ -304,7 +305,7 @@ namespace physx
 		static std::atomic<bool> printed(false);
 		if(!printed.exchange(true, std::memory_order_relaxed))
 		{
-			std::printf("[DCU PBD RADIX] host_marker=%s mode=%s device_marker=%s launches_per_64bit_sort=%u launch_grid=1x2x1 launch_block=%ux1x1\n",
+			std::printf("[HCU PBD RADIX] host_marker=%s mode=%s device_marker=%s launches_per_64bit_sort=%u launch_grid=1x2x1 launch_block=%ux1x1\n",
 				fused64 ? "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V63_FUSED64_OPT_IN" : (inlineRadix ? "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V7_INLINE_OPT_IN" : "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V5_OPT_IN"),
 				fused64 ? "fused64_v63" : (inlineRadix ? "inline_v7" : (chunked ? "chunked_v5" : "serial_v4")),
 				fused64 ? "PX_DCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE" : (inlineRadix ? "PX_DCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32" : (chunked ? "PX_DCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32" : "PX_DCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096")),
@@ -416,14 +417,14 @@ namespace physx
 			? cudaContext->memcpyDtoH(&reference.count, deviceCount, sizeof(reference.count)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d count=%u action=abort_before_low32_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d count=%u action=abort_before_low32_sort\n",
 				int(syncResult), int(countCopyResult), reference.count);
 			std::fflush(stdout);
 			return false;
 		}
 		if (reference.count > maxCount)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=COUNT_OUT_OF_RANGE count=%u max_count=%u action=abort_before_low32_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=COUNT_OUT_OF_RANGE count=%u max_count=%u action=abort_before_low32_sort\n",
 				reference.count, maxCount);
 			std::fflush(stdout);
 			return false;
@@ -457,7 +458,7 @@ namespace physx
 			particleKeyCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS ||
 			rigidKey64CopyResult != CUDA_SUCCESS || particleKey64CopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sort\n",
 				int(syncResult), int(countCopyResult), int(rigidKeyCopyResult), int(rigidRankCopyResult),
 				int(particleKeyCopyResult), int(particleRankCopyResult), int(rigidKey64CopyResult),
 				int(particleKey64CopyResult), reference.count);
@@ -477,7 +478,7 @@ namespace physx
 			reference.particle[i].rank = particleInputRanks[i];
 			if (rigidInputRanks[i] >= reference.count || particleInputRanks[i] >= reference.count)
 			{
-				std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=pre_64 verdict=INPUT_RANK_OUT_OF_RANGE count=%u index=%u rigid_rank=%u particle_rank=%u action=abort_before_sort\n",
+				std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=pre_64 verdict=INPUT_RANK_OUT_OF_RANGE count=%u index=%u rigid_rank=%u particle_rank=%u action=abort_before_sort\n",
 					reference.count, i, rigidInputRanks[i], particleInputRanks[i]);
 				std::fflush(stdout);
 				return false;
@@ -500,7 +501,7 @@ namespace physx
 		std::stable_sort(reference.rigid64.begin(), reference.rigid64.end(), keyLess64);
 		std::stable_sort(reference.particle64.begin(), reference.particle64.end(), keyLess64);
 
-		std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n",
+		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n",
 			reference.count);
 		std::fflush(stdout);
 		return true;
@@ -519,7 +520,7 @@ namespace physx
 			? cudaContext->memcpyDtoH(&outputCount, deviceCount, sizeof(outputCount)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS || outputCount != reference.count)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_high32_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_high32_copy\n",
 				(syncResult == CUDA_SUCCESS && countCopyResult == CUDA_SUCCESS) ? "COUNT_CHANGED" : "READBACK_FAILED",
 				int(syncResult), int(countCopyResult), reference.count, outputCount);
 			std::fflush(stdout);
@@ -545,7 +546,7 @@ namespace physx
 		if (rigidKeyCopyResult != CUDA_SUCCESS || rigidRankCopyResult != CUDA_SUCCESS ||
 			particleKeyCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=READBACK_FAILED rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d count=%u action=abort_before_high32_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=READBACK_FAILED rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d count=%u action=abort_before_high32_copy\n",
 				int(rigidKeyCopyResult), int(rigidRankCopyResult), int(particleKeyCopyResult),
 				int(particleRankCopyResult), outputCount);
 			std::fflush(stdout);
@@ -587,7 +588,7 @@ namespace physx
 			const PxU32 expectedRank = firstMismatch == 0xffffffffu ? 0xffffffffu : expected[firstMismatch].rank;
 			const PxU32 actualKey = firstMismatch == 0xffffffffu ? 0xffffffffu : actualKeys[firstMismatch];
 			const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : actualRanks[firstMismatch];
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 label=%s count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 label=%s count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
 				label, outputCount, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 				rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 				expectedKey, expectedRank, actualKey, actualRank, valid ? "VALID" : "INVALID");
@@ -596,7 +597,7 @@ namespace physx
 
 		const bool chunked = dcuPbdUseChunkedPrimitiveRadix();
 		const bool inlineRadix = chunked && dcuPbdUseInlinePrimitiveRadix();
-		std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=%ux1x1\n",
+		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=%ux1x1\n",
 			allValid ? "VALID" : "INVALID", outputCount,
 			allValid ? "continue_high32_copy" : "abort_before_high32_copy",
 			inlineRadix ? "inline_v7" : (chunked ? "chunked_v5" : "serial_v4"),
@@ -619,7 +620,7 @@ namespace physx
 			? cudaContext->memcpyDtoH(&outputCount, deviceCount, sizeof(outputCount)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS || outputCount != reference.count)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_sorted_value_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_sorted_value_copy\n",
 				(syncResult == CUDA_SUCCESS && countCopyResult == CUDA_SUCCESS) ? "COUNT_CHANGED" : "READBACK_FAILED",
 				int(syncResult), int(countCopyResult), reference.count, outputCount);
 			std::fflush(stdout);
@@ -648,7 +649,7 @@ namespace physx
 		if (rigidRankCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS ||
 			rigidKey64CopyResult != CUDA_SUCCESS || particleKey64CopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=READBACK_FAILED rigid_rank_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sorted_value_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=READBACK_FAILED rigid_rank_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sorted_value_copy\n",
 				int(rigidRankCopyResult), int(particleRankCopyResult), int(rigidKey64CopyResult),
 				int(particleKey64CopyResult), outputCount);
 			std::fflush(stdout);
@@ -697,7 +698,7 @@ namespace physx
 			const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : actualRanks[firstMismatch];
 			const PxU64 actualKey = firstMismatch == 0xffffffffu || actualRank >= outputCount
 				? 0xffffffffffffffffull : originalKeys[actualRank];
-			std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 label=%s count=%u key64_mismatches=%u rank_mismatches=%u pair_mismatches=%u key64_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key64=%llu expected_rank=%u actual_key64=%llu actual_rank=%u verdict=%s\n",
+			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 label=%s count=%u key64_mismatches=%u rank_mismatches=%u pair_mismatches=%u key64_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key64=%llu expected_rank=%u actual_key64=%llu actual_rank=%u verdict=%s\n",
 				label, outputCount, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 				rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 				static_cast<unsigned long long>(expectedKey), expectedRank,
@@ -707,7 +708,7 @@ namespace physx
 
 		const bool fused64 = dcuPbdUseChunkedPrimitiveRadix() && dcuPbdUseInlinePrimitiveRadix() &&
 			dcuPbdUseFused64PrimitiveRadix();
-		std::printf("[DCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s count=%u reference=host_stable_sort_key64_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=32x1x1\n",
+		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s count=%u reference=host_stable_sort_key64_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=32x1x1\n",
 			allValid ? "VALID" : "INVALID", outputCount,
 			allValid ? "continue_sorted_value_copy" : "abort_before_sorted_value_copy",
 			fused64 ? "fused64_v63" : "legacy_64bit_two_stage",
@@ -1402,7 +1403,7 @@ namespace physx
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 		// Host-side validation of the ordinary-particle grid. Keep this opt-in so
-		// normal DCU and NVIDIA runs do not pay for synchronous readbacks.
+		// normal HCU and NVIDIA runs do not pay for synchronous readbacks.
 		const char* gridDiag = std::getenv("PX_DCU_PBD_GRID_DIAG");
 		if (gridDiag && gridDiag[0] != '0' && particleSystem.mCommonData.mNumParticles > 0)
 		{
@@ -1412,7 +1413,7 @@ namespace physx
 
 			if (syncResult != CUDA_SUCCESS)
 			{
-				std::printf("[DCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=0 result=%d particles=%u cells=%u\n",
+				std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=0 result=%d particles=%u cells=%u\n",
 					id, int(syncResult), ordinaryParticles, gridCellCount);
 			}
 			else
@@ -1445,7 +1446,7 @@ namespace physx
 					cellEndResult != CUDA_SUCCESS || sortedPositionResult != CUDA_SUCCESS ||
 					unsortedPositionResult != CUDA_SUCCESS)
 				{
-					std::printf("[DCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=0 hash=%d s2u=%d u2s=%d cellStart=%d cellEnd=%d sortedPos=%d unsortedPos=%d particles=%u cells=%u\n",
+					std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=0 hash=%d s2u=%d u2s=%d cellStart=%d cellEnd=%d sortedPos=%d unsortedPos=%d particles=%u cells=%u\n",
 						id, int(hashResult), int(sortedToUnsortedResult), int(unsortedToSortedResult),
 						int(cellStartResult), int(cellEndResult), int(sortedPositionResult),
 						int(unsortedPositionResult), ordinaryParticles, gridCellCount);
@@ -1533,7 +1534,7 @@ namespace physx
 						const PxU32 lastHash = ordinaryParticles ? hashes[ordinaryParticles - 1] : EMPTY_CELL;
 						const PxU32 firstMapping = ordinaryParticles ? sortedToUnsorted[0] : EMPTY_CELL;
 						const PxU32 lastMapping = ordinaryParticles ? sortedToUnsorted[ordinaryParticles - 1] : EMPTY_CELL;
-					std::printf("[DCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=1 particles=%u cells=%u grid=%ux%ux%u cellWidth=%.9g hashFirst=%u hashLast=%u hashOrderErrors=%u hashOutOfRange=%u s2uFirst=%u s2uLast=%u s2uOutOfRange=%u s2uDuplicates=%u s2uMissing=%u u2sOutOfRange=%u reverseErrors=%u positionMismatches=%u nonFiniteSorted=%u nonEmptyCells=%u invalidCellRanges=%u cellCoverage=%u cellHashMismatches=%u\n",
+					std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=1 particles=%u cells=%u grid=%ux%ux%u cellWidth=%.9g hashFirst=%u hashLast=%u hashOrderErrors=%u hashOutOfRange=%u s2uFirst=%u s2uLast=%u s2uOutOfRange=%u s2uDuplicates=%u s2uMissing=%u u2sOutOfRange=%u reverseErrors=%u positionMismatches=%u nonFiniteSorted=%u nonEmptyCells=%u invalidCellRanges=%u cellCoverage=%u cellHashMismatches=%u\n",
 							id, ordinaryParticles, gridCellCount, particleSystem.mCommonData.mGridSizeX,
 							particleSystem.mCommonData.mGridSizeY, particleSystem.mCommonData.mGridSizeZ,
 							particleSystem.mCommonData.mGridCellWidth, firstHash, lastHash, hashOrderErrors,

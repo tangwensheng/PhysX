@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved. 
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #ifndef PXG_KERNEL_NAMES_H
 #define PXG_KERNEL_NAMES_H
@@ -639,11 +640,11 @@ KERNEL_DEF(TRIMESH_TRIMESH_CORE_CREATE_PATCH_NOINLINE_DCU_V6, "triangleTriangleC
 // Collision body that keeps inactive-lane contact payload dead until a candidate is accepted.
 KERNEL_DEF(TRIMESH_TRIMESH_CORE_CONTACT_PREDICATE_DCU_V7, "triangleTriangleCollisionContactPredicateDcuV7")
 KERNEL_DEF(TRIMESH_TRIMESH_CORE_NATIVE_BLOCK_COUNT_DCU_V8, "triangleTriangleCollisionNativeBlockCountDcuV8")
-// Deterministic stable radix pass used only by the DCU broadphase path.
+// Deterministic stable radix pass used only by the HCU broadphase path.
 KERNEL_DEF(RS_BP_SERIAL_COUNTING_PASS_DCU_V3, "radixSortBroadPhaseSerialCountingPassDcuV3")
-// Deterministic stable radix pass used only by the DCU PBD primitive-contact path.
+// Deterministic stable radix pass used only by the HCU PBD primitive-contact path.
 KERNEL_DEF(RS_PBD_PRIMITIVE_SERIAL_COUNTING_PASS_DCU_V4, "radixSortPbdPrimitiveSerialCountingPassDcuV4")
-// Chunk-parallel, complete 32-bit stable radix sort used by the opt-in DCU PBD path.
+// Chunk-parallel, complete 32-bit stable radix sort used by the opt-in HCU PBD path.
 KERNEL_DEF(RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_DCU_V5, "radixSortPbdPrimitiveChunkedCounting32DcuV5")
 // V5-equivalent primitive sort with scalar radix extraction forced inline.
 KERNEL_DEF(RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_INLINE_DCU_V7, "radixSortPbdPrimitiveChunkedCounting32InlineDcuV7")

@@ -1,4 +1,30 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 # Fingerprinted, fail-fast runner for bench_gpu_broadphase_smoke.
 
 set -u
@@ -191,7 +217,7 @@ run_once()
             host_marker_gate=1
         else
             host_marker_gate=0
-            echo "HOST MARKER MISSING: ${MARKER}, ${REPORT_MARKER}, or V3 DCU broadphase radix kernel"
+            echo "HOST MARKER MISSING: ${MARKER}, ${REPORT_MARKER}, or V3 HCU broadphase radix kernel"
         fi
         if grep -Eq 'BP_COMPUTE_ACTIVE_HISTOGRAM[[:space:]]*=[[:space:]]*256' "${BP_HEADER}" \
             && strings "${BP_HSACO}" 2>/dev/null | grep -Fq 'computeStartAndActiveRegionHistogram' \
@@ -201,7 +227,7 @@ run_once()
             device_marker_gate=1
         else
             device_marker_gate=0
-            echo "DEVICE MARKER MISSING: expected V5 report-stage marker, active histogram, and V3 DCU broadphase radix marker/kernel"
+            echo "DEVICE MARKER MISSING: expected V5 report-stage marker, active histogram, and V3 HCU broadphase radix marker/kernel"
         fi
         if [ "${host_marker_gate}" -eq 1 ] && [ "${device_marker_gate}" -eq 1 ]; then
             marker_gate=1

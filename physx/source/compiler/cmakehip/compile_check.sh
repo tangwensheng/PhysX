@@ -1,5 +1,31 @@
 #!/bin/bash
-# PhysX DCU Port — Full Compilation Check
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# PhysX HCU Port — Full Compilation Check
 #
 # Validates that ALL adapted .cu kernel files compile with hipcc.
 # This is a syntax/header check — full linking requires the PhysX CPU library.
@@ -15,7 +41,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PHYSX_SRC="$SCRIPT_DIR/../.."
 
 echo "========================================"
-echo " PhysX DCU Port — Compilation Check"
+echo " PhysX HCU Port — Compilation Check"
 echo " Architecture: $DCU_ARCH"
 echo " Source root:  $PHYSX_SRC"
 echo "========================================"
@@ -73,7 +99,7 @@ GPU_INCLUDES="
 # -include PxgHIPCompat.h: forces HIP compat header in every translation unit
 #   This provides float4/int4/uint4 types, and maps CUDA intrinsics to HIP.
 #   Eliminates the need to guard every #include <cuda.h> individually.
-# -DPX_DCU_PORT: selects DCU code paths
+# -DPX_DCU_PORT: selects HCU code paths
 HIP_FLAGS="-include PxgHIPCompat.h -DPX_DCU_PORT --offload-arch=$DCU_ARCH -ffast-math -fgpu-flush-denormals-to-zero -c"
 
 compile_file() {
@@ -132,7 +158,7 @@ echo " Results: $PASSED / $TOTAL passed"
 echo "========================================"
 
 if [ $FAILED -eq 0 ]; then
-    echo "ALL KERNEL FILES COMPILE — DCU port ready for integration"
+    echo "ALL KERNEL FILES COMPILE — HCU port ready for integration"
     exit 0
 else
     echo "$FAILED file(s) failed — see errors above"

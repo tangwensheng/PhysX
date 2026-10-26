@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #if defined(__HIPCC__)
 // float4/uint4 from PxgHIPCompat.h
@@ -228,7 +229,7 @@ extern "C" __global__ void sb_gm_preIntegrateLaunch(
 	if (softbody.mBodyFlags & PxDeformableBodyFlag::eENABLE_SPECULATIVE_CCD)
 	{
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// The DCU launch uses 8 logical warps. Clear all 32 inputs consumed by
+		// The HCU launch uses 8 logical warps. Clear all 32 inputs consumed by
 		// the second-level reduction before the active warps publish their maxima.
 		if (warpIndex == 0)
 			maxMagnitudeVelSq[threadIdxInWarp] = 0.f;
@@ -1547,7 +1548,7 @@ void sb_gm_cp_solveTetrahedronsPartitionLaunch(
 		const PxU32 endInd = shSoftbody.mSimAccumulatedPartitionsCP[partitionId];		
 
 		#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// One DCU block owns the partition; cooking guarantees its elements have disjoint vertices.
+		// One HCU block owns the partition; cooking guarantees its elements have disjoint vertices.
 		for(PxU32 workIndex = startInd + threadIdx.x; workIndex < endInd; workIndex += blockDim.x)
 		#else
 		const PxU32 workIndex = startInd + threadIdx.x + blockIdx.x * blockDim.x;
@@ -1690,7 +1691,7 @@ void sb_gm_cp_solveTetrahedronsPartitionFiveTet64FlatDcuP31(
 			invDt, isTGS, isFirstIteration, materials, 5, dcuDiagStage);
 }
 
-// P27 candidate: the 64-thread DCU mapping has no per-element cross-thread dependency.
+// P27 candidate: the 64-thread HCU mapping has no per-element cross-thread dependency.
 // Keep the P18 body and float shared copy, but omit only its per-element warp barriers.
 extern "C" __device__ __constant__ char gPxgDcuSoftBodyNoPerElementSyncP27Version[] = "PX_DCU_SOFTBODY_64_NO_PER_ELEMENT_SYNC_P27_GFX936_SELECTED";
 extern "C" __global__

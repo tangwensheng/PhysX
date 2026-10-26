@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
-# Table-driven, fingerprinted correctness runner for gfx936 DCU benchmarks.
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Table-driven, fingerprinted correctness runner for gfx936 HCU benchmarks.
 
 set -u
 
@@ -88,7 +114,7 @@ Examples:
 
 Environment overrides:
   REPEAT=N                    repeat each selected case N times
-  TARGET_HIP_DEVICE=N         physical DCU exposed as HIP device 0
+  TARGET_HIP_DEVICE=N         physical HCU exposed as HIP device 0
   EXPECTED_HCU_COUNT=N        expected healthy-card count from hy-smi
   MAX_PREFLIGHT_VRAM_PERCENT=N  maximum target VRAM use allowed before launch
   MAX_PREFLIGHT_HCU_PERCENT=N   maximum target HCU use allowed before launch
@@ -97,7 +123,7 @@ Environment overrides:
   HEALTH_INTERVAL=N           seconds between post-run health samples
   PX_DCU_BROADPHASE_DIAG=0|1  enable expensive broadphase diagnostics (default 0)
   PX_DCU_BROADPHASE_UPDATE_DIAG=0|1  print broadphase updated-pairs launch shape once (default 0)
-  PX_DCU_BROADPHASE_UPDATE_COMPACT=0|1  compact one-word updated-pairs launch to 1x32 on DCU (default 0)
+  PX_DCU_BROADPHASE_UPDATE_COMPACT=0|1  compact one-word updated-pairs launch to 1x32 on HCU (default 0)
   PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=0|1  use opt-in chunked PBD primitive radix (default 0)
   PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=0|1  use force-inlined radix extraction with the chunked primitive radix (default 0)
   PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=0|1  fuse the two 32-bit primitive radix stages into one 64-bit kernel (default 0)
@@ -721,17 +747,17 @@ run_case()
         else
             perf_line=
         fi
-        spatial_reference_count="$(grep -Ec '^\[DCU PBD SPATIAL SORT\].*phase=pre_sort verdict=REFERENCE_READY count=4096([[:space:]]|$)' "$log_file" || true)"
-        spatial_valid_count="$(grep -Ec '^\[DCU PBD SPATIAL SORT\].*phase=post_sort verdict=VALID count=4096([[:space:]]|$)' "$log_file" || true)"
-        spatial_failure_count="$(grep -Eic '^\[DCU PBD SPATIAL SORT\].*verdict=(INVALID|READBACK_FAILED|COUNT[^[:space:]]*)' "$log_file" || true)"
+        spatial_reference_count="$(grep -Ec '^\[HCU PBD SPATIAL SORT\].*phase=pre_sort verdict=REFERENCE_READY count=4096([[:space:]]|$)' "$log_file" || true)"
+        spatial_valid_count="$(grep -Ec '^\[HCU PBD SPATIAL SORT\].*phase=post_sort verdict=VALID count=4096([[:space:]]|$)' "$log_file" || true)"
+        spatial_failure_count="$(grep -Eic '^\[HCU PBD SPATIAL SORT\].*verdict=(INVALID|READBACK_FAILED|COUNT[^[:space:]]*)' "$log_file" || true)"
         if [[ "$PBD_SPATIAL_RANK_DIAG" -eq 0 ]] || \
             (( spatial_reference_count > 0 && spatial_valid_count > 0 && spatial_failure_count == 0 )); then
             spatial_diag_gate=1
         else
             spatial_diag_gate=0
         fi
-        range_valid_count="$(grep -Ec '^\[DCU PBD RANGE DIAG\].*verdict=VALID([[:space:]]|$)' "$log_file" || true)"
-        range_failure_count="$(grep -Eic '^\[DCU PBD RANGE DIAG\].*verdict=(INVALID|READBACK_FAILED|READBACK_OR_COUNT_FAILED)([[:space:]]|$)' "$log_file" || true)"
+        range_valid_count="$(grep -Ec '^\[HCU PBD RANGE DIAG\].*verdict=VALID([[:space:]]|$)' "$log_file" || true)"
+        range_failure_count="$(grep -Eic '^\[HCU PBD RANGE DIAG\].*verdict=(INVALID|READBACK_FAILED|READBACK_OR_COUNT_FAILED)([[:space:]]|$)' "$log_file" || true)"
         if [[ "$PBD_PARTICLE_RANGE_DIAG" -eq 0 ]] || \
             (( range_valid_count > 0 && range_failure_count == 0 )); then
             range_diag_gate=1

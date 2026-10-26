@@ -4,6 +4,10 @@
 <summary>Copyright & License</summary>
 
 Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
+Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+
+This repository is based on NVIDIA PhysX. Modifications for Hygon HCU/HIP
+support are made by Hygon Information Technology Co., Ltd.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -29,9 +33,9 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## Hygon DCU / HIP Port
+## Hygon HCU / HIP Port
 
-PhysX GPU modules have been ported to **Hygon DCU** (gfx936/gfx938) with HIP.
+PhysX GPU modules have been ported to **Hygon HCU** (gfx936/gfx938) with HIP.
 
 ### Quick Start
 
@@ -46,11 +50,11 @@ PhysX GPU modules have been ported to **Hygon DCU** (gfx936/gfx938) with HIP.
 cd examples/dcu && ./build.sh
 ```
 
-### Build Requirements (DCU)
+### Build Requirements (HCU)
 
 | Component | Version |
 |-----------|---------|
-| DTK (DCU Toolkit) | 2604 | 
+| DTK (HCU Toolkit) | 2604 |
 | CMake | >= 3.21 |
 | g++ | >= 8.0 |
 

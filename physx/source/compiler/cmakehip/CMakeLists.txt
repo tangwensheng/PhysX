@@ -1,3 +1,29 @@
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 cmake_minimum_required(VERSION 3.21)
 project(PhysXGpuHIP LANGUAGES CXX HIP)
 set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_DCU_PORT -DNDEBUG -ffast-math -fgpu-flush-denormals-to-zero")
@@ -5,7 +31,7 @@ if(NOT DEFINED PHYSX_ROOT_DIR)
     get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../../.." ABSOLUTE)
 endif()
 if(NOT DEFINED DCU_ARCH)
-    set(DCU_ARCH "gfx936" CACHE STRING "DCU GPU architecture")
+    set(DCU_ARCH "gfx936" CACHE STRING "HCU device architecture")
 endif()
 set(CMAKE_HIP_ARCHITECTURES "${DCU_ARCH}")
 add_compile_definitions(PX_DCU_PORT PX_PHYSX_GPU_STATIC PX_SUPPORT_GPU_PHYSX)
@@ -28,7 +54,7 @@ set(PHYSX_INCLUDE_DIRS
     ${PHYSX_ROOT_DIR}/source/simulationcontroller/include ${PHYSX_ROOT_DIR}/source/scenequery/include
 )
 
-# Collect ALL .cu files (including convex modules for DCU)
+# Collect ALL .cu files (including convex modules for HCU)
 file(GLOB GPU_ALL_CU_FILES
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA/*.cu
     ${PHYSX_ROOT_DIR}/source/gpubroadphase/src/CUDA/*.cu
@@ -296,7 +322,7 @@ if(PX_DCU_VOLUME_SOFTBODY_GM_O2_P40)
     set_property(SOURCE ${PHYSX_ROOT_DIR}/source/gpusimulationcontroller/src/CUDA/softBodyGM.cu
         APPEND PROPERTY COMPILE_OPTIONS -O2 -DPX_DCU_VOLUME_SOFTBODY_GM_O2_P40=1)
 endif()
-# DCU: cudaBox.cu still requires the hipcc register-loss codegen workaround.
+# HCU: cudaBox.cu still requires the hipcc register-loss codegen workaround.
 set_source_files_properties(
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA/cudaBox.cu
     PROPERTIES COMPILE_FLAGS "-mllvm -amdgpu-early-inline-all=0 -mllvm -inline-threshold=0"

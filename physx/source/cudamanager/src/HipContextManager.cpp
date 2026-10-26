@@ -1,4 +1,29 @@
-// HipContextManager — full HIP PxCudaContext / PxCudaContextManager for DCU
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// HipContextManager — full HIP PxCudaContext / PxCudaContextManager for HCU
 #include <hip/hip_runtime.h>
 #include <cstring>
 #include <cstdlib>
@@ -54,20 +79,20 @@ static void loadGpuLibrary() {
             free(buf);
             if(r == hipSuccess && mod) {
                 gModules.pushBack(mod);
-                if(n == 0) fprintf(stderr, "[DCU GPU] First hsaco: %s\n", path);
+                if(n == 0) fprintf(stderr, "[HCU device] First hsaco: %s\n", path);
                 n++;
             }
         }
         closedir(dp);
         if(n > 0) {
             g_DCU_ModuleCount = n;
-            fprintf(stderr, "[DCU GPU] Loaded %d hsaco modules from %s\n", n, dirs[d]);
+            fprintf(stderr, "[HCU device] Loaded %d hsaco modules from %s\n", n, dirs[d]);
             return;
         }
     }
 
     // Fallback: hipModuleLoad .so
-    fprintf(stderr, "[DCU GPU] No hsaco dir, trying .so...\n");
+    fprintf(stderr, "[HCU device] No hsaco dir, trying .so...\n");
     const char* paths[] = {
         "./libPhysXGpuDCU.so", "../build_dcu/libPhysXGpuDCU.so",
         "/public/home/tangwsh/PhysX/build_dcu/libPhysXGpuDCU.so", nullptr};
@@ -78,11 +103,11 @@ static void loadGpuLibrary() {
         if(hipModuleLoad(&mod, paths[i]) == hipSuccess && mod) {
             gModules.pushBack(mod);
             g_DCU_ModuleCount = 1;
-            fprintf(stderr, "[DCU GPU] Loaded .so: %s\n", paths[i]);
+            fprintf(stderr, "[HCU device] Loaded .so: %s\n", paths[i]);
             return;
         }
     }
-    fprintf(stderr, "[DCU GPU] No module found\n");
+    fprintf(stderr, "[HCU device] No module found\n");
 }
 
 class HipCtx : public PxCudaContext {
@@ -93,7 +118,7 @@ public:
         : mLast(hipSuccess), mSync(sync), mAbort(false), mKernelCount(0)
     { mAllocatorCallback = cb; }
     void release() override {
-        fprintf(stderr, "[DCU PROFILER] Total kernel launches: %d\n", mKernelCount);
+        fprintf(stderr, "[HCU PROFILER] Total kernel launches: %d\n", mKernelCount);
         delete this;
     }
     int totalKernels() const { return mKernelCount; }
@@ -164,13 +189,13 @@ public:
         for(int i=0;i<n&&i<32;i++) kp[i]=p[i].data;
         mKernelCount++;
         if(std::getenv("PX_DCU_TRACE_KERNELS"))
-            fprintf(stderr, "[DCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u paramBytes=%zu\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, ps);
+            fprintf(stderr, "[HCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u paramBytes=%zu\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, ps);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,kp,ex);
         if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
         {
             mLast = hipStreamSynchronize((hipStream_t)s);
             if(mLast != hipSuccess)
-                fprintf(stderr, "[DCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
+                fprintf(stderr, "[HCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
         }
         return PxCUresult(mLast);
     }
@@ -182,13 +207,13 @@ public:
         if(mAbort) return PxCUresult(mLast);
         mKernelCount++;
         if(std::getenv("PX_DCU_TRACE_KERNELS"))
-            fprintf(stderr, "[DCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u params=%p\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, params);
+            fprintf(stderr, "[HCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u params=%p\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, params);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,params,ex);
         if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
         {
             mLast = hipStreamSynchronize((hipStream_t)s);
             if(mLast != hipSuccess)
-                fprintf(stderr, "[DCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
+                fprintf(stderr, "[HCU KERNEL ERROR %d] %s:%d sync failed: %s (%d)\n", mKernelCount, name ? name : "<unnamed>", line, hipGetErrorString(mLast), int(mLast));
         }
         return PxCUresult(mLast);
     }

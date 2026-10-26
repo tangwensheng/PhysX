@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "common/PxProfileZone.h"
 #include "cudamanager/PxCudaContext.h"
@@ -99,7 +100,7 @@ namespace
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
 		std::fprintf(stderr,
-			"[DCU CALLER RETURN ENTER] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"[HCU CALLER RETURN ENTER] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
 			"call=%u tests=%u\n", call, numTests);
 		std::fflush(stderr);
 
@@ -109,11 +110,11 @@ namespace
 		narrowphaseCore->releaseContext();
 
 		std::fprintf(stderr,
-			"[DCU CALLER RETURN] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"[HCU CALLER RETURN] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
 			"call=%u tests=%u sync=%d\n",
 			call, numTests, syncResult);
 		std::fprintf(stderr,
-			"[DCU PROBE] site=post-convextrimesh-return call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
+			"[HCU PROBE] site=post-convextrimesh-return call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
 			call, numTests, holdMs, syncResult);
 		std::fflush(stderr);
 
@@ -123,7 +124,7 @@ namespace
 			std::chrono::steady_clock::now() - t0).count());
 
 		std::fprintf(stderr,
-			"[DCU PROBE] site=post-convextrimesh-return call=%u phase=end requestedMs=%u actualMs=%llu\n",
+			"[HCU PROBE] site=post-convextrimesh-return call=%u phase=end requestedMs=%u actualMs=%llu\n",
 			call, holdMs, static_cast<unsigned long long>(actualMs));
 		std::fflush(stderr);
 		std::_Exit(syncResult == int(CUDA_SUCCESS) ? 96 : 98);
@@ -149,7 +150,7 @@ namespace
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
 		std::fprintf(stderr,
-			"[DCU POST UPDATE FRICTION ENTER] "
+			"[HCU POST UPDATE FRICTION ENTER] "
 			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
 			"call=%u tests=%u\n", call, numTests);
 		std::fflush(stderr);
@@ -160,12 +161,12 @@ namespace
 		narrowphaseCore->releaseContext();
 
 		std::fprintf(stderr,
-			"[DCU POST UPDATE FRICTION] "
+			"[HCU POST UPDATE FRICTION] "
 			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
 			"call=%u tests=%u sync=%d\n",
 			call, numTests, syncResult);
 		std::fprintf(stderr,
-			"[DCU PROBE] site=post-update-friction call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
+			"[HCU PROBE] site=post-update-friction call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
 			call, numTests, holdMs, syncResult);
 		std::fflush(stderr);
 
@@ -175,7 +176,7 @@ namespace
 			std::chrono::steady_clock::now() - t0).count());
 
 		std::fprintf(stderr,
-			"[DCU PROBE] site=post-update-friction call=%u phase=end requestedMs=%u actualMs=%llu\n",
+			"[HCU PROBE] site=post-update-friction call=%u phase=end requestedMs=%u actualMs=%llu\n",
 			call, holdMs, static_cast<unsigned long long>(actualMs));
 		std::fflush(stderr);
 		std::_Exit(syncResult == int(CUDA_SUCCESS) ? 96 : 98);
@@ -760,7 +761,7 @@ void PxgNphaseImplementationContext::processResults()
 			if (compactDiag)
 			{
 				std::fprintf(stderr,
-					"[DCU NP PROCESS BEGIN] lostFound=%u outputs=%u cms=%u maxCmIndex=%u\n",
+					"[HCU NP PROCESS BEGIN] lostFound=%u outputs=%u cms=%u maxCmIndex=%u\n",
 					nbLostFoundPairs, itChangedOutputs.size(), lostFoundIndIterator.size(),
 					mContext.getContactManagerPool().getMaxUsedIndex());
 			}
@@ -789,7 +790,7 @@ void PxgNphaseImplementationContext::processResults()
 				if (compactDiag)
 				{
 					std::fprintf(stderr,
-						"[DCU NP PROCESS ITEM %u] cm=%p patches=%u prev=%u status=%u\n",
+						"[HCU NP PROCESS ITEM %u] cm=%p patches=%u prev=%u status=%u\n",
 						a, static_cast<void*>(cm), itChangedOutputs[a].nbPatches,
 						itChangedOutputs[a].prevPatches, itChangedOutputs[a].statusFlag);
 				}
@@ -838,7 +839,7 @@ void PxgNphaseImplementationContext::processResults()
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 		if (compactDiag)
-			std::fprintf(stderr, "[DCU NP PROCESS DONE] newTouch=%u lostTouch=%u maxPatches=%u\n",
+			std::fprintf(stderr, "[HCU NP PROCESS DONE] newTouch=%u lostTouch=%u maxPatches=%u\n",
 				newTouchCMCount, lostTouchCMCount, maxPatches);
 #endif
 	}
@@ -877,7 +878,7 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 	if (compactDiag)
-		std::fprintf(stderr, "[DCU NP MERGE BEGIN] totalPairs=%u outputCapacity=%u\n",
+		std::fprintf(stderr, "[HCU NP MERGE BEGIN] totalPairs=%u outputCapacity=%u\n",
 			mTotalNbPairs, mContactManagerOutputs.capacity());
 #endif
 
@@ -903,7 +904,7 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 	if (compactDiag)
-		std::fprintf(stderr, "[DCU NP MERGE FETCHED] totalPairs=%u outputs=%u lostFound=%u lostPatches=%u\n",
+		std::fprintf(stderr, "[HCU NP MERGE FETCHED] totalPairs=%u outputs=%u lostFound=%u lostPatches=%u\n",
 			mTotalNbPairs, mContactManagerOutputs.size(), mGpuNarrowphaseCore->getTotalNbLostFoundPairs(),
 			mGpuNarrowphaseCore->getTotalNbLostFoundPatches());
 #endif
@@ -964,13 +965,13 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 	if (compactDiag)
-		std::fprintf(stderr, "[DCU NP MERGE PROCESSED]\n");
+		std::fprintf(stderr, "[HCU NP MERGE PROCESSED]\n");
 #endif
 	mContext.getCudaContextManager()->releaseContext();
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
 	if (compactDiag)
-		std::fprintf(stderr, "[DCU NP MERGE DONE]\n");
+		std::fprintf(stderr, "[HCU NP MERGE DONE]\n");
 #endif
 }
 

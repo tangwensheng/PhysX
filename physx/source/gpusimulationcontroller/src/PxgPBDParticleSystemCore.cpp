@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 
 #include "PxgPBDParticleSystemCore.h"
@@ -98,7 +99,7 @@ namespace physx
 			const char* reason = enabled ? "activated" : !requested ? "opt_in_disabled" :
 				nbActiveParticleSystems != 1 ? "active_system_count" :
 				numSimParticles != 4096 ? "particle_count" : hasDiffuse ? "diffuse_enabled" : "unknown";
-			std::printf("[DCU PBD SPATIAL RADIX] host_marker=PX_DCU_PBD_SPATIAL_RADIX_HOST_V6_OPT_IN requested=%u mode=%s reason=%s active_systems=%u particles=%u has_diffuse=%u device_marker=%s launches_per_sort=%u launch_grid=%s launch_block=%s\n",
+			std::printf("[HCU PBD SPATIAL RADIX] host_marker=PX_DCU_PBD_SPATIAL_RADIX_HOST_V6_OPT_IN requested=%u mode=%s reason=%s active_systems=%u particles=%u has_diffuse=%u device_marker=%s launches_per_sort=%u launch_grid=%s launch_block=%s\n",
 				requested ? 1u : 0u, enabled ? "chunked_v6" : "legacy_16_launch", reason,
 				nbActiveParticleSystems, numSimParticles, hasDiffuse ? 1u : 0u,
 				enabled ? "PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32" : "legacy_multiblock_no_count",
@@ -173,7 +174,7 @@ namespace physx
 		}
 		if(syncResult != CUDA_SUCCESS || keyCopyResult != CUDA_SUCCESS || rankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_sort\n",
+			std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_sort\n",
 				int(syncResult), int(keyCopyResult), int(rankCopyResult), count);
 			std::fflush(stdout);
 			return false;
@@ -190,7 +191,7 @@ namespace physx
 			{
 				return a.key < b.key;
 			});
-		std::printf("[DCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n", count);
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n", count);
 		std::fflush(stdout);
 		return true;
 	}
@@ -214,7 +215,7 @@ namespace physx
 		}
 		if(syncResult != CUDA_SUCCESS || keyCopyResult != CUDA_SUCCESS || rankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_reorder\n",
+			std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_reorder\n",
 				int(syncResult), int(keyCopyResult), int(rankCopyResult), reference.count);
 			std::fflush(stdout);
 			return false;
@@ -248,11 +249,11 @@ namespace physx
 		const PxU32 expectedRank = firstMismatch == 0xffffffffu ? 0xffffffffu : reference.items[firstMismatch].rank;
 		const PxU32 actualKey = firstMismatch == 0xffffffffu ? 0xffffffffu : outputKeys[firstMismatch];
 		const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : outputRanks[firstMismatch];
-		std::printf("[DCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort label=simulation count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort label=simulation count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
 			reference.count, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 			rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 			expectedKey, expectedRank, actualKey, actualRank, valid ? "VALID" : "INVALID");
-		std::printf("[DCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=chunked_v6 device_marker=PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32 launch_grid=1x1x1 launch_block=32x1x1\n",
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=chunked_v6 device_marker=PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32 launch_grid=1x1x1 launch_block=32x1x1\n",
 			valid ? "VALID" : "INVALID", reference.count, valid ? "continue_reorder" : "abort_before_reorder");
 		std::fflush(stdout);
 		return valid;

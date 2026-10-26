@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgSimulationCore.h"
 #include "PxDirectGPUAPI.h"
@@ -2271,7 +2272,7 @@ void PxgSimulationCore::gpuMemDmaBack(PxInt32ArrayPinned& frozenArray,
 	*mPinnedEvent = 0;
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-	// DCU: the completion flag lives in host-mapped memory; writing it from the GPU
+	// HCU: the completion flag lives in host-mapped memory; writing it from the GPU
 	// issues a PCIe AtomicOp this platform rejects (UR_ATOMIC_OPCODE). Skip the
 	// signal kernel and let syncDmaback() use streamSynchronize instead.
 #else
@@ -2306,7 +2307,7 @@ void PxgSimulationCore::syncDmaback(PxU32& nbFrozenShapesThisFrame, PxU32& nbUnf
 	if (didSimulate)
 	{
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-		// DCU: no host-mapped completion flag is written (see above).
+		// HCU: no host-mapped completion flag is written (see above).
 		mCudaContext->streamSynchronize(mStream);
 #else
 		volatile PxU32* pEvent = mPinnedEvent;

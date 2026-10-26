@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxgCudaSolverCore.h"
 #include "PxgSolverConstraintDesc.h"
@@ -845,7 +846,7 @@ void PxgCudaSolverCore::syncDmaBack(PxU32& nbChangedThresholdElements)
 	PX_UNUSED(result);
 	PX_ASSERT(result == CUDA_SUCCESS);*/
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-	// DCU: mPinnedEvent lives in host-mapped memory and is never signalled from the
+	// HCU: mPinnedEvent lives in host-mapped memory and is never signalled from the
 	// GPU here, so the spin always times out. Synchronize directly and avoid the
 	// host-mapped access that trips PCIe AtomicOp support (UR_ATOMIC_OPCODE).
 	mCudaContext->streamSynchronize(mStream);
@@ -1053,7 +1054,7 @@ void PxgCudaSolverCore::contactConstraintPrepareParallel(PxU32 nbContactBatches)
 		{
 			syncSequence = ++contactPrepareSyncSequence;
 			const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-			std::fprintf(stderr, "[DCU CONTACT PREP SYNC V40] seq=%u phase=pre batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
+			std::fprintf(stderr, "[HCU CONTACT PREP SYNC V40] seq=%u phase=pre batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
 				syncSequence, nbContactBatches, nbBlocks, int(syncResult));
 			std::fflush(stderr);
 			if(syncResult != CUDA_SUCCESS)
@@ -1069,7 +1070,7 @@ void PxgCudaSolverCore::contactConstraintPrepareParallel(PxU32 nbContactBatches)
 		if(contactPrepareSyncDiagnostic)
 		{
 			const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-			std::fprintf(stderr, "[DCU CONTACT PREP SYNC V40] seq=%u phase=post batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
+			std::fprintf(stderr, "[HCU CONTACT PREP SYNC V40] seq=%u phase=post batches=%u blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS\n",
 				syncSequence, nbContactBatches, nbBlocks, int(syncResult));
 			std::fflush(stderr);
 			if(syncResult != CUDA_SUCCESS)
@@ -1420,7 +1421,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 				contactStarts.data(), bodyCount * sizeof(PxU32));
 			if (!countsRead || !startsRead)
 			{
-				std::fprintf(stderr, "[DCU SOLVER FLOW V49] phase=select island=%u result=READ_FAIL marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+				std::fprintf(stderr, "[HCU SOLVER FLOW V49] phase=select island=%u result=READ_FAIL marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 					islandIndex);
 				std::fflush(stderr);
 				continue;
@@ -1500,7 +1501,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						const float4 raXn = point.raXn_targetVelocity[compactLane];
 						const float4 rbXn = point.rbXn_maxImpulse[compactLane];
 						std::fprintf(stderr,
-							"[DCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u global_body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u batch=%u mask=0x%08x lane=%u compact=%u stride=%u header=%u point=%u normal_count=%u normal=(%.9g,%.9g,%.9g) friction=%.9g inv_mass=(%.9g,%.9g,%.9g,%.9g) target=%.9g max_impulse=%.9g resp=(%.9g,%.9g) coeff=(%.9g,%.9g) applied=%.9g result=OK marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+							"[HCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u global_body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u batch=%u mask=0x%08x lane=%u compact=%u stride=%u header=%u point=%u normal_count=%u normal=(%.9g,%.9g,%.9g) friction=%.9g inv_mass=(%.9g,%.9g,%.9g,%.9g) target=%.9g max_impulse=%.9g resp=(%.9g,%.9g) coeff=(%.9g,%.9g) applied=%.9g result=OK marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 							chunk, islandIndex, bodyIndex, sample.globalBody, diagnosticIsland.mBodyStartIndex, inputBody, angularStride,
 							contactCounts[bodyIndex], contactStarts[bodyIndex], batchIndex, batch.mask, lane,
 							compactLane, PxU32(batch.mDescStride), batch.mConstraintBatchIndex, batch.startConstraintIndex,
@@ -1519,7 +1520,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					const PxU32 angularStride = diagnosticIsland.mBodyCount + diagnosticIsland.mBodyStartIndex;
 					solverFlowCapturedChunkMask |= chunkBit;
 					std::fprintf(stderr,
-						"[DCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u result=NO_VALID_BATCH marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+						"[HCU SOLVER FLOW V49] phase=prep chunk=%u island=%u body=%u body_offset=%u input=%u angular_stride=%u static_count=%u start=%u result=NO_VALID_BATCH marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 						chunk, islandIndex, firstActiveBody, diagnosticIsland.mBodyStartIndex, inputBody, angularStride,
 						contactCounts[firstActiveBody], contactStarts[firstActiveBody]);
 					std::fflush(stderr);
@@ -1528,7 +1529,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 		}
 		if (solverFlowSampleCount != 0)
 		{
-			std::fprintf(stderr, "[DCU SOLVER FLOW V49] phase=progress new_samples=%u captured_mask=0x%02x marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+			std::fprintf(stderr, "[HCU SOLVER FLOW V49] phase=progress new_samples=%u captured_mask=0x%02x marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 				solverFlowSampleCount, solverFlowCapturedChunkMask);
 			std::fflush(stderr);
 		}
@@ -1638,7 +1639,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 								mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
 								mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
 							std::fprintf(stderr,
-								"[DCU SOLVER FLOW V49] phase=pre_static_solve chunk=%u island=%u iteration=%d body=%u static_count=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								"[HCU SOLVER FLOW V49] phase=pre_static_solve chunk=%u island=%u iteration=%d body=%u static_count=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 								sample.chunk, a, b, sample.body, sample.staticCount, linear.x, linear.y, linear.z, linear.w,
 								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
 						}
@@ -1667,7 +1668,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					if (staticSolverSyncDiagnosticMode)
 					{
 						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=pre path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+						std::fprintf(stderr, "[HCU SOLVER SYNC V27] seq=%u phase=pre path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
 							syncSequence, a, b, nbBlocksRequired, int(syncResult));
 						std::fflush(stderr);
 						if (syncResult != CUDA_SUCCESS)
@@ -1680,7 +1681,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					if (staticSolverSyncDiagnosticMode)
 					{
 						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=post path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+						std::fprintf(stderr, "[HCU SOLVER SYNC V27] seq=%u phase=post path=position island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
 							syncSequence, a, b, nbBlocksRequired, int(syncResult));
 						std::fflush(stderr);
 						if (syncResult != CUDA_SUCCESS)
@@ -1701,7 +1702,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 								mTempStaticBodyOutputPool.getDevicePtr(), sample.body, sample.body + sample.angularStride,
 								mTempStaticBodyOutputPool.getSize() / sizeof(float4), linear, angular);
 							std::fprintf(stderr,
-								"[DCU SOLVER FLOW V49] phase=post_static_solve chunk=%u island=%u iteration=%d body=%u temp_linear=(%.9g,%.9g,%.9g,%.9g) temp_angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								"[HCU SOLVER FLOW V49] phase=post_static_solve chunk=%u island=%u iteration=%d body=%u temp_linear=(%.9g,%.9g,%.9g,%.9g) temp_angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 								sample.chunk, a, b, sample.body, linear.x, linear.y, linear.z, linear.w,
 								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
 						}
@@ -1732,7 +1733,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 								mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
 								mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
 							std::fprintf(stderr,
-								"[DCU SOLVER FLOW V49] phase=post_static_propagate chunk=%u island=%u iteration=%d body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+								"[HCU SOLVER FLOW V49] phase=post_static_propagate chunk=%u island=%u iteration=%d body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 								sample.chunk, a, b, sample.body, linear.x, linear.y, linear.z, linear.w,
 								angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
 						}
@@ -1772,7 +1773,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
 					mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
 				std::fprintf(stderr,
-					"[DCU SOLVER FLOW V49] phase=post_position_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					"[HCU SOLVER FLOW V49] phase=post_position_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 					sample.chunk, a, sample.body, sample.globalBody, linear.x, linear.y, linear.z, linear.w,
 					angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
 			}
@@ -1844,7 +1845,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 						mMotionVelocityArray.getDevicePtr(), sample.globalBody, sample.globalBody + motionAngularStride,
 						motionElementCount, linear, angular);
 					std::fprintf(stderr,
-						"[DCU SOLVER FLOW V49] phase=post_writeback_motion chunk=%u island=%u body=%u global_body=%u angular_stride=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+						"[HCU SOLVER FLOW V49] phase=post_writeback_motion chunk=%u island=%u body=%u global_body=%u angular_stride=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 						sample.chunk, a, sample.body, sample.globalBody, motionAngularStride,
 						linear.x, linear.y, linear.z, linear.w, angular.x, angular.y, angular.z, angular.w,
 						readOk ? "OK" : "READ_FAIL");
@@ -2007,7 +2008,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					if (staticSolverSyncDiagnosticMode)
 					{
 						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=pre path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+						std::fprintf(stderr, "[HCU SOLVER SYNC V27] seq=%u phase=pre path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
 							syncSequence, a, b, nbBlocksRequired, int(syncResult));
 						std::fflush(stderr);
 						if (syncResult != CUDA_SUCCESS)
@@ -2020,7 +2021,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					if (staticSolverSyncDiagnosticMode)
 					{
 						const CUresult syncResult = mCudaContext->streamSynchronize(mStream);
-						std::fprintf(stderr, "[DCU SOLVER SYNC V27] seq=%u phase=post path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
+						std::fprintf(stderr, "[HCU SOLVER SYNC V27] seq=%u phase=post path=velocity island=%u iteration=%d blocks=%u result=%d marker=PX_DCU_SOLVER_STAGE_V27_HOST_SYNC_BOUNDARY\n",
 							syncSequence, a, b, nbBlocksRequired, int(syncResult));
 						std::fflush(stderr);
 						if (syncResult != CUDA_SUCCESS)
@@ -2073,7 +2074,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 					mSolverBodyPool.getDevicePtr(), sample.inputBody, sample.inputBody + sample.angularStride,
 					mSolverBodyPool.getSize() / sizeof(float4), linear, angular);
 				std::fprintf(stderr,
-					"[DCU SOLVER FLOW V49] phase=final_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					"[HCU SOLVER FLOW V49] phase=final_solver chunk=%u island=%u body=%u global_body=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) result=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 					sample.chunk, a, sample.body, sample.globalBody, linear.x, linear.y, linear.z, linear.w,
 					angular.x, angular.y, angular.z, angular.w, readOk ? "OK" : "READ_FAIL");
 			}
@@ -2105,7 +2106,7 @@ void PxgCudaSolverCore::solveContactMultiBlockParallel(PxgIslandContext* islandC
 		for (PxU32 sampleIndex = 0; sampleIndex < gDcuSolverIntegrationFlowState.sampleCount; ++sampleIndex)
 			gDcuSolverIntegrationFlowState.samples[sampleIndex] = solverFlowSamples[sampleIndex];
 		std::fprintf(stderr,
-			"[DCU SOLVER FLOW V49] phase=integration_handoff samples=%u marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+			"[HCU SOLVER FLOW V49] phase=integration_handoff samples=%u marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 			gDcuSolverIntegrationFlowState.sampleCount);
 		std::fflush(stderr);
 	}
@@ -2370,7 +2371,7 @@ void PxgCudaSolverCore::integrateCoreParallel(const PxU32 offset, const PxU32 nb
 				const PxU64 gpuNodeValue = gpuNodeOk ? gpuNode.getInd() : PxU64(0xFFFFFFFFFFFFFFFFull);
 				const PxU64 cpuNodeValue = cpuNodeOk ? mCpuIslandNodeIndices[sample.globalBody].getInd() : PxU64(0xFFFFFFFFFFFFFFFFull);
 				std::fprintf(stderr,
-					"[DCU SOLVER FLOW V49] phase=post_integrate chunk=%u body=%u global_body=%u offset=%u nb_bodies=%u integrated=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) pose_p=(%.9g,%.9g,%.9g,%.9g) pose_q=(%.9g,%.9g,%.9g,%.9g) body_node=0x%016llx gpu_node=0x%016llx cpu_node=0x%016llx velocity=%s pose=%s body_data=%s gpu_node_read=%s cpu_node_read=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
+					"[HCU SOLVER FLOW V49] phase=post_integrate chunk=%u body=%u global_body=%u offset=%u nb_bodies=%u integrated=%u linear=(%.9g,%.9g,%.9g,%.9g) angular=(%.9g,%.9g,%.9g,%.9g) pose_p=(%.9g,%.9g,%.9g,%.9g) pose_q=(%.9g,%.9g,%.9g,%.9g) body_node=0x%016llx gpu_node=0x%016llx cpu_node=0x%016llx velocity=%s pose=%s body_data=%s gpu_node_read=%s cpu_node_read=%s marker=PX_DCU_SOLVER_STAGE_V49_INTEGRATION_FLOW_READBACK\n",
 					sample.chunk, sample.body, sample.globalBody, offset, nbSolverBodies, integrated ? 1u : 0u,
 					linear.x, linear.y, linear.z, linear.w, angular.x, angular.y, angular.z, angular.w,
 					pose.p.x, pose.p.y, pose.p.z, pose.p.w, pose.q.q.x, pose.q.q.y, pose.q.q.z, pose.q.q.w,

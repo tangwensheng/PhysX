@@ -1,4 +1,30 @@
-# PhysX CPU Library Build for DCU
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# PhysX CPU Library Build for HCU
 #
 # Builds PhysX CPU-side libraries with g++ and links GPU modules with hipcc.
 #
@@ -22,7 +48,7 @@ if(NOT DEFINED CMAKE_HIP_COMPILER)
 endif()
 
 if(NOT DEFINED DCU_ARCH)
-    set(DCU_ARCH "gfx936" CACHE STRING "DCU GPU architecture")
+    set(DCU_ARCH "gfx936" CACHE STRING "HCU device architecture")
 endif()
 set(CMAKE_HIP_ARCHITECTURES ${DCU_ARCH})
 set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_DCU_PORT -ffast-math -fgpu-flush-denormals-to-zero")
@@ -285,18 +311,18 @@ target_include_directories(PhysXCharacterKinematic PUBLIC
 target_link_libraries(PhysXCharacterKinematic PUBLIC Foundation PhysXSDK)
 target_compile_options(PhysXCharacterKinematic PRIVATE -fPIC -O2 -Wno-unused-parameter)
 
-# ---- HipContext: DCU GPU bridge (context mgr + all GPU host-side objects) ----
+# ---- HipContext: HCU device bridge (context mgr + all GPU host-side objects) ----
 # This library contains:
-#  1. DCU-specific adapter files (HipCtx, HipCtxMgr, KernelWrangler, etc.)
+#  1. HCU-specific adapter files (HipCtx, HipCtxMgr, KernelWrangler, etc.)
 #  2. ALL original PhysX GPU host-side .cpp files (PxgCudaBroadPhaseSap,
 #     PxgDynamicsContext, PxgNphaseImplementationContext, etc.), compiled
-#     for DCU with CUDA→HIP type mapping via the stub <cuda.h>.
+#     for HCU with CUDA→HIP type mapping via the stub <cuda.h>.
 #
 # The GPU kernel .cu files themselves are compiled separately by cmakehip/
 # into libPhysXGpuDCU.so and loaded at runtime via hipModuleLoad.
 
 set(GPU_HOST_SRC
-    # ---- DCU adapter files ----
+    # ---- HCU adapter files ----
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipContextManager.cpp
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipGpuDispatcher.cpp
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipPhysXGpu.cpp
@@ -372,7 +398,7 @@ if(PX_DCU_RIGID_STAGE2_INDEX_P54)
     set_property(SOURCE ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp
         APPEND PROPERTY COMPILE_OPTIONS -DPX_DCU_RIGID_STAGE2_INDEX_P54=1)
 endif()
-# -include forces the DCU stub <cuda.h> to be included before EVERY header,
+# -include forces the HCU stub <cuda.h> to be included before EVERY header,
 # ensuring CUDA_VERSION is set and PxCudaTypes.h skips its own definitions
 # (which would otherwise pull in <hip/hip_runtime.h> and break float4/float2).
 target_compile_options(HipContext PRIVATE -fPIC -O2 -Wno-unused-parameter -Wno-reorder

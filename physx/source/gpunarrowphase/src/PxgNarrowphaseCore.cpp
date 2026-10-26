@@ -25,6 +25,7 @@
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+// Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 
 #include "PxNodeIndex.h"
 #include "PxgCudaMemoryAllocator.h"
@@ -95,7 +96,7 @@
 #include "PxgRadixSortKernelIndices.h"
 
 #if defined(PX_DCU_PORT) && PX_DCU_PORT
-// Support for the DCU device-drop probe defined below.
+// Support for the HCU device-drop probe defined below.
 #include "foundation/PxThread.h"
 #include <atomic>
 #include <chrono>
@@ -152,7 +153,7 @@ namespace
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[DCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=narrowphase seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=narrowphase seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
@@ -167,7 +168,7 @@ namespace
 		PxU32 count = 0;
 		PxCUresult copyResult = syncResult == CUDA_SUCCESS
 			? cudaContext->memcpyDtoH(&count, pairCount, sizeof(PxU32)) : syncResult;
-		std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=%s sync=%d copy=%d pairs=%u\n",
+		std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=%s sync=%d copy=%d pairs=%u\n",
 			phase, int(syncResult), int(copyResult), count);
 		std::fflush(stdout);
 		printed = true;
@@ -189,7 +190,7 @@ namespace
 
 		if (count > 0 && copyResult == CUDA_SUCCESS)
 		{
-			std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u firstParticle=%llu firstRigid=%llu normal=(%.9g,%.9g,%.9g) pen=%.9g\n",
+			std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u firstParticle=%llu firstRigid=%llu normal=(%.9g,%.9g,%.9g) pen=%.9g\n",
 				int(syncResult), int(copyResult), count,
 				static_cast<unsigned long long>(firstContact.particleId),
 				static_cast<unsigned long long>(firstContact.rigidId),
@@ -198,7 +199,7 @@ namespace
 		}
 		else
 		{
-			std::printf("[DCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u\n",
+			std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u\n",
 				int(syncResult), int(copyResult), count);
 		}
 		std::fflush(stdout);
@@ -207,7 +208,7 @@ namespace
 }
 
 // ---------------------------------------------------------------------------
-// DCU device-drop probe.
+// HCU device-drop probe.
 //
 // testSDKConvexTriMeshSATGpu issues six kernels back to back. The probe holds
 // the CPU just after a chosen one of them, then leaves via _Exit(96), so the
@@ -254,7 +255,7 @@ namespace
 //    32 second-clip early-out/crossing  33 triangle edge planes complete
 //    34 legacy second-clip j=0          35 legacy second-clip j=1
 //    36 legacy second-clip j=2          37 legacy second-clip loop complete
-//    38 DCU deterministic classify      39 deterministic second addContacts
+//    38 HCU deterministic classify      39 deterministic second addContacts
 //    40 deterministic edge crossings    41 deterministic polygon clip complete
 //    42 deterministic contact generation complete
 //    43 deterministic full core kernel
@@ -326,7 +327,7 @@ namespace
 		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
-		std::fprintf(stderr, "[DCU PROBE] site=%s call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
+		std::fprintf(stderr, "[HCU PROBE] site=%s call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
 			site, call, numTests, holdMs, syncResult);
 		std::fflush(stderr);
 
@@ -335,7 +336,7 @@ namespace
 		const PxU64 actualMs = PxU64(std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - t0).count());
 
-		std::fprintf(stderr, "[DCU PROBE] site=%s call=%u phase=end requestedMs=%u actualMs=%llu\n",
+		std::fprintf(stderr, "[HCU PROBE] site=%s call=%u phase=end requestedMs=%u actualMs=%llu\n",
 			site, call, holdMs, static_cast<unsigned long long>(actualMs));
 		std::fflush(stderr);
 		std::_Exit((syncResult == -1 || syncResult == int(CUDA_SUCCESS)) ? 96 : 98);
@@ -373,7 +374,7 @@ namespace
 		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
 		if (syncResult != CUDA_SUCCESS)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] call=%u sync_failed=%d\n", call, int(syncResult));
+			std::fprintf(stderr, "[HCU MIDDIAG] call=%u sync_failed=%d\n", call, int(syncResult));
 			std::fflush(stderr);
 			return false;
 		}
@@ -388,7 +389,7 @@ namespace
 			copyResult = cudaContext->memcpyDtoH(&rawPairsFound, gpuStackShift, sizeof(PxU32));
 		if (copyResult != CUDA_SUCCESS)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] call=%u counter_copy_failed=%d\n", call, int(copyResult));
+			std::fprintf(stderr, "[HCU MIDDIAG] call=%u counter_copy_failed=%d\n", call, int(copyResult));
 			std::fflush(stderr);
 			return false;
 		}
@@ -406,19 +407,19 @@ namespace
 		PxU32 errors = 0;
 		if (nbPairs > maxPairs)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] error=nbPairs_overflow value=%u max=%llu\n",
+			std::fprintf(stderr, "[HCU MIDDIAG] error=nbPairs_overflow value=%u max=%llu\n",
 				nbPairs, static_cast<unsigned long long>(maxPairs));
 			++errors;
 		}
 		if (stackBytesUsed > stackSizeBytes)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] error=stack_overflow used=%llu limit=%u\n",
+			std::fprintf(stderr, "[HCU MIDDIAG] error=stack_overflow used=%llu limit=%u\n",
 				static_cast<unsigned long long>(stackBytesUsed), stackSizeBytes);
 			++errors;
 		}
 		if (rawPairsFound < nbPairs)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] error=raw_count_too_small raw=%u compact=%u\n",
+			std::fprintf(stderr, "[HCU MIDDIAG] error=raw_count_too_small raw=%u compact=%u\n",
 				rawPairsFound, nbPairs);
 			++errors;
 		}
@@ -428,7 +429,7 @@ namespace
 			sizeof(ConvexMeshPair) * numTests);
 		if (copyResult != CUDA_SUCCESS)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] call=%u mesh_pair_copy_failed=%d\n", call, int(copyResult));
+			std::fprintf(stderr, "[HCU MIDDIAG] call=%u mesh_pair_copy_failed=%d\n", call, int(copyResult));
 			std::fflush(stderr);
 			return false;
 		}
@@ -441,7 +442,7 @@ namespace
 			if (pair.cmIndex != int(i))
 			{
 				if (errors < 16u)
-					std::fprintf(stderr, "[DCU MIDDIAG] error=cm_index slot=%u value=%d\n", i, pair.cmIndex);
+					std::fprintf(stderr, "[HCU MIDDIAG] error=cm_index slot=%u value=%d\n", i, pair.cmIndex);
 				++errors;
 			}
 
@@ -452,7 +453,7 @@ namespace
 			if (pair.count < 0 || pair.startIndex < 0 || pair.roundedStartIndex < 0)
 			{
 				if (errors < 16u)
-					std::fprintf(stderr, "[DCU MIDDIAG] error=negative_range cm=%u start=%d count=%d rounded=%d\n",
+					std::fprintf(stderr, "[HCU MIDDIAG] error=negative_range cm=%u start=%d count=%d rounded=%d\n",
 						i, pair.startIndex, pair.count, pair.roundedStartIndex);
 				++errors;
 				continue;
@@ -466,14 +467,14 @@ namespace
 			if (start + count > nbPairs)
 			{
 				if (errors < 16u)
-					std::fprintf(stderr, "[DCU MIDDIAG] error=start_range cm=%u start=%llu count=%u nbPairs=%u\n",
+					std::fprintf(stderr, "[HCU MIDDIAG] error=start_range cm=%u start=%llu count=%u nbPairs=%u\n",
 						i, static_cast<unsigned long long>(start), count, nbPairs);
 				++errors;
 			}
 			if ((roundedStart & 3u) != 0u || roundedStart + paddedCount > nbPaddedPairs)
 			{
 				if (errors < 16u)
-					std::fprintf(stderr, "[DCU MIDDIAG] error=rounded_range cm=%u start=%llu span=%llu padded=%u\n",
+					std::fprintf(stderr, "[HCU MIDDIAG] error=rounded_range cm=%u start=%llu span=%llu padded=%u\n",
 						i, static_cast<unsigned long long>(roundedStart),
 						static_cast<unsigned long long>(paddedCount), nbPaddedPairs);
 				++errors;
@@ -482,13 +483,13 @@ namespace
 
 		if (countSum != nbPairs)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] error=count_sum value=%llu nbPairs=%u\n",
+			std::fprintf(stderr, "[HCU MIDDIAG] error=count_sum value=%llu nbPairs=%u\n",
 				static_cast<unsigned long long>(countSum), nbPairs);
 			++errors;
 		}
 		if (paddedCountSum != nbPaddedPairs)
 		{
-			std::fprintf(stderr, "[DCU MIDDIAG] error=padded_sum value=%llu padded=%u\n",
+			std::fprintf(stderr, "[HCU MIDDIAG] error=padded_sum value=%llu padded=%u\n",
 				static_cast<unsigned long long>(paddedCountSum), nbPaddedPairs);
 			++errors;
 		}
@@ -516,7 +517,7 @@ namespace
 				if (compactOverlap || paddedOverlap)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=cm_overlap a=%u b=%u compact=%u padded=%u\n",
+						std::fprintf(stderr, "[HCU MIDDIAG] error=cm_overlap a=%u b=%u compact=%u padded=%u\n",
 							i, j, compactOverlap ? 1u : 0u, paddedOverlap ? 1u : 0u);
 					++errors;
 				}
@@ -536,7 +537,7 @@ namespace
 			}
 			if (copyResult != CUDA_SUCCESS)
 			{
-				std::fprintf(stderr, "[DCU MIDDIAG] call=%u pair_copy_failed=%d\n", call, int(copyResult));
+				std::fprintf(stderr, "[HCU MIDDIAG] call=%u pair_copy_failed=%d\n", call, int(copyResult));
 				std::fflush(stderr);
 				return false;
 			}
@@ -547,7 +548,7 @@ namespace
 				if (pairRecord.x >= numTests)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=pair_cm pair=%u cm=%u tests=%u\n", i, pairRecord.x, numTests);
+						std::fprintf(stderr, "[HCU MIDDIAG] error=pair_cm pair=%u cm=%u tests=%u\n", i, pairRecord.x, numTests);
 					++errors;
 					continue;
 				}
@@ -557,7 +558,7 @@ namespace
 				if (count == CONVEX_TRIMESH_CACHED || meshPair.count <= 0 || pairRecord.z >= count)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=test_offset pair=%u cm=%u offset=%u count=%d\n",
+						std::fprintf(stderr, "[HCU MIDDIAG] error=test_offset pair=%u cm=%u offset=%u count=%d\n",
 							i, pairRecord.x, pairRecord.z, meshPair.count);
 					++errors;
 					continue;
@@ -567,14 +568,14 @@ namespace
 				if (logicalIndex >= nbPairs)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=logical_index pair=%u value=%llu nbPairs=%u\n",
+						std::fprintf(stderr, "[HCU MIDDIAG] error=logical_index pair=%u value=%llu nbPairs=%u\n",
 							i, static_cast<unsigned long long>(logicalIndex), nbPairs);
 					++errors;
 				}
 				else if (logicalSeen[PxU32(logicalIndex)] != 0u)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=duplicate_offset pair=%u logical=%llu\n",
+						std::fprintf(stderr, "[HCU MIDDIAG] error=duplicate_offset pair=%u logical=%llu\n",
 							i, static_cast<unsigned long long>(logicalIndex));
 					++errors;
 				}
@@ -584,7 +585,7 @@ namespace
 				if (maxTriangles && pairRecord.y >= maxTriangles)
 				{
 					if (errors < 16u)
-						std::fprintf(stderr, "[DCU MIDDIAG] error=triangle_index pair=%u triangle=%u max=%u\n",
+						std::fprintf(stderr, "[HCU MIDDIAG] error=triangle_index pair=%u triangle=%u max=%u\n",
 							i, pairRecord.y, maxTriangles);
 					++errors;
 				}
@@ -592,7 +593,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-			"[DCU MIDDIAG] call=%u tests=%u pairs=%u padded=%u raw=%u maxPairs=%llu stackUsed=%llu stackLimit=%u errors=%u verdict=%s\n",
+			"[HCU MIDDIAG] call=%u tests=%u pairs=%u padded=%u raw=%u maxPairs=%llu stackUsed=%llu stackLimit=%u errors=%u verdict=%s\n",
 			call, numTests, nbPairs, nbPaddedPairs, rawPairsFound,
 			static_cast<unsigned long long>(maxPairs), static_cast<unsigned long long>(stackBytesUsed),
 			stackSizeBytes, errors, errors ? "INVALID" : "VALID");
@@ -728,7 +729,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-			"[DCU CONTACT GEOM] marker=PX_DCU_NARROWPHASE_STAGE_V43_NOINLINE_CONTACT_GEOMETRY_AGGREGATE "
+			"[HCU CONTACT GEOM] marker=PX_DCU_NARROWPHASE_STAGE_V43_NOINLINE_CONTACT_GEOMETRY_AGGREGATE "
 			"call=%u tests=%u sync=%d pair_copy=%d manifold_copy=%d active_pairs=%u invalid_pair_mappings=%u "
 			"pairs_with_manifolds=%u declared_manifolds=%llu valid_manifolds=%llu invalid_manifolds=%llu "
 			"contacts=%llu finite=%llu invalid=%llu normal_y_min=%.9g normal_y_max=%.9g up=%llu down=%llu side=%llu "
@@ -953,7 +954,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-			"[DCU FINISH STREAM] marker=PX_DCU_NARROWPHASE_STAGE_V44_NOINLINE_FINISH_STREAM_AGGREGATE "
+			"[HCU FINISH STREAM] marker=PX_DCU_NARROWPHASE_STAGE_V44_NOINLINE_FINISH_STREAM_AGGREGATE "
 			"call=%u tests=%u sync=%d output_copy=%d touch=%u no_touch=%u touch_unknown=%u stream_managers=%u "
 			"invalid_descriptors=%u null_streams=%u range_errors=%u patch_copy_failures=%u contact_copy_failures=%u "
 			"declared_patches=%llu declared_output_contacts=%llu valid_patches=%llu invalid_patches=%llu "
@@ -1104,7 +1105,7 @@ namespace
 		if (syncResult != CUDA_SUCCESS)
 		{
 			std::fprintf(stderr,
-				"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=pre_sync sync=%d verdict=UPSTREAM_FAILED\n",
+				"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=pre_sync sync=%d verdict=UPSTREAM_FAILED\n",
 				call, numTests, int(syncResult));
 			std::fflush(stderr);
 			return false;
@@ -1118,7 +1119,7 @@ namespace
 		if (copyResult != CUDA_SUCCESS)
 		{
 			std::fprintf(stderr,
-				"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=cm_copy copy=%d verdict=COPY_FAILED\n",
+				"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=cm_copy copy=%d verdict=COPY_FAILED\n",
 				call, numTests, int(copyResult));
 			std::fflush(stderr);
 			return false;
@@ -1143,7 +1144,7 @@ namespace
 				{
 					if (errors < 16u)
 						std::fprintf(stderr,
-							"[DCU TRITRI OVERLAP DIAG] error=shape_ref test=%u side=%u ref=%u capacity=%llu\n",
+							"[HCU TRITRI OVERLAP DIAG] error=shape_ref test=%u side=%u ref=%u capacity=%llu\n",
 							testIndex, side, shapeRef, static_cast<unsigned long long>(shapeCapacity));
 					++errors;
 				}
@@ -1156,7 +1157,7 @@ namespace
 					{
 						if (errors < 16u)
 							std::fprintf(stderr,
-								"[DCU TRITRI OVERLAP DIAG] error=shape_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
+								"[HCU TRITRI OVERLAP DIAG] error=shape_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
 								testIndex, side, shapeRef, static_cast<unsigned long long>(shapeAddress), int(shapeCopy));
 						++errors;
 						++copyFailures;
@@ -1168,7 +1169,7 @@ namespace
 						{
 							if (errors < 16u)
 								std::fprintf(stderr,
-									"[DCU TRITRI OVERLAP DIAG] error=shape_type test=%u side=%u ref=%u type=%u expected=%u\n",
+									"[HCU TRITRI OVERLAP DIAG] error=shape_type test=%u side=%u ref=%u type=%u expected=%u\n",
 									testIndex, side, shapeRef, shape.type, PxU32(PxGeometryType::eTRIANGLEMESH));
 							++errors;
 						}
@@ -1177,7 +1178,7 @@ namespace
 						{
 							if (errors < 16u)
 								std::fprintf(stderr,
-									"[DCU TRITRI OVERLAP DIAG] error=null_mesh test=%u side=%u ref=%u\n",
+									"[HCU TRITRI OVERLAP DIAG] error=null_mesh test=%u side=%u ref=%u\n",
 									testIndex, side, shapeRef);
 							++errors;
 						}
@@ -1197,7 +1198,7 @@ namespace
 								{
 									if (errors < 16u)
 										std::fprintf(stderr,
-											"[DCU TRITRI OVERLAP DIAG] error=mesh_header_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
+											"[HCU TRITRI OVERLAP DIAG] error=mesh_header_copy test=%u side=%u ref=%u address=0x%llx result=%d\n",
 											testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress), int(headerCopy));
 									++errors;
 									++copyFailures;
@@ -1213,7 +1214,7 @@ namespace
 									{
 										if (errors < 16u)
 											std::fprintf(stderr,
-												"[DCU TRITRI OVERLAP DIAG] error=mesh_header test=%u side=%u ref=%u address=0x%llx verts=%u tris=%u nodes=%u packed=%u\n",
+												"[HCU TRITRI OVERLAP DIAG] error=mesh_header test=%u side=%u ref=%u address=0x%llx verts=%u tris=%u nodes=%u packed=%u\n",
 												testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress),
 												header.x, header.y, header.z, header.w);
 										++errors;
@@ -1227,7 +1228,7 @@ namespace
 										{
 											if (errors < 16u)
 												std::fprintf(stderr,
-													"[DCU TRITRI OVERLAP DIAG] error=packed_root_copy test=%u side=%u ref=%u result=%d\n",
+													"[HCU TRITRI OVERLAP DIAG] error=packed_root_copy test=%u side=%u ref=%u result=%d\n",
 													testIndex, side, shapeRef, int(rootCopy));
 											++errors;
 											++copyFailures;
@@ -1245,7 +1246,7 @@ namespace
 													&& minimum.x <= maximum.x && minimum.y <= maximum.y && minimum.z <= maximum.z;
 											}
 											std::fprintf(stderr,
-												"[DCU TRITRI OVERLAP DIAG] mesh_root test=%u side=%u ref=%u address=0x%llx "
+												"[HCU TRITRI OVERLAP DIAG] mesh_root test=%u side=%u ref=%u address=0x%llx "
 												"verts=%u tris=%u nodes=%u packed=%u nb_nodes=%u depth=%u valid=%u\n",
 												testIndex, side, shapeRef, static_cast<unsigned long long>(meshAddress),
 												header.x, header.y, header.z, header.w, root.mNbNodes, root.mDepth,
@@ -1254,7 +1255,7 @@ namespace
 											{
 												if (errors < 16u)
 													std::fprintf(stderr,
-														"[DCU TRITRI OVERLAP DIAG] error=packed_root test=%u side=%u ref=%u nb_nodes=%u depth=%u\n",
+														"[HCU TRITRI OVERLAP DIAG] error=packed_root test=%u side=%u ref=%u nb_nodes=%u depth=%u\n",
 														testIndex, side, shapeRef, root.mNbNodes, root.mDepth);
 												++errors;
 											}
@@ -1271,7 +1272,7 @@ namespace
 				{
 					if (errors < 16u)
 						std::fprintf(stderr,
-							"[DCU TRITRI OVERLAP DIAG] error=transform_ref test=%u side=%u ref=%u transform_capacity=%llu distance_capacity=%llu\n",
+							"[HCU TRITRI OVERLAP DIAG] error=transform_ref test=%u side=%u ref=%u transform_capacity=%llu distance_capacity=%llu\n",
 							testIndex, side, transformRef, static_cast<unsigned long long>(transformCapacity),
 							static_cast<unsigned long long>(contactDistanceCapacity));
 					++errors;
@@ -1290,7 +1291,7 @@ namespace
 				{
 					if (errors < 16u)
 						std::fprintf(stderr,
-							"[DCU TRITRI OVERLAP DIAG] error=transform_copy test=%u side=%u ref=%u transform_result=%d distance_result=%d\n",
+							"[HCU TRITRI OVERLAP DIAG] error=transform_copy test=%u side=%u ref=%u transform_result=%d distance_result=%d\n",
 							testIndex, side, transformRef, int(transformCopy), int(distanceCopy));
 					++errors;
 					++copyFailures;
@@ -1299,7 +1300,7 @@ namespace
 				{
 					if (errors < 16u)
 						std::fprintf(stderr,
-							"[DCU TRITRI OVERLAP DIAG] error=transform_value test=%u side=%u ref=%u finite=%u distance=%.9g\n",
+							"[HCU TRITRI OVERLAP DIAG] error=transform_value test=%u side=%u ref=%u finite=%u distance=%.9g\n",
 							testIndex, side, transformRef, cachedTransform.transform.isFinite() ? 1u : 0u, double(distance));
 					++errors;
 				}
@@ -1307,7 +1308,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-		"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u sync=%d "
+		"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u sync=%d "
 			"shape_capacity=%llu transform_capacity=%llu distance_capacity=%llu unique_meshes=%u mesh_headers=%u packed_roots=%u "
 			"copy_failures=%u errors=%u verdict=%s\n",
 			call, numTests, int(syncResult), static_cast<unsigned long long>(shapeCapacity),
@@ -2485,7 +2486,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshPlaneGpu(PxgGpuContactManagers& gpuMan
 			if (!s_dcuTrimeshPlaneBatch2Reported)
 			{
 				const bool legacyOverridePresent = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH") != NULL;
-				std::printf("[DCU TRIMESH PLANE] marker=PX_DCU_TRIMESH_PLANE_HOST_V2_BATCH2_OPT_IN requested=1 active=1 "
+				std::printf("[HCU TRIMESH PLANE] marker=PX_DCU_TRIMESH_PLANE_HOST_V2_BATCH2_OPT_IN requested=1 active=1 "
 					"blocks_per_launch=2 launch_block=32x1x1 reducer=reduceDcuTrimeshPlaneContacts "
 					"legacy_override_precedence=batch2 legacy_override_present=%u\n",
 					legacyOverridePresent ? 1u : 0u);
@@ -2722,7 +2723,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 				const bool manualOverridesPresent =
 					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
 					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
-				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V11_PACK4_OPT_IN requested=1 active=1 "
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V11_PACK4_OPT_IN requested=1 active=1 "
 					"base_pack2_requested=1 items_per_launch=4 launch_warps_per_block=4 launch_grid=1x1x1 launch_block=32x4x1 "
 					"manual_overrides_precedence=pack4 manual_overrides_present=%u\n",
 					manualOverridesPresent ? 1u : 0u);
@@ -2743,7 +2744,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 				const bool manualOverridesPresent =
 					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
 					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
-				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V5_PACK2_OPT_IN requested=1 active=1 "
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V5_PACK2_OPT_IN requested=1 active=1 "
 					"items_per_launch=2 launch_warps_per_block=2 launch_grid=1x1x1 launch_block=32x2x1 "
 					"manual_overrides_precedence=pack2 manual_overrides_present=%u\n",
 					manualOverridesPresent ? 1u : 0u);
@@ -2757,7 +2758,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			static bool s_dcuTriTriOverlapLaunchBounds64Reported = false;
 			if (!s_dcuTriTriOverlapLaunchBounds64Reported)
 			{
-				std::printf("[DCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V10_LAUNCH_BOUNDS64_OPT_IN requested=1 active=1 "
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V10_LAUNCH_BOUNDS64_OPT_IN requested=1 active=1 "
 					"launch_bounds_max_threads=64 launch_bounds_min_blocks=1 launch_grid=1x1x1 launch_block=32x2x1 "
 					"kernel=triangleTriangleOverlapsLaunchBounds64DcuV10\n");
 				std::fflush(stdout);
@@ -2775,7 +2776,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			if (!inputsValid)
 			{
 				std::fprintf(stderr,
-					"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort reason=invalid_inputs exit=97\n",
+					"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort reason=invalid_inputs exit=97\n",
 					dcuTriTriOverlapCall, numTests);
 				std::fflush(stderr);
 				std::_Exit(97);
@@ -2806,7 +2807,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			if (dcuTriTriOverlapDiagEnabled || dcuTriTriOverlapSyncBatchEnabled)
 			{
 				std::fprintf(stderr,
-					"[DCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_begin "
+					"[HCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_begin "
 					"work_offset=%u batch_size=%u blocks=%u launch_warps_per_block=%u shared_warps_per_block=%u "
 					"cm_inputs=0x%llx cm_outputs=0x%llx overlaps=0x%llx\n",
 					dcuTriTriOverlapCall, numTests, workOffset, batchSize, numBlocks, launchWarpsPerBlock, kernelWarpsPerBlock,
@@ -2836,7 +2837,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			{
 				const PxCUresult syncResult = mCudaContext->streamSynchronize(mStream);
 				std::fprintf(stderr,
-					"[DCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_end "
+					"[HCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_end "
 					"work_offset=%u batch_size=%u sync=%d verdict=%s\n",
 					dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult),
 					syncResult == CUDA_SUCCESS ? "STABLE" : "FAILED");
@@ -2844,7 +2845,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 				if (syncResult != CUDA_SUCCESS)
 				{
 					std::fprintf(stderr,
-						"[DCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort "
+						"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort "
 						"reason=batch_sync_failed work_offset=%u batch_size=%u sync=%d exit=98\n",
 						dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult));
 					std::fflush(stderr);
@@ -2896,7 +2897,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V1_SDF_INLINE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionSdfInlineDcuV1\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V1_SDF_INLINE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionSdfInlineDcuV1\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2906,7 +2907,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V2_INVERSE_CACHE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionInverseCacheDcuV2\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V2_INVERSE_CACHE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionInverseCacheDcuV2\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2916,7 +2917,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V3_PACK2_SERIAL_OPT_IN requested=1 active=1 items_per_launch=2 launch_grid=1x1x1 launch_block=1024x1x1 concurrent_blocks=1 kernel=triangleTriangleCollisionPack2SerialDcuV3\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V3_PACK2_SERIAL_OPT_IN requested=1 active=1 items_per_launch=2 launch_grid=1x1x1 launch_block=1024x1x1 concurrent_blocks=1 kernel=triangleTriangleCollisionPack2SerialDcuV3\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2926,7 +2927,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V5_OCCUPANCY2_OPT_IN requested=1 active=1 launch_bounds_min_blocks_request=2 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionOccupancy2DcuV5\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V5_OCCUPANCY2_OPT_IN requested=1 active=1 launch_bounds_min_blocks_request=2 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionOccupancy2DcuV5\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2936,7 +2937,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V6_CREATE_PATCH_NOINLINE_OPT_IN requested=1 active=1 helper=createNewPatchesNoInlineDcuV6 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionCreatePatchNoInlineDcuV6\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V6_CREATE_PATCH_NOINLINE_OPT_IN requested=1 active=1 helper=createNewPatchesNoInlineDcuV6 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionCreatePatchNoInlineDcuV6\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2946,7 +2947,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V7_CONTACT_PREDICATE_OPT_IN requested=1 active=1 payload_writes=candidate_only processed_clear=candidate_only launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionContactPredicateDcuV7\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V7_CONTACT_PREDICATE_OPT_IN requested=1 active=1 payload_writes=candidate_only processed_clear=candidate_only launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionContactPredicateDcuV7\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2956,7 +2957,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[DCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V8_NATIVE_BLOCK_COUNT_OPT_IN requested=1 active=1 count_scope=generated_contacts primitive=__syncthreads_count launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionNativeBlockCountDcuV8\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V8_NATIVE_BLOCK_COUNT_OPT_IN requested=1 active=1 count_scope=generated_contacts primitive=__syncthreads_count launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionNativeBlockCountDcuV8\n");
 				std::fflush(stdout);
 			}
 		}
@@ -4236,7 +4237,7 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 			if (blocksMode && std::strcmp(blocksMode, "fit") == 0)
 			{
 				const PxU32 fitted = PxMax(1u, (numTests*coreGridMultiplier + numWarpsPerBlock - 1) / numWarpsPerBlock);
-				std::fprintf(stderr, "[DCU CORE] blocks %u -> %u (tests=%u)\n", numBlocks, fitted, numTests);
+				std::fprintf(stderr, "[HCU CORE] blocks %u -> %u (tests=%u)\n", numBlocks, fitted, numTests);
 				std::fflush(stderr);
 				numBlocks = fitted;
 			}
@@ -4253,7 +4254,7 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		const PxU32 coreStage = dcuCoreStage(dcuProbeCall);
 		if (coreStage)
 		{
-			std::fprintf(stderr, "[DCU CORE STAGE] call=%u stage=%u tests=%u\n", dcuProbeCall, coreStage, numTests);
+			std::fprintf(stderr, "[HCU CORE STAGE] call=%u stage=%u tests=%u\n", dcuProbeCall, coreStage, numTests);
 			std::fflush(stderr);
 		}
 #endif
@@ -4311,7 +4312,7 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 			}
 
 			std::fprintf(stderr,
-				"[DCU CORE TEMP INDEX] call=%u tests=%u sync=%d pairs_copy=%d temp_copy=%d midphase_pairs=%u temp_index=%u\n",
+				"[HCU CORE TEMP INDEX] call=%u tests=%u sync=%d pairs_copy=%d temp_copy=%d midphase_pairs=%u temp_index=%u\n",
 				dcuProbeCall, numTests, int(syncResult), int(pairsCopyResult), int(tempCopyResult), midphasePairs, tempIndex);
 			std::fflush(stderr);
 		}
@@ -4548,7 +4549,7 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		const bool boundsValid = countsValid && touchChanges <= totalChanges && totalChanges <= 2u * numTests;
 
 		std::fprintf(stderr,
-			"[DCU POST COMPACT] marker=PX_DCU_NARROWPHASE_STAGE_V51_POST_COMPACT_BOUNDARY "
+			"[HCU POST COMPACT] marker=PX_DCU_NARROWPHASE_STAGE_V51_POST_COMPACT_BOUNDARY "
 			"call=%u tests=%u sync=%d counts_valid=%u bounds_valid=%u touch=%u total=%u\n",
 			dcuProbeCall, numTests, syncResult, countsValid ? 1u : 0u, boundsValid ? 1u : 0u,
 			touchChanges, totalChanges);
