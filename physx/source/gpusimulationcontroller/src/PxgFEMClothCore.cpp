@@ -1234,7 +1234,7 @@ namespace physx
 			CUfunction finalizeKernelFunction =
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_FINALIZE_VELOCITIES);
 
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			const PxU32 finalizeBlockDim = 256;
 	#else
 			const PxU32 finalizeBlockDim = PxgFEMClothKernelBlockDim::CLOTH_STEP;
@@ -1268,7 +1268,7 @@ namespace physx
 			CUfunction sleepKernelFunction =
 				mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::CLOTH_SLEEPING);
 
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			const PxU32 sleepingBlockDim = 256;
 	#else
 			const PxU32 sleepingBlockDim = PxgFEMClothKernelBlockDim::CLOTH_STEP;

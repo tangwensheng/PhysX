@@ -28,6 +28,7 @@
 # Build PhysX HCU Examples
 set -euo pipefail
 
+# Keep the legacy marker value: external build verification helpers match it verbatim.
 BUILD_SCRIPT_MARKER="PX_DCU_EXAMPLES_BUILD_R2_FOREIGN_CMAKE_CACHE_RECOVERY"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 BUILD_DIR="$SCRIPT_DIR/build"
@@ -44,7 +45,7 @@ reset_build_dir()
     mkdir -p "$BUILD_DIR"
 }
 
-# Find a usable HIP compiler (same search order as build_dcu.sh).
+# Find a usable HIP compiler (same search order as build_hcu.sh).
 HIP_CLANG=""
 if [[ -n "${HIPCXX:-}" ]]; then
     if [[ -x "$HIPCXX" ]]; then

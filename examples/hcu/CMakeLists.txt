@@ -30,11 +30,11 @@ if(NOT DEFINED CMAKE_HIP_ARCHITECTURES)
     set(CMAKE_HIP_ARCHITECTURES gfx936 CACHE STRING "HCU/HIP GPU architecture")
 endif()
 
-project(PhysXDcuExamples LANGUAGES CXX HIP)
+project(PhysXHcuExamples LANGUAGES CXX HIP)
 
-set(PHYSX_DCU_HIP_FLAGS
+set(PHYSX_HCU_HIP_FLAGS
     -include PxgHIPCompat.h
-    -DPX_DCU_PORT
+    -DPX_HCU_PORT
     -DNDEBUG
     -ffast-math
     -fgpu-flush-denormals-to-zero
@@ -73,7 +73,7 @@ set(PHYSX_INCLUDE_DIRS
     ${PHYSX_ROOT_DIR}/source/geomutils/src/cooking
     ${PHYSX_ROOT_DIR}/source/gpucommon/include
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA
-    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/HCU/stubs
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/include
     ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/CUDA
     ${PHYSX_ROOT_DIR}/source/gpusolver/include
@@ -116,7 +116,7 @@ set(PHYSX_LIBS
     -Wl,--end-group
 )
 
-function(add_dcu_example SOURCE_FILE)
+function(add_hcu_example SOURCE_FILE)
     get_filename_component(EXE_NAME ${SOURCE_FILE} NAME_WE)
     add_executable(${EXE_NAME} ${SOURCE_FILE} ${ARGN})
     target_include_directories(${EXE_NAME} PRIVATE ${PHYSX_INCLUDE_DIRS})
@@ -124,7 +124,7 @@ function(add_dcu_example SOURCE_FILE)
     target_link_libraries(${EXE_NAME} PRIVATE ${PHYSX_LIBS} amdhip64 pthread dl)
     target_compile_definitions(${EXE_NAME} PRIVATE __HIP_PLATFORM_AMD__=1)
     target_compile_options(${EXE_NAME} PRIVATE
-        $<$<COMPILE_LANGUAGE:HIP>:${PHYSX_DCU_HIP_FLAGS}>
+        $<$<COMPILE_LANGUAGE:HIP>:${PHYSX_HCU_HIP_FLAGS}>
     )
 endfunction()
 
@@ -137,13 +137,13 @@ foreach(SOURCE_FILE ${EXAMPLE_CPP_SOURCES})
     if(EXE_NAME STREQUAL "scene_tower")
         set(KERNEL_SOURCE ${CMAKE_SOURCE_DIR}/scene_tower_kernel.hip)
         set_source_files_properties(${KERNEL_SOURCE} PROPERTIES LANGUAGE HIP)
-        add_dcu_example(${SOURCE_FILE} ${KERNEL_SOURCE})
+        add_hcu_example(${SOURCE_FILE} ${KERNEL_SOURCE})
     elseif(EXE_NAME STREQUAL "bench_deformable_surface_smoke")
         # Some existing CPU PhysXExtensions archives were built before the
         # deformable-surface extension was included. Compile this implementation
         # into the smoke target so PxDeformableSurfaceExt symbols are available.
         set(DEFORMABLE_SURFACE_EXT_SOURCE ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtDeformableSurfaceExt.cpp)
-        add_dcu_example(${SOURCE_FILE} ${DEFORMABLE_SURFACE_EXT_SOURCE})
+        add_hcu_example(${SOURCE_FILE} ${DEFORMABLE_SURFACE_EXT_SOURCE})
     elseif(EXE_NAME STREQUAL "bench_deformable_volume_smoke")
         # Keep the volume smoke self-contained because the current static
         # PhysXExtensions archive does not export deformable-volume helpers.
@@ -153,18 +153,18 @@ foreach(SOURCE_FILE ${EXAMPLE_CPP_SOURCES})
             ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtTetMakerExt.cpp
             ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtTetrahedronMeshExt.cpp
         )
-        add_dcu_example(${SOURCE_FILE} ${DEFORMABLE_VOLUME_EXT_SOURCES})
+        add_hcu_example(${SOURCE_FILE} ${DEFORMABLE_VOLUME_EXT_SOURCES})
     elseif(EXE_NAME STREQUAL "bench_pbd_cloth_smoke")
         # The existing static PhysXExtensions archive may not include GPU
         # particle-cloth helpers, so compile the small implementation here.
         set(PBD_CLOTH_EXT_SOURCE ${PHYSX_ROOT_DIR}/source/physxextensions/src/ExtParticleExt.cpp)
-        add_dcu_example(${SOURCE_FILE} ${PBD_CLOTH_EXT_SOURCE})
+        add_hcu_example(${SOURCE_FILE} ${PBD_CLOTH_EXT_SOURCE})
     else()
-        add_dcu_example(${SOURCE_FILE})
+        add_hcu_example(${SOURCE_FILE})
     endif()
 endforeach()
 
 foreach(SOURCE_FILE ${EXAMPLE_HIP_SOURCES})
     set_source_files_properties(${SOURCE_FILE} PROPERTIES LANGUAGE HIP)
-    add_dcu_example(${SOURCE_FILE})
+    add_hcu_example(${SOURCE_FILE})
 endforeach()

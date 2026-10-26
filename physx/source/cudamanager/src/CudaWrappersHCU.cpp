@@ -24,7 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// CudaWrappersDCU — implements CUDA Driver API functions using HIP
+// CudaWrappersHCU — implements CUDA Driver API functions using HIP
 //
 // This file is compiled with access to <hip/hip_runtime.h> and performs
 // the opaque-pointer casts between CUDA types (CUstream_st*, etc.) and
@@ -37,7 +37,7 @@
 #include <hip/hip_runtime.h>
 #include <cstring>
 
-extern "C" bool pxDcuIsGfx936(int deviceOrdinal) {
+extern "C" bool pxHcuIsGfx936(int deviceOrdinal) {
 	hipDeviceProp_t properties = {};
 	if (deviceOrdinal < 0 || hipGetDeviceProperties(&properties, deviceOrdinal) != hipSuccess)
 		return false;

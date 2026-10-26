@@ -64,7 +64,7 @@
 // explicitly inside the current 32-lane virtual warp instead of relying on
 // HIP's width argument, whose semantics differ across ROCm/HCU toolchains.
 template <typename T>
-__device__ __forceinline__ T pxgDcuLaneRead32(T var, int hwLane)
+__device__ __forceinline__ T pxgHcuLaneRead32(T var, int hwLane)
 {
     union Bits
     {
@@ -80,58 +80,58 @@ __device__ __forceinline__ T pxgDcuLaneRead32(T var, int hwLane)
 }
 
 template <typename T>
-__device__ __forceinline__ T pxgDcuShfl(T var, int lane, int width = 32)
+__device__ __forceinline__ T pxgHcuShfl(T var, int lane, int width = 32)
 {
     const int localLane = PXG_HW_LANE & 31;
     const int baseLane = PXG_HW_LANE & ~31;
     const int groupBase = (localLane / width) * width;
-    return pxgDcuLaneRead32(var, baseLane + groupBase + (lane & (width - 1)));
+    return pxgHcuLaneRead32(var, baseLane + groupBase + (lane & (width - 1)));
 }
 
 template <typename T>
-__device__ __forceinline__ T pxgDcuShflXor(T var, int offset, int width = 32)
+__device__ __forceinline__ T pxgHcuShflXor(T var, int offset, int width = 32)
 {
     const int localLane = PXG_HW_LANE & 31;
     const int baseLane = PXG_HW_LANE & ~31;
     const int targetLane = localLane ^ offset;
-    return ((targetLane / width) == (localLane / width)) ? pxgDcuLaneRead32(var, baseLane + targetLane) : var;
+    return ((targetLane / width) == (localLane / width)) ? pxgHcuLaneRead32(var, baseLane + targetLane) : var;
 }
 
 template <typename T>
-__device__ __forceinline__ T pxgDcuShflUp(T var, int delta, int width = 32)
+__device__ __forceinline__ T pxgHcuShflUp(T var, int delta, int width = 32)
 {
     const int localLane = PXG_HW_LANE & 31;
     const int baseLane = PXG_HW_LANE & ~31;
     const int groupBase = (localLane / width) * width;
     const int laneInGroup = localLane - groupBase;
-    return (laneInGroup >= delta) ? pxgDcuLaneRead32(var, baseLane + groupBase + laneInGroup - delta) : var;
+    return (laneInGroup >= delta) ? pxgHcuLaneRead32(var, baseLane + groupBase + laneInGroup - delta) : var;
 }
 
 template <typename T>
-__device__ __forceinline__ T pxgDcuShflDown(T var, int delta, int width = 32)
+__device__ __forceinline__ T pxgHcuShflDown(T var, int delta, int width = 32)
 {
     const int localLane = PXG_HW_LANE & 31;
     const int baseLane = PXG_HW_LANE & ~31;
     const int groupBase = (localLane / width) * width;
     const int laneInGroup = localLane - groupBase;
-    return (laneInGroup + delta < width) ? pxgDcuLaneRead32(var, baseLane + groupBase + laneInGroup + delta) : var;
+    return (laneInGroup + delta < width) ? pxgHcuLaneRead32(var, baseLane + groupBase + laneInGroup + delta) : var;
 }
 
-#define __shfl_sync_4(mask, var, lane, width)  pxgDcuShfl((var), (int)(lane), (int)(width))
-#define __shfl_sync_3(mask, var, lane)         pxgDcuShfl((var), (int)(lane), 32)
+#define __shfl_sync_4(mask, var, lane, width)  pxgHcuShfl((var), (int)(lane), (int)(width))
+#define __shfl_sync_3(mask, var, lane)         pxgHcuShfl((var), (int)(lane), 32)
 #define __shfl_sync_DISP(_1,_2,_3,_4,NAME,...) NAME
 #define __shfl_sync(...)     __shfl_sync_DISP(__VA_ARGS__, __shfl_sync_4, __shfl_sync_3, _DUMMY)(__VA_ARGS__)
 
-#define __shfl_xor_sync_4(mask, var, offset, width)  pxgDcuShflXor((var), (int)(offset), (int)(width))
-#define __shfl_xor_sync_3(mask, var, offset)         pxgDcuShflXor((var), (int)(offset), 32)
+#define __shfl_xor_sync_4(mask, var, offset, width)  pxgHcuShflXor((var), (int)(offset), (int)(width))
+#define __shfl_xor_sync_3(mask, var, offset)         pxgHcuShflXor((var), (int)(offset), 32)
 #define __shfl_xor_sync(...)     __shfl_sync_DISP(__VA_ARGS__, __shfl_xor_sync_4, __shfl_xor_sync_3, _DUMMY)(__VA_ARGS__)
 
-#define __shfl_up_sync_4(mask, var, delta, width)    pxgDcuShflUp((var), (int)(delta), (int)(width))
-#define __shfl_up_sync_3(mask, var, delta)           pxgDcuShflUp((var), (int)(delta), 32)
+#define __shfl_up_sync_4(mask, var, delta, width)    pxgHcuShflUp((var), (int)(delta), (int)(width))
+#define __shfl_up_sync_3(mask, var, delta)           pxgHcuShflUp((var), (int)(delta), 32)
 #define __shfl_up_sync(...)     __shfl_sync_DISP(__VA_ARGS__, __shfl_up_sync_4, __shfl_up_sync_3, _DUMMY)(__VA_ARGS__)
 
-#define __shfl_down_sync_4(mask, var, delta, width)  pxgDcuShflDown((var), (int)(delta), (int)(width))
-#define __shfl_down_sync_3(mask, var, delta)         pxgDcuShflDown((var), (int)(delta), 32)
+#define __shfl_down_sync_4(mask, var, delta, width)  pxgHcuShflDown((var), (int)(delta), (int)(width))
+#define __shfl_down_sync_3(mask, var, delta)         pxgHcuShflDown((var), (int)(delta), 32)
 #define __shfl_down_sync(...)     __shfl_sync_DISP(__VA_ARGS__, __shfl_down_sync_4, __shfl_down_sync_3, _DUMMY)(__VA_ARGS__)
 
 // ---- Warp vote intrinsics ----

@@ -27,7 +27,7 @@
 // HCU Toolchain Probe — Host-side launcher
 //
 // Build (standalone):
-//   hipcc probe_kernel.hip probe_main.cpp -o probe_dcu --offload-arch=gfx936
+//   hipcc probe_kernel.hip probe_main.cpp -o probe_hcu --offload-arch=gfx936
 //
 // Build (via CMake):
 //   mkdir build && cd build
@@ -35,7 +35,7 @@
 //   make
 //
 // Run:
-//   ./probe_dcu
+//   ./probe_hcu
 //
 // Verifies: hipcc → device code gen → hiprt → kernel launch → memory transfer
 

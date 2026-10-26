@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -75,8 +75,8 @@ using namespace schlock;
 
 using namespace physx;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39) && PX_DCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39
-extern "C" __device__ __constant__ char gPxgDcuSoftBodyPrimitivesO3P39Version[] = "PX_DCU_SOFTBODY_PRIMITIVES_O3_P39_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39) && PX_HCU_VOLUME_SOFTBODY_PRIMITIVES_O3_P39
+extern "C" __device__ __constant__ char gPxgHcuSoftBodyPrimitivesO3P39Version[] = "PX_HCU_SOFTBODY_PRIMITIVES_O3_P39_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __host__ void initNarrowphaseKernels14() {}

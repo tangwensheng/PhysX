@@ -31,21 +31,21 @@
 #include "stdio.h"
 #include "PxNodeIndex.h"
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_RADIX_O3_P38) && PX_DCU_VOLUME_RADIX_O3_P38
-extern "C" __device__ __constant__ char gPxgDcuVolumeRadixO3P38Version[] = "PX_DCU_RADIX_O3_P38_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_VOLUME_RADIX_O3_P38) && PX_HCU_VOLUME_RADIX_O3_P38
+extern "C" __device__ __constant__ char gPxgHcuVolumeRadixO3P38Version[] = "PX_HCU_RADIX_O3_P38_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __host__ void initCommonKernels1() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuBroadphaseRadixStageVersion[] = "PX_DCU_GPU_BROADPHASE_RADIX_V3_SERIAL_COUNTING_PASS";
-extern "C" __device__ __constant__ char gPxgDcuFemClothRadixStageVersion[] = "PX_DCU_FEM_CLOTH_RADIX_V2_SERIAL_COUNTING_1024";
-extern "C" __device__ __constant__ char gPxgDcuPbdRadixStageVersion[] = "PX_DCU_PBD_RADIX_NO_COUNT_V1_SERIAL_STABLE_4BIT";
-extern "C" __device__ __constant__ char gPxgDcuPbdPrimitiveRadixStageVersion[] = "PX_DCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096";
-extern "C" __device__ __constant__ char gPxgDcuPbdPrimitiveRadixChunkedStageVersion[] = "PX_DCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32";
-extern "C" __device__ __constant__ char gPxgDcuPbdPrimitiveRadixInlineStageVersion[] = "PX_DCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32";
-extern "C" __device__ __constant__ char gPxgDcuPbdPrimitiveRadixFused64StageVersion[] = "PX_DCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE";
-extern "C" __device__ __constant__ char gPxgDcuPbdSpatialRadixChunkedStageVersion[] = "PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuBroadphaseRadixStageVersion[] = "PX_HCU_GPU_BROADPHASE_RADIX_V3_SERIAL_COUNTING_PASS";
+extern "C" __device__ __constant__ char gPxgHcuFemClothRadixStageVersion[] = "PX_HCU_FEM_CLOTH_RADIX_V2_SERIAL_COUNTING_1024";
+extern "C" __device__ __constant__ char gPxgHcuPbdRadixStageVersion[] = "PX_HCU_PBD_RADIX_NO_COUNT_V1_SERIAL_STABLE_4BIT";
+extern "C" __device__ __constant__ char gPxgHcuPbdPrimitiveRadixStageVersion[] = "PX_HCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096";
+extern "C" __device__ __constant__ char gPxgHcuPbdPrimitiveRadixChunkedStageVersion[] = "PX_HCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32";
+extern "C" __device__ __constant__ char gPxgHcuPbdPrimitiveRadixInlineStageVersion[] = "PX_HCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32";
+extern "C" __device__ __constant__ char gPxgHcuPbdPrimitiveRadixFused64StageVersion[] = "PX_HCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE";
+extern "C" __device__ __constant__ char gPxgHcuPbdSpatialRadixChunkedStageVersion[] = "PX_HCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32";
 #endif
 
 
@@ -77,7 +77,7 @@ void radixSortMultiCalculateRanksLaunch(PxgRadixSortBlockDesc* desc, const PxU32
 
 	const PxU32 numKeys = *desc[blockIdx.y].numKeys;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// The gfx936 multiblock rank gather is unstable once FEM cloth plane
 	// contacts exceed the old 128-key fallback. Keep the validated matrix range
 	// on a stable per-pass counting sort while preserving descriptor ping-pong.
@@ -118,10 +118,10 @@ void radixSortMultiCalculateRanksLaunch(PxgRadixSortBlockDesc* desc, const PxU32
 	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, numKeys, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 extern "C" __global__
 __launch_bounds__(1, 1)
-void radixSortPbdPrimitiveSerialCountingPassDcuV4(PxgRadixSortBlockDesc* desc, const PxU32 gStartBit)
+void radixSortPbdPrimitiveSerialCountingPassHcuV4(PxgRadixSortBlockDesc* desc, const PxU32 gStartBit)
 {
 	const PxgRadixSortBlockDesc& radixDesc = desc[blockIdx.y];
 	const PxU32 numKeys = *radixDesc.numKeys;
@@ -156,7 +156,7 @@ void radixSortPbdPrimitiveSerialCountingPassDcuV4(PxgRadixSortBlockDesc* desc, c
 
 extern "C" __global__
 __launch_bounds__(32, 1)
-void radixSortPbdPrimitiveChunkedCounting32DcuV5(PxgRadixSortBlockDesc* desc0, PxgRadixSortBlockDesc* desc1)
+void radixSortPbdPrimitiveChunkedCounting32HcuV5(PxgRadixSortBlockDesc* desc0, PxgRadixSortBlockDesc* desc1)
 {
 	const PxU32 lane = threadIdx.x;
 	const PxU32 descriptorIndex = blockIdx.y;
@@ -229,14 +229,14 @@ void radixSortPbdPrimitiveChunkedCounting32DcuV5(PxgRadixSortBlockDesc* desc0, P
 	}
 }
 
-PX_FORCE_INLINE static __device__ PxU32 getPbdPrimitiveRadixInlineDcuV7(PxU32 input, PxU32 startBit)
+PX_FORCE_INLINE static __device__ PxU32 getPbdPrimitiveRadixInlineHcuV7(PxU32 input, PxU32 startBit)
 {
 	return (input >> startBit) & 0xFu;
 }
 
 extern "C" __global__
 __launch_bounds__(32, 1)
-void radixSortPbdPrimitiveChunkedCounting32InlineDcuV7(PxgRadixSortBlockDesc* desc0, PxgRadixSortBlockDesc* desc1)
+void radixSortPbdPrimitiveChunkedCounting32InlineHcuV7(PxgRadixSortBlockDesc* desc0, PxgRadixSortBlockDesc* desc1)
 {
 	const PxU32 lane = threadIdx.x;
 	const PxU32 descriptorIndex = blockIdx.y;
@@ -262,7 +262,7 @@ void radixSortPbdPrimitiveChunkedCounting32InlineDcuV7(PxgRadixSortBlockDesc* de
 		__syncthreads();
 
 		for(PxU32 i = chunkBegin; i < chunkEnd; ++i)
-			++chunkOffsets[getPbdPrimitiveRadixInlineDcuV7(inputKeys[i], startBit) * 32u + lane];
+			++chunkOffsets[getPbdPrimitiveRadixInlineHcuV7(inputKeys[i], startBit) * 32u + lane];
 		__syncthreads();
 
 		if(lane < RADIX_SIZE)
@@ -300,7 +300,7 @@ void radixSortPbdPrimitiveChunkedCounting32InlineDcuV7(PxgRadixSortBlockDesc* de
 
 		for(PxU32 i = chunkBegin; i < chunkEnd; ++i)
 		{
-			const PxU32 radix = getPbdPrimitiveRadixInlineDcuV7(inputKeys[i], startBit);
+			const PxU32 radix = getPbdPrimitiveRadixInlineHcuV7(inputKeys[i], startBit);
 			const PxU32 outputIndex = chunkOffsets[radix * 32u + lane]++;
 			outputKeys[outputIndex] = inputKeys[i];
 			outputRanks[outputIndex] = inputRanks[i];
@@ -311,7 +311,7 @@ void radixSortPbdPrimitiveChunkedCounting32InlineDcuV7(PxgRadixSortBlockDesc* de
 
 extern "C" __global__
 __launch_bounds__(32, 1)
-void radixSortPbdPrimitiveChunkedCounting64InlineDcuV63(PxgRadixSortBlockDesc* desc0,
+void radixSortPbdPrimitiveChunkedCounting64InlineHcuV63(PxgRadixSortBlockDesc* desc0,
 	PxgRadixSortBlockDesc* desc1, const PxU64* originalKeys0, const PxU64* originalKeys1)
 {
 	const PxU32 lane = threadIdx.x;
@@ -348,7 +348,7 @@ void radixSortPbdPrimitiveChunkedCounting64InlineDcuV63(PxgRadixSortBlockDesc* d
 		__syncthreads();
 
 		for(PxU32 i = chunkBegin; i < chunkEnd; ++i)
-			++chunkOffsets[getPbdPrimitiveRadixInlineDcuV7(inputKeys[i], startBit) * 32u + lane];
+			++chunkOffsets[getPbdPrimitiveRadixInlineHcuV7(inputKeys[i], startBit) * 32u + lane];
 		__syncthreads();
 
 		if(lane < RADIX_SIZE)
@@ -386,7 +386,7 @@ void radixSortPbdPrimitiveChunkedCounting64InlineDcuV63(PxgRadixSortBlockDesc* d
 
 		for(PxU32 i = chunkBegin; i < chunkEnd; ++i)
 		{
-			const PxU32 radix = getPbdPrimitiveRadixInlineDcuV7(inputKeys[i], startBit);
+			const PxU32 radix = getPbdPrimitiveRadixInlineHcuV7(inputKeys[i], startBit);
 			const PxU32 outputIndex = chunkOffsets[radix * 32u + lane]++;
 			outputKeys[outputIndex] = inputKeys[i];
 			outputRanks[outputIndex] = inputRanks[i];
@@ -397,7 +397,7 @@ void radixSortPbdPrimitiveChunkedCounting64InlineDcuV63(PxgRadixSortBlockDesc* d
 
 extern "C" __global__
 __launch_bounds__(32, 1)
-void radixSortPbdSpatialChunkedCounting32DcuV6(PxgRadixSortDesc* desc0, PxgRadixSortDesc* desc1)
+void radixSortPbdSpatialChunkedCounting32HcuV6(PxgRadixSortDesc* desc0, PxgRadixSortDesc* desc1)
 {
 	const PxU32 lane = threadIdx.x;
 	const PxU32 numKeys = desc0[0].count;
@@ -474,7 +474,7 @@ extern "C" __global__
 __launch_bounds__(PxgRadixSortKernelBlockDim::RADIX_SORT, 1)
 void radixSortMultiBlockLaunchWithoutCount(PxgRadixSortDesc* desc, const PxU32 gStartBit)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// PBD's no-count path does not consume the per-block histogram directly.
 	// Keep the 1024-thread histogram kernel out of the gfx936 execution path;
 	// the following rank kernel performs the complete stable digit pass.
@@ -500,7 +500,7 @@ void radixSortMultiCalculateRanksLaunchWithoutCount(PxgRadixSortDesc* desc, cons
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
 	const PxU32 numKeys = desc[blockIdx.y].count;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// Avoid the gfx936 1024-thread shared-LDS rank path for the PBD no-count
 	// descriptor. This is a stable least-significant 4-bit counting pass, so
 	// descriptor ping-pong remains unchanged across all eight passes.
@@ -562,7 +562,7 @@ void radixSortMultiCalculateRanksLaunchWithCount(PxgRadixSortDesc* desc, const P
 	PxU32* gOutputRanks = desc[blockIdx.y].outputRanks;
 	PxU32* gRadixCount = desc[blockIdx.y].radixBlockCounts;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// The 64-body TGS eGPU smoke test produces 132 projection keys. Keep this
 	// small set off the unstable gfx936 1024-thread wave/LDS rank path.
 	if(numKeys <= WARP_SIZE * 8)
@@ -602,10 +602,10 @@ void radixSortMultiCalculateRanksLaunchWithCount(PxgRadixSortDesc* desc, const P
 	radixSortCalculateRanks<PxgRadixSortKernelBlockDim::RADIX_SORT / WARP_SIZE>(gInputKeys, gInputRanks, numKeys, gStartBit, gRadixCount, gOutputKeys, gOutputRanks);
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 extern "C" __global__
 __launch_bounds__(1, 1)
-void radixSortBroadPhaseSerialCountingPassDcuV3(PxgRadixSortDesc* desc, const PxU32 numKeys, const PxU32 gStartBit)
+void radixSortBroadPhaseSerialCountingPassHcuV3(PxgRadixSortDesc* desc, const PxU32 numKeys, const PxU32 gStartBit)
 {
 	const PxgRadixSortDesc& radixDesc = desc[blockIdx.y];
 	const PxU32* PX_RESTRICT inputKeys = radixDesc.inputKeys;

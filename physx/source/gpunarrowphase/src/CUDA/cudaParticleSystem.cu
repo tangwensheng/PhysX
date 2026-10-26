@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -87,11 +87,11 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels10() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuParticlePrimitiveBoundVersion[] =
-	"PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256";
-extern "C" __device__ __constant__ char gPxgDcuParticlePrimitiveCollisionVersion[] =
-	"PX_DCU_PARTICLE_PRIMITIVE_COLLISION_V58_DIRECT_GRID_STRIDE";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuParticlePrimitiveBoundVersion[] =
+	"PX_HCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256";
+extern "C" __device__ __constant__ char gPxgHcuParticlePrimitiveCollisionVersion[] =
+	"PX_HCU_PARTICLE_PRIMITIVE_COLLISION_V58_DIRECT_GRID_STRIDE";
 #endif
 
 PX_FORCE_INLINE __device__ PxBounds3 combine(const PxBounds3& bound0, const PxBounds3& bound1)
@@ -174,8 +174,8 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 	PxU32 warpIndex = threadIdx.x / (WARP_SIZE);
 	const PxU32 idx = threadIdx.x;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	__shared__ PxU32 sDcuCellCounts[128];
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	__shared__ PxU32 sHcuCellCounts[128];
 	if (numTests <= 128)
 	{
 		if (blockIdx.x != 0)
@@ -189,7 +189,7 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 		{
 			const PxU32 cellNumCount = calculatePrimitiveBoundCellCount(
 				cmInputs, shapes, bounds, contactDistance, particleSystems, idx);
-			sDcuCellCounts[idx] = cellNumCount;
+			sHcuCellCounts[idx] = cellNumCount;
 		}
 
 		__syncthreads();
@@ -199,7 +199,7 @@ extern "C" __global__ void __launch_bounds__(PxgParticleSystemKernelBlockDim::BO
 			for (PxU32 testIndex = 0; testIndex < numTests; ++testIndex)
 			{
 				offsets[testIndex] = totalCellCount;
-				totalCellCount += sDcuCellCounts[testIndex];
+				totalCellCount += sHcuCellCounts[testIndex];
 			}
 			blockOffsets[0] = totalCellCount;
 		}
@@ -271,7 +271,7 @@ extern "C" __global__ void ps_primitivesBoundSecondPassLaunch(
 )
 {
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (numTests <= 128)
 	{
 		if (blockIdx.x == 0 && threadIdx.x == 0)
@@ -1272,8 +1272,8 @@ extern "C" __global__ void ps_primitivesCollisionLaunch(
 	__shared__ PxU32 shWarpSum[NumWarps];
 	PxU32 workCount = 0;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	__shared__ PxU32 shDcuWorkCount;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	__shared__ PxU32 shHcuWorkCount;
 	if (totalComparision <= blockDim.x)
 	{
 		if (blockIdx.x != 0)
@@ -1298,14 +1298,14 @@ extern "C" __global__ void ps_primitivesCollisionLaunch(
 					}
 				}
 			}
-			shDcuWorkCount = count;
+			shHcuWorkCount = count;
 		}
 
 		__syncthreads();
-		if (shDcuWorkCount == 0)
+		if (shHcuWorkCount == 0)
 			return;
 
-		const bool hasWork = threadIdx.x < shDcuWorkCount;
+		const bool hasWork = threadIdx.x < shHcuWorkCount;
 		const PxU32 dataWorkIndex = shWorkIndices[hasWork ? threadIdx.x : 0];
 		const PxU32 workIndex = hasWork ? dataWorkIndex : 0xFFFFFFFF;
 		PxgCellData data;
@@ -1474,8 +1474,8 @@ extern "C" __global__ void ps_primitivesDiffuseCollisionLaunch(
 	
 	PxU32 workCount = 0;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	__shared__ PxU32 shDcuWorkCount;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	__shared__ PxU32 shHcuWorkCount;
 	if (totalComparision <= blockDim.x)
 	{
 		if (blockIdx.x != 0)
@@ -1501,14 +1501,14 @@ extern "C" __global__ void ps_primitivesDiffuseCollisionLaunch(
 					}
 				}
 			}
-			shDcuWorkCount = count;
+			shHcuWorkCount = count;
 		}
 
 		__syncthreads();
-		if (shDcuWorkCount == 0)
+		if (shHcuWorkCount == 0)
 			return;
 
-		const bool hasWork = threadIdx.x < shDcuWorkCount;
+		const bool hasWork = threadIdx.x < shHcuWorkCount;
 		const PxU32 dataWorkIndex = shWorkIndices[hasWork ? threadIdx.x : 0];
 		const PxU32 workIndex = hasWork ? dataWorkIndex : 0xFFFFFFFF;
 		PxgCellData data;

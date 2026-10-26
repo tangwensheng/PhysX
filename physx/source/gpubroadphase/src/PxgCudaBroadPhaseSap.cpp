@@ -94,22 +94,22 @@
 
 using namespace physx;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-static bool dcuBroadPhaseDiagnosticsEnabled()
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+static bool hcuBroadPhaseDiagnosticsEnabled()
 {
-	const char* value = std::getenv("PX_DCU_BROADPHASE_DIAG");
+	const char* value = std::getenv("PX_HCU_BROADPHASE_DIAG");
 	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
 }
 
-static bool dcuBroadPhaseUpdateDiagnosticsEnabled()
+static bool hcuBroadPhaseUpdateDiagnosticsEnabled()
 {
-	const char* value = std::getenv("PX_DCU_BROADPHASE_UPDATE_DIAG");
+	const char* value = std::getenv("PX_HCU_BROADPHASE_UPDATE_DIAG");
 	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
 }
 
-static bool dcuBroadPhaseUpdateCompactEnabled()
+static bool hcuBroadPhaseUpdateCompactEnabled()
 {
-	const char* value = std::getenv("PX_DCU_BROADPHASE_UPDATE_COMPACT");
+	const char* value = std::getenv("PX_HCU_BROADPHASE_UPDATE_COMPACT");
 	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
 }
 #endif
@@ -449,7 +449,7 @@ void PxgCudaBroadPhaseSap::runCopyResultsKernel(PxgBroadPhaseDesc& /*desc*/)
 #endif
 	}
 
-	#if !defined(PX_DCU_PORT) || !PX_DCU_PORT
+	#if !defined(PX_HCU_PORT) || !PX_HCU_PORT
 	{
 		KERNEL_PARAM_TYPE kernelParams[] = { CUDA_KERNEL_PARAM(bpBuff) };
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_COPY_REPORTS, PxgBPKernelGridDim::BP_COPY_REPORTS, 1, 1, PxgBPKernelBlockDim::BP_COPY_REPORTS, 1, 1, 0, EPILOG);
@@ -471,7 +471,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		mCudaContext->memcpyDtoHAsync((void*)&desc, bpBuff, sizeof(PxgBroadPhaseDesc), mStream);
 		//resultR = mCudaContext->streamSynchronize(mStream);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// HCU: writing the completion flag through host-mapped memory issues a PCIe
 		// AtomicOp that this platform rejects (UR_ATOMIC_OPCODE), so skip the signal
 		// kernel entirely and rely on streamSynchronize below.
@@ -489,7 +489,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 	{
 		PX_PROFILE_ZONE("PxgCudaBroadPhaseSap.Synchronize", mContextID);
 		//mCudaContext->streamSynchronize(mStream);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// HCU: no host-mapped completion flag is written (see above), so synchronize
 		// directly instead of spinning on it.
 		mCudaContext->streamSynchronize(mStream);
@@ -505,12 +505,12 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 	mStartRegionAccumTotal = desc.startRegionAccumTotal;
 	mRegionAccumTotal = desc.regionAccumTotal;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const PxU32 foundActorPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedFoundPairIndex) - desc.sharedFoundAggPairIndex;
 	const PxU32 lostActorPairTotal = PxMin(mMaxFoundLostPairs, desc.sharedLostPairIndex) - desc.sharedLostAggPairIndex;
 	if(!mCudaContext->isInAbortMode())
 	{
-		// PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK
+		// PX_HCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK
 		// gfx936 can leave a partial result when copyReports writes directly to
 		// host-mapped memory. Keep report classification on the device, then copy
 		// the compact actor lists through the driver's device-to-host path.
@@ -520,7 +520,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 			mCudaContext->memcpyDtoH(mLostActorPairs.begin(), mLostActorBuf.getDevicePtr(), lostActorPairTotal * sizeof(PxgBroadPhasePair));
 	}
 
-	if(dcuBroadPhaseDiagnosticsEnabled())
+	if(hcuBroadPhaseDiagnosticsEnabled())
 	{
 		const PxU32 maxDiagnosticPairs = 64;
 		const PxU32 rawFoundPairCount = PxMin(PxMin(desc.sharedFoundPairIndex, mMaxFoundLostPairs), maxDiagnosticPairs);
@@ -571,7 +571,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 		}
 
 		PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-			"HCU device broadphase report-stage diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN] [PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK]: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u readbackTotal=%u readbackSelfPairs=%u firstReadbackSelfPair=%u\n",
+			"HCU device broadphase report-stage diagnostic [PX_HCU_BROADPHASE_DIAG_V1_OPT_IN] [PX_HCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK]: rawTotal=%u rawChecked=%u rawSelfPairs=%u firstRawSelfPair=%u aggTotal=%u actorTotal=%u actorChecked=%u actorSelfPairs=%u firstActorSelfPair=%u readbackTotal=%u readbackSelfPairs=%u firstReadbackSelfPair=%u\n",
 			desc.sharedFoundPairIndex, rawFoundPairCount, rawSelfPairs, firstRawSelfPair,
 			desc.sharedFoundAggPairIndex, foundActorPairTotal, actorFoundPairCount, actorSelfPairs, firstActorSelfPair,
 			foundActorPairTotal, readbackSelfPairs, firstReadbackSelfPair);
@@ -619,7 +619,7 @@ void PxgCudaBroadPhaseSap::gpuDMABack(const PxgBroadPhaseDesc& desc)
 	PX_CATCH_UNDEFINED_ENABLE_SIM_STATS
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const bool foundLostPairsOverflow = desc.sharedFoundPairIndex > mMaxFoundLostPairs || desc.sharedLostPairIndex > mMaxFoundLostPairs;
 #else
 	const bool foundLostPairsOverflow = desc.found_lost_pairs_overflow_flags;
@@ -792,10 +792,10 @@ void PxgCudaBroadPhaseSap::runRadixSort(const PxU32 numOfKeys, CUdeviceptr radix
 
 		KERNEL_PARAM_TYPE kernelParams[] = { CUDA_KERNEL_PARAM(rsDesc), CUDA_KERNEL_PARAM(numOfKeys), CUDA_KERNEL_PARAM(startBit) };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// gfx936 faults in the generic warp/LDS rank path for broadphase-sized
 		// projection sets. Each axis performs an equivalent stable counting pass.
-		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_BP_SERIAL_COUNTING_PASS_DCU_V3, 1, 3, 1, 1, 1, 1, 0, EPILOG);
+		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_BP_SERIAL_COUNTING_PASS_HCU_V3, 1, 3, 1, 1, 1, 1, 0, EPILOG);
 #else
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_MULTIBLOCK_COUNT, PxgRadixSortKernelGridDim::RADIX_SORT, 3, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, EPILOG);
 		_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::RS_CALCULATERANKS_MULTIBLOCK_COUNT, PxgRadixSortKernelGridDim::RADIX_SORT, 3, 1, PxgRadixSortKernelBlockDim::RADIX_SORT, 1, 1, 0, EPILOG);
@@ -935,14 +935,14 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 {
 	PX_PROFILE_ZONE("PxgCudaBroadPhaseSap.markUpdatedPairsKernel", mContextID);
 
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const PxU32 wordCount = mBpDesc->aabbMngr_changedHandleBitMapWordCounts;
-	const bool compactRequested = dcuBroadPhaseUpdateCompactEnabled();
+	const bool compactRequested = hcuBroadPhaseUpdateCompactEnabled();
 	const bool compactActivated = compactRequested && wordCount == 1;
 	static bool updateDiagnosticPrinted = false;
-	if(dcuBroadPhaseUpdateDiagnosticsEnabled() && !updateDiagnosticPrinted)
+	if(hcuBroadPhaseUpdateDiagnosticsEnabled() && !updateDiagnosticPrinted)
 	{
-		std::printf("[HCU BP UPDATE] marker=PX_DCU_BP_UPDATE_DIAG_V1 word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+		std::printf("[HCU BP UPDATE] marker=PX_HCU_BP_UPDATE_DIAG_V1 word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
 			wordCount, wordCount * 32u,
 			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
 			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);
@@ -956,7 +956,7 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 		const char* mode = compactActivated ? "compact_1x32" : "default_32x256";
 		const char* reason = compactActivated ? "activated" :
 			(compactRequested ? "word_count_not_one" : "opt_in_disabled");
-		std::printf("[HCU BP UPDATE COMPACT] host_marker=PX_DCU_BP_UPDATE_COMPACT_V1_OPT_IN requested=%u mode=%s reason=%s word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
+		std::printf("[HCU BP UPDATE COMPACT] host_marker=PX_HCU_BP_UPDATE_COMPACT_V1_OPT_IN requested=%u mode=%s reason=%s word_count=%u num_elements=%u launch_grid=%ux1x1 launch_block=%ux1x1\n",
 			compactRequested ? 1u : 0u, mode, reason, wordCount, wordCount * 32u,
 			compactActivated ? 1u : PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS,
 			compactActivated ? 32u : PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS);
@@ -976,7 +976,7 @@ void PxgCudaBroadPhaseSap::markUpdatedPairsKernel()
 			_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_UPDATE_UPDATEDPAIRS2, PxgBPKernelGridDim::BP_UPDATE_UPDATEDPAIRS2, 1, 1, PxgBPKernelBlockDim::BP_UPDATE_UPDATEDPAIRS2, 1, 1, 0, EPILOG);
 		else
 #endif
-		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		if(compactActivated)
 			_launch<GPU_BP_DEBUG>(PROLOG, PxgKernelIds::BP_UPDATE_UPDATEDPAIRS, 1, 1, 1, 32, 1, 1, 0, EPILOG);
 		else

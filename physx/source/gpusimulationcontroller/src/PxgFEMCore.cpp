@@ -263,7 +263,7 @@ void PxgFEMCore::accumulateRigidDeltas(PxgDevicePointer<PxgPrePrepDesc> prePrepD
 {
 	PX_UNUSED(rigidIdsd);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const PxU32 accumulateDeltaBlockDim = 256;
 #else
 	const PxU32 accumulateDeltaBlockDim = PxgSoftBodyKernelBlockDim::SB_ACCUMULATE_DELTA;

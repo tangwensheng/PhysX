@@ -36,13 +36,13 @@
 
 set -e
 
-DCU_ARCH="${1:-gfx936}"
+HCU_ARCH="${1:-gfx936}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PHYSX_SRC="$SCRIPT_DIR/../.."
 
 echo "========================================"
 echo " PhysX HCU Port — Compilation Check"
-echo " Architecture: $DCU_ARCH"
+echo " Architecture: $HCU_ARCH"
 echo " Source root:  $PHYSX_SRC"
 echo "========================================"
 echo ""
@@ -56,7 +56,7 @@ PHYSX_ROOT="$PHYSX_SRC/.."
 
 # HIP stubs: provide cuda_runtime.h, cuda.h, sm_35_intrinsics.h, vector_types.h
 # These redirect to hip/hip_runtime.h. MUST come first in include order.
-STUBS_DIR="$PHYSX_SRC/gpucommon/src/DCU/stubs"
+STUBS_DIR="$PHYSX_SRC/gpucommon/src/HCU/stubs"
 
 GPU_INCLUDES="
     -I$PHYSX_ROOT/source/geomutils/src
@@ -99,8 +99,8 @@ GPU_INCLUDES="
 # -include PxgHIPCompat.h: forces HIP compat header in every translation unit
 #   This provides float4/int4/uint4 types, and maps CUDA intrinsics to HIP.
 #   Eliminates the need to guard every #include <cuda.h> individually.
-# -DPX_DCU_PORT: selects HCU code paths
-HIP_FLAGS="-include PxgHIPCompat.h -DPX_DCU_PORT --offload-arch=$DCU_ARCH -ffast-math -fgpu-flush-denormals-to-zero -c"
+# -DPX_HCU_PORT: selects HCU code paths
+HIP_FLAGS="-include PxgHIPCompat.h -DPX_HCU_PORT --offload-arch=$HCU_ARCH -ffast-math -fgpu-flush-denormals-to-zero -c"
 
 compile_file() {
     local f=$1

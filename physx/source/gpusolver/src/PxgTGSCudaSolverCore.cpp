@@ -782,7 +782,7 @@ void PxgTGSCudaSolverCore::syncDmaBack(PxU32& nbChangedThresholdElements)
 	//Wait for mStream to have completed
 	/*CUresult result = mCudaContext->streamSynchronize(mStream);
 	PX_UNUSED(result);*/
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// HCU: mPinnedEvent lives in host-mapped memory and is never signalled from the
 	// GPU here, so the spin always times out. Synchronize directly and avoid the
 	// host-mapped access that trips PCIe AtomicOp support (UR_ATOMIC_OPCODE).

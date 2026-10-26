@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -366,7 +366,7 @@ static __device__ void solveContactBlock(const PxgBlockConstraintBatch& batch, P
 		const uint numNormalConstr = Pxldcg(contactHeader->numNormalConstr[threadIndex]);
 		const uint	numFrictionConstr = Pxldcg(frictionHeader->numFrictionConstr[threadIndex]);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// Contact prep explicitly emits an empty normal/friction pair for this lane.
 		// Avoid the pipelined contacts[0] prefetch when the batch owns no point.
 		if(numNormalConstr == 0 && numFrictionConstr == 0)
@@ -583,10 +583,10 @@ static __device__ void solveContactBlock(const PxgBlockConstraintBatch& batch, P
 	b1AngVel = angVel1;
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 // The static HCU solver consumes a small contact set. Read each constraint only
 // when it is solved so no address from the next contact array is formed early.
-static __device__ void solveStaticContactBlockDcu(const PxgBlockConstraintBatch& batch,
+static __device__ void solveStaticContactBlockHcu(const PxgBlockConstraintBatch& batch,
 	PxVec3& b0LinVel, PxVec3& b0AngVel, PxVec3& b1LinVel, PxVec3& b1AngVel, bool doFriction,
 	const PxU32 threadIndex, PxgBlockSolverContactHeader* contactHeaders,
 	PxgBlockSolverFrictionHeader* frictionHeaders, PxgBlockSolverContactPoint* contactPoints,

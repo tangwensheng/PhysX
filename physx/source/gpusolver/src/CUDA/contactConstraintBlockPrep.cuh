@@ -241,7 +241,7 @@ static __device__ bool getFrictionPatches(PxgBlockFrictionPatch&  frictionPatch,
 	//printf("prevFrictionStartIndex = %i, frictionPatchCount = %i\n", prevFrictionStartIndex, frictionPatchCount);
 	if(prevFrictionStartIndex == 0xFFFFFFFF || frictionPatchCount == 0 || !prevFrictionIndices)
 		return true;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const PxU64 unboundedCount = ~PxU64(0);
 	const bool validateHistoryBounds = previousFrictionIndexCount != unboundedCount || previousFrictionPatchCount != unboundedCount;
 	if(validateHistoryBounds && (!previousPatches || !previousAnchors || totalNbEdges == 0 || prevFrictionStartIndex >= totalNbEdges))
@@ -257,7 +257,7 @@ static __device__ bool getFrictionPatches(PxgBlockFrictionPatch&  frictionPatch,
 	for(PxU32 a = 0; a < frictionPatchCount; ++a)
 	{
 		PxU64 previousIndex;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		if(validateHistoryBounds)
 		{
 			previousIndex = PxU64(prevFrictionStartIndex) + PxU64(a) * PxU64(totalNbEdges);
@@ -271,7 +271,7 @@ static __device__ bool getFrictionPatches(PxgBlockFrictionPatch&  frictionPatch,
 		const PxgBlockFrictionIndex index = prevFrictionIndices[previousIndex];
 		const PxU32 oldThreadId = index.getThreadIdx();
 		const PxU64 patchIndex = index.getPatchIndex();
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		if(validateHistoryBounds && (oldThreadId >= 32 || patchIndex >= previousFrictionPatchCount))
 			continue;
 #endif

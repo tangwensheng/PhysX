@@ -2271,7 +2271,7 @@ void PxgSimulationCore::gpuMemDmaBack(PxInt32ArrayPinned& frozenArray,
 	
 	*mPinnedEvent = 0;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// HCU: the completion flag lives in host-mapped memory; writing it from the GPU
 	// issues a PCIe AtomicOp this platform rejects (UR_ATOMIC_OPCODE). Skip the
 	// signal kernel and let syncDmaback() use streamSynchronize instead.
@@ -2306,7 +2306,7 @@ void PxgSimulationCore::syncDmaback(PxU32& nbFrozenShapesThisFrame, PxU32& nbUnf
 
 	if (didSimulate)
 	{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// HCU: no host-mapped completion flag is written (see above).
 		mCudaContext->streamSynchronize(mStream);
 #else

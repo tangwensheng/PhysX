@@ -56,7 +56,7 @@
 #include <new>
 #include <cstdio>
 
-#define DCU_TRACE(fmt, ...) fprintf(stderr, "[HCU device] " fmt "\n", ##__VA_ARGS__)
+#define HCU_TRACE(fmt, ...) fprintf(stderr, "[HCU device] " fmt "\n", ##__VA_ARGS__)
 
 #if PX_SUPPORT_GPU_PHYSX
 namespace physx {
@@ -99,22 +99,22 @@ struct HipPhysXGpu final : public PxPhysXGpu
 
 	// ---- Memory Manager ----
 	PxsMemoryManager* createGpuMemoryManager(PxCudaContextManager* ctx) override {
-		DCU_TRACE("createGpuMemoryManager");
+		HCU_TRACE("createGpuMemoryManager");
 		return createPxgMemoryManager(ctx);
 	}
 
 	// ---- Kernel Wrangler Manager ----
 	PxsKernelWranglerManager* getGpuKernelWranglerManager(PxCudaContextManager* ctx) override {
 		if(!ctx) return nullptr;
-		DCU_TRACE("getGpuKernelWranglerManager");
+		HCU_TRACE("getGpuKernelWranglerManager");
 
 		const HipKernelWranglerMap::Map::Entry* entry = mKernelWranglerInstances.find(ctx);
 		if(entry) return entry->second;
 
-		DCU_TRACE("  creating PxgCudaKernelWranglerManager...");
+		HCU_TRACE("  creating PxgCudaKernelWranglerManager...");
 		PxgCudaKernelWranglerManager* wrangler =
 			PX_NEW(PxgCudaKernelWranglerManager)(*ctx, *PxGetErrorCallback());
-		DCU_TRACE("  done");
+		HCU_TRACE("  done");
 		mKernelWranglerInstances.insert(ctx, wrangler);
 		return wrangler;
 	}
@@ -123,7 +123,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 	PxsHeapMemoryAllocatorManager* createGpuHeapMemoryAllocatorManager(
 		PxU32 heapCapacity, PxsMemoryManager* memoryManager, PxU32) override
 	{
-		DCU_TRACE("createGpuHeapMemoryAllocatorManager cap=%u", heapCapacity);
+		HCU_TRACE("createGpuHeapMemoryAllocatorManager cap=%u", heapCapacity);
 		return PX_NEW(PxgHeapMemoryAllocatorManager)(heapCapacity, memoryManager);
 	}
 
@@ -133,7 +133,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		PxU32 gpuComputeVersion, const PxGpuDynamicsMemoryConfig& config,
 		PxsHeapMemoryAllocatorManager* heapMemoryManager, PxU64 contextID) override
 	{
-		DCU_TRACE("createGpuBroadPhase");
+		HCU_TRACE("createGpuBroadPhase");
 		if(gpuComputeVersion != 0) return nullptr;
 		return PX_PLACEMENT_NEW(
 			PX_ALLOC(sizeof(PxgCudaBroadPhaseSap), "PxgCudaBroadPhaseSap"),
@@ -153,7 +153,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		PxPairFilteringMode::Enum kineKineFilteringMode,
 		PxPairFilteringMode::Enum staticKineFilteringMode) override
 	{
-		DCU_TRACE("createGpuAABBManager");
+		HCU_TRACE("createGpuAABBManager");
 		if(gpuComputeVersion != 0) return nullptr;
 		return PX_PLACEMENT_NEW(
 			PX_ALLOC(sizeof(PxgAABBManager), "PxgAABBManager"), PxgAABBManager)(
@@ -175,7 +175,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		PxBoundsArrayPinned& bounds, IG::IslandSim* islandSim, Dy::Context* dynamicsContext,
 		PxU32, PxsHeapMemoryAllocatorManager* heapMemoryManager, bool useGPUBP) override
 	{
-		DCU_TRACE("createGpuNphaseImplementationContext");
+		HCU_TRACE("createGpuNphaseImplementationContext");
 		return PX_PLACEMENT_NEW(
 			PX_ALLOC(sizeof(PxgNphaseImplementationContext), "PxgNphaseImplementationContext"),
 			PxgNphaseImplementationContext)(context, gpuKernelWrangler,
@@ -195,7 +195,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		PxU32 maxParticleContacts, PxU32 collisionStackSizeBytes,
 		bool enableBodyAccelerations) override
 	{
-		DCU_TRACE("createGpuSimulationController");
+		HCU_TRACE("createGpuSimulationController");
 		return PX_PLACEMENT_NEW(
 			PX_ALLOC(sizeof(PxgSimulationController), "PxgSimulationController"),
 			PxgSimulationController)(gpuWranglerManagers, cudaContextManager,
@@ -220,7 +220,7 @@ struct HipPhysXGpu final : public PxPhysXGpu
 		PxSolverType::Enum solverType, PxReal lengthScale, bool enableDirectGPUAPI,
 		PxU64 contextID, bool isResidualReportingEnabled) override
 	{
-		DCU_TRACE("createGpuDynamicsContext solverType=%d", (int)solverType);
+		HCU_TRACE("createGpuDynamicsContext solverType=%d", (int)solverType);
 		if(solverType == PxSolverType::eTGS)
 		{
 			return PX_PLACEMENT_NEW(

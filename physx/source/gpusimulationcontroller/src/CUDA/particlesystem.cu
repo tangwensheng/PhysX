@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -81,15 +81,15 @@ using namespace physx;
 
 extern "C" __host__ void initParticleSystemKernels0() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuParticleContactRangeVersion[] =
-	"PX_DCU_PARTICLE_CONTACT_RANGE_V59_DETERMINISTIC_LARGE";
-extern "C" __device__ __constant__ char gPxgDcuParticleContactRangeFusedVersion[] =
-	"PX_DCU_PBD_PARTICLE_RANGE_V60_FUSED_SINGLE_SCAN";
-extern "C" __device__ __constant__ char gPxgDcuParticleContactRangeChunkedVersion[] =
-	"PX_DCU_PBD_PARTICLE_RANGE_V61_CHUNKED_SINGLE_SCAN";
-extern "C" __device__ __constant__ char gPxgDcuParticleContactRangeParallelVersion[] =
-	"PX_DCU_PBD_PARTICLE_RANGE_V62_PARALLEL_BOUNDARY_32";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuParticleContactRangeVersion[] =
+	"PX_HCU_PARTICLE_CONTACT_RANGE_V59_DETERMINISTIC_LARGE";
+extern "C" __device__ __constant__ char gPxgHcuParticleContactRangeFusedVersion[] =
+	"PX_HCU_PBD_PARTICLE_RANGE_V60_FUSED_SINGLE_SCAN";
+extern "C" __device__ __constant__ char gPxgHcuParticleContactRangeChunkedVersion[] =
+	"PX_HCU_PBD_PARTICLE_RANGE_V61_CHUNKED_SINGLE_SCAN";
+extern "C" __device__ __constant__ char gPxgHcuParticleContactRangeParallelVersion[] =
+	"PX_HCU_PBD_PARTICLE_RANGE_V62_PARALLEL_BOUNDARY_32";
 #endif
 
 __device__ inline PxReal InvSqrt(PxReal x)
@@ -2298,15 +2298,15 @@ extern "C" __global__ void ps_findStartEndParticleFirstLaunch(
 	PxU32*										offsets
 )
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const PxU32 dcuNumContacts = *numContacts;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	const PxU32 hcuNumContacts = *numContacts;
 	// The sorted contact and range buffers both have mMaxContacts capacity.
 	// A single writer preserves the original contiguous-particle range contract.
 	if (blockIdx.x == 0 && threadIdx.x == 0)
 	{
 		PxU32 pairIndex = 0;
 		PxU64 previousParticleId = 0xffffffffffffffffull;
-		for (PxU32 contactIndex = 0; contactIndex < dcuNumContacts; ++contactIndex)
+		for (PxU32 contactIndex = 0; contactIndex < hcuNumContacts; ++contactIndex)
 		{
 			const PxU64 particleId = sortedContacts[contactIndex].particleId;
 			if (contactIndex == 0 || particleId != previousParticleId)
@@ -2317,7 +2317,7 @@ extern "C" __global__ void ps_findStartEndParticleFirstLaunch(
 			}
 			offsets[contactIndex] = pairIndex;
 		}
-		blockOffsets[0] = dcuNumContacts ? pairIndex + 1 : 0;
+		blockOffsets[0] = hcuNumContacts ? pairIndex + 1 : 0;
 	}
 	else if (threadIdx.x == 0)
 	{
@@ -2451,31 +2451,31 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 	PxU32*							totalNumPairs,			//output
 	PxU32*							rangeStart,				//output
 	PxU32*							rangeEnd,				//output
-	PxU32							dcuRangeMode
+	PxU32							hcuRangeMode
 )
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const PxU32 dcuRangeTileCapacity = 256;
-	__shared__ PxU64 sDcuParticleIds[dcuRangeTileCapacity];
-	__shared__ PxU32 sDcuRangeStarts[dcuRangeTileCapacity];
-	__shared__ PxU32 sDcuLaneCounts[32];
-	__shared__ PxU32 sDcuLaneOffsets[32];
-	__shared__ PxU32 sDcuTilePairCount;
-	__shared__ PxU32 sDcuPairBase;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	const PxU32 hcuRangeTileCapacity = 256;
+	__shared__ PxU64 sHcuParticleIds[hcuRangeTileCapacity];
+	__shared__ PxU32 sHcuRangeStarts[hcuRangeTileCapacity];
+	__shared__ PxU32 sHcuLaneCounts[32];
+	__shared__ PxU32 sHcuLaneOffsets[32];
+	__shared__ PxU32 sHcuTilePairCount;
+	__shared__ PxU32 sHcuPairBase;
 
-	const PxU32 dcuNumContacts = *numContacts;
-	if (dcuRangeMode == 2 && blockIdx.x == 0 && blockDim.x == 32)
+	const PxU32 hcuNumContacts = *numContacts;
+	if (hcuRangeMode == 2 && blockIdx.x == 0 && blockDim.x == 32)
 	{
 		const PxU32 lane = threadIdx.x;
-		const PxU32 contactsPerLane = dcuRangeTileCapacity / 32;
+		const PxU32 contactsPerLane = hcuRangeTileCapacity / 32;
 		PxU32 pairBase = 0;
 		PxU64 previousParticleId = 0;
 
-		for (PxU32 tileBase = 0; tileBase < dcuNumContacts; tileBase += dcuRangeTileCapacity)
+		for (PxU32 tileBase = 0; tileBase < hcuNumContacts; tileBase += hcuRangeTileCapacity)
 		{
-			const PxU32 tileCount = PxMin(dcuRangeTileCapacity, dcuNumContacts - tileBase);
+			const PxU32 tileCount = PxMin(hcuRangeTileCapacity, hcuNumContacts - tileBase);
 			for (PxU32 tileIndex = lane; tileIndex < tileCount; tileIndex += blockDim.x)
-				sDcuParticleIds[tileIndex] = sortedContacts[tileBase + tileIndex].particleId;
+				sHcuParticleIds[tileIndex] = sortedContacts[tileBase + tileIndex].particleId;
 			__syncthreads();
 
 			const PxU32 laneBase = lane * contactsPerLane;
@@ -2486,10 +2486,10 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 				const PxU32 tileIndex = laneBase + localIndex;
 				if (tileIndex < tileCount)
 				{
-					const PxU64 particleId = sDcuParticleIds[tileIndex];
+					const PxU64 particleId = sHcuParticleIds[tileIndex];
 					const bool isBoundary = tileIndex == 0
 						? (tileBase == 0 || particleId != previousParticleId)
-						: particleId != sDcuParticleIds[tileIndex - 1];
+						: particleId != sHcuParticleIds[tileIndex - 1];
 					if (isBoundary)
 					{
 						boundaryMask |= 1u << localIndex;
@@ -2497,7 +2497,7 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 					}
 				}
 			}
-			sDcuLaneCounts[lane] = laneBoundaryCount;
+			sHcuLaneCounts[lane] = laneBoundaryCount;
 			__syncthreads();
 
 			if (lane == 0)
@@ -2505,15 +2505,15 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 				PxU32 tilePairCount = 0;
 				for (PxU32 scanLane = 0; scanLane < 32; ++scanLane)
 				{
-					sDcuLaneOffsets[scanLane] = tilePairCount;
-					tilePairCount += sDcuLaneCounts[scanLane];
+					sHcuLaneOffsets[scanLane] = tilePairCount;
+					tilePairCount += sHcuLaneCounts[scanLane];
 				}
-				sDcuTilePairCount = tilePairCount;
-				previousParticleId = sDcuParticleIds[tileCount - 1];
+				sHcuTilePairCount = tilePairCount;
+				previousParticleId = sHcuParticleIds[tileCount - 1];
 			}
 			__syncthreads();
 
-			const PxU32 lanePairBase = pairBase + sDcuLaneOffsets[lane];
+			const PxU32 lanePairBase = pairBase + sHcuLaneOffsets[lane];
 			PxU32 localRank = 0;
 			for (PxU32 localIndex = 0; localIndex < contactsPerLane; ++localIndex)
 			{
@@ -2527,32 +2527,32 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 					++localRank;
 				}
 			}
-			pairBase += sDcuTilePairCount;
+			pairBase += sHcuTilePairCount;
 		}
 
 		if (lane == 0)
 		{
 			if (pairBase)
-				rangeEnd[pairBase - 1] = dcuNumContacts;
+				rangeEnd[pairBase - 1] = hcuNumContacts;
 			*totalNumPairs = pairBase;
 		}
 		return;
 	}
 
-	if (dcuRangeMode == 1 && blockIdx.x == 0 && blockDim.x == 32)
+	if (hcuRangeMode == 1 && blockIdx.x == 0 && blockDim.x == 32)
 	{
 		const PxU32 lane = threadIdx.x;
 		if (lane == 0)
-			sDcuPairBase = 0;
+			sHcuPairBase = 0;
 		__syncthreads();
 
 		PxU64 previousParticleId = 0;
 		bool hasPreviousParticle = false;
-		for (PxU32 tileBase = 0; tileBase < dcuNumContacts; tileBase += dcuRangeTileCapacity)
+		for (PxU32 tileBase = 0; tileBase < hcuNumContacts; tileBase += hcuRangeTileCapacity)
 		{
-			const PxU32 tileCount = PxMin(dcuRangeTileCapacity, dcuNumContacts - tileBase);
+			const PxU32 tileCount = PxMin(hcuRangeTileCapacity, hcuNumContacts - tileBase);
 			for (PxU32 tileIndex = lane; tileIndex < tileCount; tileIndex += blockDim.x)
-				sDcuParticleIds[tileIndex] = sortedContacts[tileBase + tileIndex].particleId;
+				sHcuParticleIds[tileIndex] = sortedContacts[tileBase + tileIndex].particleId;
 			__syncthreads();
 
 			if (lane == 0)
@@ -2560,21 +2560,21 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 				PxU32 tilePairCount = 0;
 				for (PxU32 tileIndex = 0; tileIndex < tileCount; ++tileIndex)
 				{
-					const PxU64 particleId = sDcuParticleIds[tileIndex];
+					const PxU64 particleId = sHcuParticleIds[tileIndex];
 					if (!hasPreviousParticle || particleId != previousParticleId)
-						sDcuRangeStarts[tilePairCount++] = tileBase + tileIndex;
+						sHcuRangeStarts[tilePairCount++] = tileBase + tileIndex;
 					previousParticleId = particleId;
 					hasPreviousParticle = true;
 				}
-				sDcuTilePairCount = tilePairCount;
+				sHcuTilePairCount = tilePairCount;
 			}
 			__syncthreads();
 
-			const PxU32 pairBase = sDcuPairBase;
-			for (PxU32 tilePair = lane; tilePair < sDcuTilePairCount; tilePair += blockDim.x)
+			const PxU32 pairBase = sHcuPairBase;
+			for (PxU32 tilePair = lane; tilePair < sHcuTilePairCount; tilePair += blockDim.x)
 			{
 				const PxU32 pairIndex = pairBase + tilePair;
-				const PxU32 rangeBoundary = sDcuRangeStarts[tilePair];
+				const PxU32 rangeBoundary = sHcuRangeStarts[tilePair];
 				rangeStart[pairIndex] = rangeBoundary;
 				if (pairIndex)
 					rangeEnd[pairIndex - 1] = rangeBoundary;
@@ -2582,15 +2582,15 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 			__syncthreads();
 
 			if (lane == 0)
-				sDcuPairBase = pairBase + sDcuTilePairCount;
+				sHcuPairBase = pairBase + sHcuTilePairCount;
 			__syncthreads();
 		}
 
 		if (lane == 0)
 		{
-			if (sDcuPairBase)
-				rangeEnd[sDcuPairBase - 1] = dcuNumContacts;
-			*totalNumPairs = sDcuPairBase;
+			if (sHcuPairBase)
+				rangeEnd[sHcuPairBase - 1] = hcuNumContacts;
+			*totalNumPairs = sHcuPairBase;
 		}
 		return;
 	}
@@ -2599,7 +2599,7 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 	if (blockIdx.x == 0 && threadIdx.x == 0)
 	{
 		PxU32 pairIndex = 0;
-		for (PxU32 contactIndex = 0; contactIndex < dcuNumContacts; ++contactIndex)
+		for (PxU32 contactIndex = 0; contactIndex < hcuNumContacts; ++contactIndex)
 		{
 			const bool isRangeStart = contactIndex == 0 ||
 				sortedContacts[contactIndex].particleId != sortedContacts[contactIndex - 1].particleId;
@@ -2614,16 +2614,16 @@ extern "C" __global__ void ps_findStartEndParticleSecondLaunch(
 			}
 		}
 
-		if (dcuNumContacts)
+		if (hcuNumContacts)
 		{
-			rangeEnd[pairIndex] = dcuNumContacts;
+			rangeEnd[pairIndex] = hcuNumContacts;
 			++pairIndex;
 		}
 		*totalNumPairs = pairIndex;
 	}
 	return;
 #endif
-	PX_UNUSED(dcuRangeMode);
+	PX_UNUSED(hcuRangeMode);
 
 	__shared__ PxU32 sBlockAccum[PxgParticleSystemKernelGridDim::ACCUMULATE_DELTA];
 	__shared__ PxU64 sParticleId[PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA + 1];

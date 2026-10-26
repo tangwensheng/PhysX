@@ -69,8 +69,8 @@ extern "C" __global__ void tgs_solver(
     pos[tid*2+1] = pos[tid*2+1] + vel[tid*2+1] * dt;
 }
 
-// ====== DCU-optimized radix sort kernels ======
-extern "C" __global__ void radixSortCopy_dcu(const PxU64* in, PxU64* out, PxU32* rank, const PxU32* numKeys)
+// ====== HCU-optimized radix sort kernels ======
+extern "C" __global__ void radixSortCopy_hcu(const PxU64* in, PxU64* out, PxU32* rank, const PxU32* numKeys)
 {
     unsigned int i0 = (blockIdx.x*blockDim.x+threadIdx.x)*4;
     unsigned int n = *numKeys;
@@ -78,7 +78,7 @@ extern "C" __global__ void radixSortCopy_dcu(const PxU64* in, PxU64* out, PxU32*
     unsigned int r0=rank[i0],r1=rank[i0+1],r2=rank[i0+2],r3=rank[i0+3];
     out[i0]=in[r0];out[i0+1]=in[r1];out[i0+2]=in[r2];out[i0+3]=in[r3];
 }
-extern "C" __global__ void radixSortCopy2_dcu(const PxU64* in, PxU64* out, PxU32* rank, PxU32 n)
+extern "C" __global__ void radixSortCopy2_hcu(const PxU64* in, PxU64* out, PxU32* rank, PxU32 n)
 {
     unsigned int i0 = (blockIdx.x*blockDim.x+threadIdx.x)*4;
     if(i0>=n)return;
@@ -88,7 +88,7 @@ extern "C" __global__ void radixSortCopy2_dcu(const PxU64* in, PxU64* out, PxU32
     out[i0+2]=(r2==0xffffffff)?0xffffffffffffffffULL:in[r2];
     out[i0+3]=(r3==0xffffffff)?0xffffffffffffffffULL:in[r3];
 }
-extern "C" __global__ void radixSortCopyHigh32Bits_dcu(const PxU64* in, PxU32* out, PxU32* rank, const PxU32* numKeys)
+extern "C" __global__ void radixSortCopyHigh32Bits_hcu(const PxU64* in, PxU32* out, PxU32* rank, const PxU32* numKeys)
 {
     unsigned int i0=(blockIdx.x*blockDim.x+threadIdx.x)*4, n=*numKeys;
     if(i0>=n)return;
@@ -96,7 +96,7 @@ extern "C" __global__ void radixSortCopyHigh32Bits_dcu(const PxU64* in, PxU32* o
     out[i0]=(unsigned)(in[r.x]>>32);out[i0+1]=(unsigned)(in[r.y]>>32);
     out[i0+2]=(unsigned)(in[r.z]>>32);out[i0+3]=(unsigned)(in[r.w]>>32);
 }
-extern "C" __global__ void radixSortCopyBits2_dcu(const PxU64* in, PxU32* out, PxU32* rank, PxU32 n, bool lo)
+extern "C" __global__ void radixSortCopyBits2_hcu(const PxU64* in, PxU32* out, PxU32* rank, PxU32 n, bool lo)
 {
     unsigned int i0=(blockIdx.x*blockDim.x+threadIdx.x)*4;
     if(i0>=n)return;
@@ -113,7 +113,7 @@ extern "C" __global__ void radixSortCopyBits2_dcu(const PxU64* in, PxU32* out, P
         out[i0+3]=(r3==0xffffffff)?0xffffffff:(PxU32)(in[r3]>>32);
     }
 }
-extern "C" __global__ void interleaveBuffers_dcu(const float4* v, const float4* n, PxU32 len, PxVec3* out)
+extern "C" __global__ void interleaveBuffers_hcu(const float4* v, const float4* n, PxU32 len, PxVec3* out)
 {
     unsigned int i=(blockIdx.x*blockDim.x+threadIdx.x)*2;
     if(i>=len)return;
@@ -124,7 +124,7 @@ extern "C" __global__ void interleaveBuffers_dcu(const float4* v, const float4* 
         d[i*3/2+2]=make_float4(v1.z,n1.x,n1.y,n1.z);
     }else{d[i*3/2]=make_float4(v0.x,v0.y,v0.z,n0.x);d[i*3/2+1]=make_float4(n0.y,n0.z,0,0);}
 }
-extern "C" __global__ void clampMaxValue_dcu(PxU32* v, PxU32 m) { if(*v>m)*v=m; }
+extern "C" __global__ void clampMaxValue_hcu(PxU32* v, PxU32 m) { if(*v>m)*v=m; }
 
 // v2: block-level sparse solver — each block solves its own contacts
 // Matches real PhysX solverMultiBlock pattern: contacts assigned to blocks
@@ -270,25 +270,25 @@ int main()
     hipEvent_t s1,s2;hipEventCreate(&s1);hipEventCreate(&s2);float ms;int kc=0;
 #define B(label,kernel,grid,block,...) do{hipEventRecord(s1);for(int r=0;r<RND;r++)kernel<<<grid,block>>>(__VA_ARGS__);hipEventRecord(s2);hipDeviceSynchronize();hipEventElapsedTime(&ms,s1,s2);printf("[%2d] %-45s %7.1f us\n",++kc,label,ms/RND*1000);}while(0)
 
-    // ---- gpucommon (orig vs dcu) ----
+    // ---- gpucommon (orig vs hcu) ----
     printf("--- radixSortCopy ---\n");
     int g1=(N+255)/256,g4=(N/4+255)/256;
     B("radixSortCopy      (orig)",  radixSortCopy,              g1,256,d_64i,d_64o,d_u2,d_num);
-    B("radixSortCopy      (dcu )",  radixSortCopy_dcu,          g4,256,d_64i,d_64o,d_u2,d_num);
+    B("radixSortCopy      (hcu )",  radixSortCopy_hcu,          g4,256,d_64i,d_64o,d_u2,d_num);
     B("radixSortCopy2     (orig)",  radixSortCopy2,             g1,256,d_64i,d_64o,d_u2,N);
-    B("radixSortCopy2     (dcu )",  radixSortCopy2_dcu,         g4,256,d_64i,d_64o,d_u2,N);
+    B("radixSortCopy2     (hcu )",  radixSortCopy2_hcu,         g4,256,d_64i,d_64o,d_u2,N);
     B("radixSortCopyHi32  (orig)",  radixSortCopyHigh32Bits,    g1,256,d_64i,d_u3,d_u2,d_num);
-    B("radixSortCopyHi32  (dcu )",  radixSortCopyHigh32Bits_dcu,g4,256,d_64i,d_u3,d_u2,d_num);
+    B("radixSortCopyHi32  (hcu )",  radixSortCopyHigh32Bits_hcu,g4,256,d_64i,d_u3,d_u2,d_num);
     B("radixSortCopyBits2 (orig)",  radixSortCopyBits2,         g1,256,d_64i,d_u3,d_u2,N,true);
-    B("radixSortCopyBits2 (dcu )",  radixSortCopyBits2_dcu,     g4,256,d_64i,d_u3,d_u2,N,true);
+    B("radixSortCopyBits2 (hcu )",  radixSortCopyBits2_hcu,     g4,256,d_64i,d_u3,d_u2,N,true);
 
     printf("--- interleaveBuffers ---\n");
     B("interleaveBuffers  (orig)",  interleaveBuffers,          (N+255)/256,256,d_f4i,d_f4i,N/2,d_v3);
-    B("interleaveBuffers  (dcu )",  interleaveBuffers_dcu,      (N/4+255)/256,256,d_f4i,d_f4i,N/2,d_v3);
+    B("interleaveBuffers  (hcu )",  interleaveBuffers_hcu,      (N/4+255)/256,256,d_f4i,d_f4i,N/2,d_v3);
 
     printf("--- clampMaxValue ---\n");
     B("clampMaxValue      (orig)",  clampMaxValue,              1,1,d_u1,(PxU32)5000);
-    B("clampMaxValue      (dcu )",  clampMaxValue_dcu,          1,1,d_u1,(PxU32)5000);
+    B("clampMaxValue      (hcu )",  clampMaxValue_hcu,          1,1,d_u1,(PxU32)5000);
 
     // ---- TGS Solver (compute-intensive) ----
     printf("--- TGS Solver ---\n");

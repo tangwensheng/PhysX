@@ -208,7 +208,7 @@ class CMakePreset:
         if gpuEnabled:
             if os.environ.get('PM_CUDA_PATH') is not None:
                 if os.environ.get('PM_CUDA_PATH') is not None:
-                    outString = outString + ' -DCUDAToolkit_ROOT_DIR=' + \
+                    outString = outString + ' -HCUDAToolkit_ROOT_DIR=' + \
                             os.environ['PM_CUDA_PATH']
                     if self.compiler in ['vc15', 'vc16', 'vc17'] and self.generator != 'ninja':
                         outString = outString + ' -T cuda=' + os.environ['PM_CUDA_PATH']

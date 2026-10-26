@@ -63,8 +63,8 @@ using namespace Cm;
 
 extern "C" __host__ void initSolverKernels2() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuSolverPrePrepStageVersion[] = "PX_DCU_SOLVER_STAGE_V45_TARGETED_STATIC_BATCH_AGGREGATE";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuSolverPrePrepStageVersion[] = "PX_HCU_SOLVER_STAGE_V45_TARGETED_STATIC_BATCH_AGGREGATE";
 #endif
 
 struct MassModificationProps
@@ -126,7 +126,7 @@ static __device__ PxU32 createSolverContactConstraintDescsFromPatchWithSharedMem
 	PxContactPatch* gContactPatch, PxContact* contactPoints, PxU32 endIndex,
 	PxU32 prevFrictionPatchCount, PxU32& contactStartIndex, PxU32 numActiveThreads)
 {  
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	PX_UNUSED(numActiveThreads);
 
 	if (threadIndex < endIndex)
@@ -833,8 +833,8 @@ static __device__ PxU32 D6JointSolverPrep(Px1DConstraint* constraints, const Pxg
 	return constraintCount;
 }
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
-extern "C" __device__ __constant__ char gPxgDcuContactPrepLaunchBoundsP78R2Version[] = "PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+extern "C" __device__ __constant__ char gPxgHcuContactPrepLaunchBoundsP78R2Version[] = "PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1";
 
 extern "C" __global__ __launch_bounds__(PxgKernelBlockDim::CONSTRAINT_PREPREP_BLOCK, 2)
 #else
@@ -894,13 +894,13 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 	const PxU32 totalBatches = totalStaticPlusDynamic + numArtiSelfBatches + numStaticBatches;
 	const PxU32 firstStaticBatch = totalBatches - numStaticBatches;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if(totalBatches == 0 && blockIdx.x == 0 && threadIdx.x == 0)
 	{
-		const volatile char* version = gPxgDcuSolverPrePrepStageVersion;
+		const volatile char* version = gPxgHcuSolverPrePrepStageVersion;
 		contactCounts[0] = PxU32(version[0]);
-#if defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
-		const volatile char* launchBoundsVersion = gPxgDcuContactPrepLaunchBoundsP78R2Version;
+#if defined(PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+		const volatile char* launchBoundsVersion = gPxgHcuContactPrepLaunchBoundsP78R2Version;
 		contactCounts[0] = PxU32(launchBoundsVersion[0]);
 #endif
 	}
@@ -921,8 +921,8 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 			PxU32(globalHeader.mDescStride), PxU32(globalHeader.constraintType), globalHeader.mConstraintBatchIndex,
 			globalHeader.mStartPartitionIndex, globalHeader.mask, static_cast<void*>(shDesc.mBatchHeaders),
 			static_cast<void*>(gDesc->mBatchHeaders), static_cast<void*>(shDesc.blockBatches));
-#if defined(PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
-		printf("PX_DCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1\n");
+#if defined(PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78) && PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78
+		printf("PX_HCU_RIGID_CONTACT_PREP_LAUNCH_BOUNDS_P78_R2_GFX936_DEVICE_V1\n");
 #endif
 	}
 
@@ -1148,7 +1148,7 @@ void constraintContactBlockPrePrepLaunch(PxgPrePrepDesc* gDesc,
 			//__syncwarp();
 
 			PxU32 maxCount = 0;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			contactCounts[threadIdx.x] = contactCount;
 			__syncwarp();
 			if(threadIndexInWarp == 0)
@@ -1670,7 +1670,7 @@ void rigidSumInternalContactAndJointBatches1(
 	__shared__ PxU32 shJointUniqueIndicesWarpSum[warpPerBlock];
 	__shared__ PxU32 shContactHeaderWarpSum[warpPerBlock];
 	__shared__ PxU32 shJointHeaderWarpSum[warpPerBlock];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	__shared__ PxU32 shContactCounts[numThreadsPerBlock];
 	__shared__ PxU32 shJointCounts[numThreadsPerBlock];
 #endif
@@ -1711,7 +1711,7 @@ void rigidSumInternalContactAndJointBatches1(
 		PxU32 maxContact = contactCount;
 		PxU32 maxJoint = jointCount;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		shContactCounts[threadIdx.x] = contactCount;
 		shJointCounts[threadIdx.x] = jointCount;
 		__syncthreads();
@@ -1832,7 +1832,7 @@ void rigidSumInternalContactAndJointBatches2(
 	__shared__ PxU32 shJointUniqueIndicesWarpSum[warpPerBlock];
 	__shared__ PxU32 shContactHeaderWarpSum[warpPerBlock];
 	__shared__ PxU32 shJointHeaderWarpSum[warpPerBlock];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	__shared__ PxU32 shContactCounts[numThreadsPerBlock];
 	__shared__ PxU32 shJointCounts[numThreadsPerBlock];
 #endif
@@ -1959,7 +1959,7 @@ void rigidSumInternalContactAndJointBatches2(
 		PxU32 maxContact = contactCount;
 		PxU32 maxJoint = jointCount;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		shContactCounts[threadIdx.x] = contactCount;
 		shJointCounts[threadIdx.x] = jointCount;
 		__syncthreads();
@@ -1999,7 +1999,7 @@ void rigidSumInternalContactAndJointBatches2(
 
 		__syncthreads();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		sumContact = shContactUniqueIndicesWarpSum[warpIndex];
 		sumJoint = shJointUniqueIndicesWarpSum[warpIndex];
 		maxContact = shContactHeaderWarpSum[warpIndex];
@@ -2102,7 +2102,7 @@ void rigidSumInternalContactAndJointBatches2(
 
 		for (PxU32 i = 0; i < maxContact; ++i)
 		{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			PxU32 mask = 0;
 			PxU32 stride = 0;
 			PxU32 offset = 0;
@@ -2128,7 +2128,7 @@ void rigidSumInternalContactAndJointBatches2(
 			if (printFirstStaticHeader)
 			{
 				firstLane = PxU32(__ffs(mask) - 1);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				firstWorkIndex = workIndex - threadIndexInWarp + firstLane;
 				firstContactCount = shContactCounts[warpBase + firstLane];
 #else
@@ -2183,7 +2183,7 @@ void rigidSumInternalContactAndJointBatches2(
 
 		for (PxU32 i = 0; i < maxJoint; ++i)
 		{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			PxU32 mask = 0;
 			PxU32 stride = 0;
 			PxU32 offset = 0;
@@ -2232,7 +2232,7 @@ void rigidSumInternalContactAndJointBatches2(
 		}
 	}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	__syncthreads();
 	if (diagnosticMode && blockIdx.x == 0 && threadIdx.x == 0 && nbBodies <= numThreadsPerBlock)
 	{

@@ -29,15 +29,16 @@
 
 set -u
 
-ROOT=/public/home/tangwsh/PhysX
-LOG_DIR=${ROOT}/examples/dcu
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+LOG_DIR=${SCRIPT_DIR}
 EXE=${LOG_DIR}/build/bench_gpu_broadphase_smoke
 RUNNER=${LOG_DIR}/run_gpu_broadphase_smoke.sh
 BASELINE=${LOG_DIR}/gpu_broadphase_smoke_baseline.md5
-GPU_LIB=${ROOT}/build_dcu/libPhysXGpuDCU.so
-BP_HSACO=${ROOT}/build_dcu/kernels/broadphase.hsaco
-AGGREGATE_HSACO=${ROOT}/build_dcu/kernels/aggregate.hsaco
-RADIX_HSACO=${ROOT}/build_dcu/kernels/radixSortImpl.hsaco
+GPU_LIB=${ROOT}/build_hcu/libPhysXGpuHCU.so
+BP_HSACO=${ROOT}/build_hcu/kernels/broadphase.hsaco
+AGGREGATE_HSACO=${ROOT}/build_hcu/kernels/aggregate.hsaco
+RADIX_HSACO=${ROOT}/build_hcu/kernels/radixSortImpl.hsaco
 BP_HEADER=${ROOT}/physx/source/gpubroadphase/include/PxgBroadPhaseKernelIndices.h
 BP_SOURCE=${ROOT}/physx/source/gpubroadphase/src/CUDA/broadphase.cu
 AGGREGATE_SOURCE=${ROOT}/physx/source/gpubroadphase/src/CUDA/aggregate.cu
@@ -62,11 +63,11 @@ BODIES=${BODIES:-512}
 CYCLES=${CYCLES:-8}
 TRANSITION_STEPS=${TRANSITION_STEPS:-2}
 SETTLE_STEPS=${SETTLE_STEPS:-60}
-MARKER=PX_DCU_GPU_BROADPHASE_SMOKE_V1_PAIR_CHURN
-REPORT_MARKER=PX_DCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK
-REPORT_STAGE_MARKER=PX_DCU_GPU_BROADPHASE_REPORT_V5_SERIAL_FULL_COMPACTION
-RADIX_MARKER=PX_DCU_GPU_BROADPHASE_RADIX_V3_SERIAL_COUNTING_PASS
-RADIX_KERNEL=radixSortBroadPhaseSerialCountingPassDcuV3
+MARKER=PX_HCU_GPU_BROADPHASE_SMOKE_V1_PAIR_CHURN
+REPORT_MARKER=PX_HCU_GPU_BROADPHASE_REPORT_V4_DEVICE_TO_HOST_READBACK
+REPORT_STAGE_MARKER=PX_HCU_GPU_BROADPHASE_REPORT_V5_SERIAL_FULL_COMPACTION
+RADIX_MARKER=PX_HCU_GPU_BROADPHASE_RADIX_V3_SERIAL_COUNTING_PASS
+RADIX_KERNEL=radixSortBroadPhaseSerialCountingPassHcuV3
 
 FINGERPRINT_SRC="
 ${BP_HEADER}

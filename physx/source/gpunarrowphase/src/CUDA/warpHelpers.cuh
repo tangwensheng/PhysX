@@ -177,7 +177,7 @@ __device__ inline void scanWarp<PxU32, AddOP<PxU32> >(unsigned int scanIdx, vola
 	PxU32 input = sdata[scanIdx];
 
 #if defined(__HIPCC__)
-	// HIP/DCU: use __shfl_up intrinsic (portable, works on all GPUs)
+	// HIP/HCU: use __shfl_up intrinsic (portable, works on all GPUs)
 	#pragma unroll
 	for (int STEP = 0; STEP < STEPS; STEP++)
 	{

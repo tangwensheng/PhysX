@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -51,18 +51,18 @@
 #include "solver.cuh"
 #include "PxgArticulationCoreDesc.h"
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48) && PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48
-extern "C" __device__ __constant__ char gPxgDcuRigidSolverMultiBlockO3P48Version[] = "PX_DCU_RIGID_SOLVER_MULTIBLOCK_O3_P48_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_SOLVER_MULTIBLOCK_O3_P48) && PX_HCU_RIGID_SOLVER_MULTIBLOCK_O3_P48
+extern "C" __device__ __constant__ char gPxgHcuRigidSolverMultiBlockO3P48Version[] = "PX_HCU_RIGID_SOLVER_MULTIBLOCK_O3_P48_GFX936_DEVICE_V1";
 #endif
 
 using namespace physx;
 
 extern "C" __host__ void initSolverKernels6() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuSolverStaticStageVersion[] = "PX_DCU_SOLVER_STAGE_V32_LEAN_STATIC_SOLVER_ABI";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuSolverStaticStageVersion[] = "PX_HCU_SOLVER_STAGE_V32_LEAN_STATIC_SOLVER_ABI";
 
-PX_FORCE_INLINE __device__ PxU32 dcuStaticBatchLaneIndex(const PxU32 mask, const PxU32 lane)
+PX_FORCE_INLINE __device__ PxU32 hcuStaticBatchLaneIndex(const PxU32 mask, const PxU32 lane)
 {
 	const PxU32 lowerLaneMask = lane == 0 ? 0u : ((PxU32(1) << lane) - 1u);
 	return __popc(mask & lowerLaneMask);
@@ -1006,11 +1006,11 @@ void solveStaticBlock(
 
 					assert(batch.constraintType == PxgSolverConstraintDesc::eCONSTRAINT_1D);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					const PxU32 laneBit = PxU32(1) << threadIndexInWarp;
 					if((batch.mask & laneBit) == 0)
 						continue;
-					const PxU32 idx = dcuStaticBatchLaneIndex(batch.mask, threadIndexInWarp);
+					const PxU32 idx = hcuStaticBatchLaneIndex(batch.mask, threadIndexInWarp);
 #else
 					const PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
 #endif
@@ -1026,18 +1026,18 @@ void solveStaticBlock(
 
 					assert(batch.constraintType == PxgSolverConstraintDesc::eCONTACT);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					const PxU32 laneBit = PxU32(1) << threadIndexInWarp;
 					if((batch.mask & laneBit) == 0)
 						continue;
-					const PxU32 idx = dcuStaticBatchLaneIndex(batch.mask, threadIndexInWarp);
+					const PxU32 idx = hcuStaticBatchLaneIndex(batch.mask, threadIndexInWarp);
 #else
 					const PxU32 idx = warpScanExclusive(batch.mask, threadIndexInWarp);
 #endif
 
 					// For interaction with static objects, mass-splitting is not used; thus, reference counts are 1.
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-					solveStaticContactBlockDcu(batch, lv0, av0, lv1, av1, doFriction, idx,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+					solveStaticContactBlockHcu(batch, lv0, av0, lv1, av1, doFriction, idx,
 						iterativeData.blockContactHeaders, iterativeData.blockFrictionHeaders,
 						iterativeData.blockContactPoints, iterativeData.blockFrictions,
 						residualAccumulationEnabled ? &error : NULL, 1.f, 1.f);

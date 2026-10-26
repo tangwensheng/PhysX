@@ -226,7 +226,7 @@ int main(int argc, char** argv)
                 ++belowPlane;
         }
         observationOk = observationOk && bad == 0;
-        printf("VERTEX_OBSERVATION marker=PX_DCU_VOLUME_VERTEX_OBSERVATION_P5_V1 frame=%d sim_vertices=%u coll_vertices=%u sim_y_min=%.6f sim_y_max=%.6f coll_y_min=%.6f coll_y_max=%.6f near_plane=%u below_plane=%u bad_vertices=%u sync=%d sim_copy=%d coll_copy=%d\n",
+        printf("VERTEX_OBSERVATION marker=PX_HCU_VOLUME_VERTEX_OBSERVATION_P5_V1 frame=%d sim_vertices=%u coll_vertices=%u sim_y_min=%.6f sim_y_max=%.6f coll_y_min=%.6f coll_y_max=%.6f near_plane=%u below_plane=%u bad_vertices=%u sync=%d sim_copy=%d coll_copy=%d\n",
                frame, simCount, collCount, simMin, simMax, collMin, collMax,
                nearPlane, belowPlane, bad, int(sync), int(simCopy), int(collCopy));
         fflush(stdout);
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
         }
     }
     const int measuredSteps = steps - timingWarmupSteps;
-    printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
+    printf("PERF marker=PX_HCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
            timingWarmupSteps, measuredSteps, simulationMs,
            measuredSteps > 0 ? simulationMs / double(measuredSteps) : 0.0,
            simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);

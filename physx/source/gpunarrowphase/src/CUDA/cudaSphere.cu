@@ -85,7 +85,7 @@ extern "C" __global__ void sphereNphase_Kernel(
 	PxU32 contactBytesLimit,
 	PxU32 forceBytesLimit)
 {
-	// DCU: copy materials to local to prevent hipcc register clobbering
+	// HCU: copy materials to local to prevent hipcc register clobbering
 	if (blockIdx.x == 0 && threadIdx.x == 0) {
 		PxReal _sf,_df,_r,_d; PxU32 _f;
 		combineMaterials(materials, 0, 0, _f, _sf, _df, _r, _d);

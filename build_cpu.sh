@@ -74,7 +74,7 @@ for subdir in \
     $PHYSX/include/geometry \
     $PHYSX/source/gpucommon/include \
     $PHYSX/source/gpucommon/src/CUDA \
-    $PHYSX/source/gpucommon/src/DCU/stubs \
+    $PHYSX/source/gpucommon/src/HCU/stubs \
     $PHYSX/source/gpunarrowphase/include \
     $PHYSX/source/gpunarrowphase/src/CUDA \
     $PHYSX/source/gpusolver/include \

@@ -38,7 +38,7 @@
 #include "foundation/PxFoundation.h"
 
 // Global scope for cross-TU access (unsigned avoids PxU32 dependency)
-unsigned int g_DCU_ModuleCount = 0;
+unsigned int g_HCU_ModuleCount = 0;
 
 namespace physx {
 
@@ -52,8 +52,8 @@ static void loadGpuLibrary() {
     gLoaded = true;
 
     const char* dirs[] = {
-        "./kernels", "../build_dcu/kernels",
-        "/public/home/tangwsh/PhysX/build_dcu/kernels", nullptr};
+        "./kernels", "../build_hcu/kernels", "../../build_hcu/kernels",
+        "../../../build_hcu/kernels", nullptr};
 
     for(int d = 0; dirs[d]; d++) {
         DIR* dp = opendir(dirs[d]);
@@ -85,7 +85,7 @@ static void loadGpuLibrary() {
         }
         closedir(dp);
         if(n > 0) {
-            g_DCU_ModuleCount = n;
+            g_HCU_ModuleCount = n;
             fprintf(stderr, "[HCU device] Loaded %d hsaco modules from %s\n", n, dirs[d]);
             return;
         }
@@ -94,15 +94,16 @@ static void loadGpuLibrary() {
     // Fallback: hipModuleLoad .so
     fprintf(stderr, "[HCU device] No hsaco dir, trying .so...\n");
     const char* paths[] = {
-        "./libPhysXGpuDCU.so", "../build_dcu/libPhysXGpuDCU.so",
-        "/public/home/tangwsh/PhysX/build_dcu/libPhysXGpuDCU.so", nullptr};
+        "./libPhysXGpuHCU.so", "../build_hcu/libPhysXGpuHCU.so",
+        "../../build_hcu/libPhysXGpuHCU.so",
+        "../../../build_hcu/libPhysXGpuHCU.so", nullptr};
     for(int i=0; paths[i]; i++) {
         FILE* fp = fopen(paths[i], "r");
         if(!fp) continue; fclose(fp);
         hipModule_t mod = nullptr;
         if(hipModuleLoad(&mod, paths[i]) == hipSuccess && mod) {
             gModules.pushBack(mod);
-            g_DCU_ModuleCount = 1;
+            g_HCU_ModuleCount = 1;
             fprintf(stderr, "[HCU device] Loaded .so: %s\n", paths[i]);
             return;
         }
@@ -188,10 +189,10 @@ public:
         void* kp[32]; int n=(int)(ps/sizeof(PxCudaKernelParam));
         for(int i=0;i<n&&i<32;i++) kp[i]=p[i].data;
         mKernelCount++;
-        if(std::getenv("PX_DCU_TRACE_KERNELS"))
+        if(std::getenv("PX_HCU_TRACE_KERNELS"))
             fprintf(stderr, "[HCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u paramBytes=%zu\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, ps);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,kp,ex);
-        if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
+        if(mLast == hipSuccess && std::getenv("PX_HCU_SYNC_KERNELS"))
         {
             mLast = hipStreamSynchronize((hipStream_t)s);
             if(mLast != hipSuccess)
@@ -206,10 +207,10 @@ public:
     {
         if(mAbort) return PxCUresult(mLast);
         mKernelCount++;
-        if(std::getenv("PX_DCU_TRACE_KERNELS"))
+        if(std::getenv("PX_HCU_TRACE_KERNELS"))
             fprintf(stderr, "[HCU KERNEL %d] %s:%d grid=(%u,%u,%u) block=(%u,%u,%u) sh=%u params=%p\n", mKernelCount, name ? name : "<unnamed>", line, gx, gy, gz, bx, by, bz, sh, params);
         mLast=hipModuleLaunchKernel((hipFunction_t)f,gx,gy,gz,bx,by,bz,sh,(hipStream_t)s,params,ex);
-        if(mLast == hipSuccess && std::getenv("PX_DCU_SYNC_KERNELS"))
+        if(mLast == hipSuccess && std::getenv("PX_HCU_SYNC_KERNELS"))
         {
             mLast = hipStreamSynchronize((hipStream_t)s);
             if(mLast != hipSuccess)

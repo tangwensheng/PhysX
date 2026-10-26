@@ -56,14 +56,14 @@ against the CPU libraries and load the GPU library at runtime, so both library
 builds must complete before the examples are built.
 
 ```bash
-# 1) GPU (HIP) libraries -> build_dcu/libPhysXGpuDCU.so, build_dcu/kernels/*.hsaco
-./build_dcu.sh gfx936
+# 1) GPU (HIP) libraries -> build_hcu/libPhysXGpuHCU.so, build_hcu/kernels/*.hsaco
+./build_hcu.sh gfx936
 
 # 2) CPU (host) libraries -> build_cpu/ (Foundation, PhysXSDK, ...)
 ./build_cpu.sh
 
-# 3) One example target -> examples/dcu/build/<target>
-cd examples/dcu && ./build.sh
+# 3) One example target -> examples/hcu/build/<target>
+cd examples/hcu && ./build.sh
 ```
 
 ### Running the Examples
@@ -72,15 +72,15 @@ cd examples/dcu && ./build.sh
 another example target name to build a different one:
 
 ```bash
-cd examples/dcu
+cd examples/hcu
 ./build.sh bench_compare
 ```
 
-Binaries are written to `examples/dcu/build/`. Run them from there so the
+Binaries are written to `examples/hcu/build/`. Run them from there so the
 runtime can locate the GPU library and kernel files:
 
 ```bash
-cd examples/dcu
+cd examples/hcu
 ./build/bench_physx_scene
 ```
 
@@ -88,13 +88,13 @@ cd examples/dcu
 
 | Runner | Purpose |
 |--------|---------|
-| `examples/dcu/run_dcu_correctness.sh` | table-driven, fingerprinted correctness cases (`--list` prints case names) |
-| `examples/dcu/run_gpu_broadphase_smoke.sh` | fail-fast GPU broadphase smoke test with a fingerprint baseline |
+| `examples/hcu/run_hcu_correctness.sh` | table-driven, fingerprinted correctness cases (`--list` prints case names) |
+| `examples/hcu/run_gpu_broadphase_smoke.sh` | fail-fast GPU broadphase smoke test with a fingerprint baseline |
 | `build_cpu/test_cpu` | unit probe produced by `build_cpu.sh` |
-| `build_dcu/test_functional` | functional probe produced by `build_dcu.sh` |
+| `build_hcu/test_functional` | functional probe produced by `build_hcu.sh` |
 
 Runners read overrides from the environment, for example
-`EXPECTED_HCU_COUNT=8 REPEAT=3 ./run_dcu_correctness.sh all`.
+`EXPECTED_HCU_COUNT=8 REPEAT=3 ./run_hcu_correctness.sh all`.
 
 ### Port Summary
 
@@ -123,7 +123,7 @@ Runners read overrides from the environment, for example
 ### Adapted Files
 
 - **New**: `physx/source/gpucommon/include/PxgHIPCompat.h` — HIP compatibility layer
-- **New**: `physx/source/gpucommon/src/DCU/` — runtime, stubs, tests
+- **New**: `physx/source/gpucommon/src/HCU/` — runtime, stubs, tests
 - **New**: `physx/source/compiler/cmakehip/` — HIP CMake build
 - **New**: `physx/source/compiler/cmakecpu/` — CPU library CMake build
 - **Modified**: ~55 .cu/.cuh files — `cuda.h` → conditional, intrinsic macros, PTX asm

@@ -41,11 +41,11 @@
 
 #define PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH 6 // corresponding CPU define is CONTACT_REDUCTION_MAX_CONTACTS
 
-// DCU/HIP platform detection: __HIPCC__ is defined by the hipcc compiler
+// HCU/HIP platform detection: __HIPCC__ is defined by the hipcc compiler
 // NOTE: Hardware wavefront = 64, but PhysX GPU algorithms assume 32-thread
 // warps for block size calculations. PxgHIPCompat.h handles the 32→64
 // mapping for warp intrinsics (__shfl_sync, __ballot_sync, etc.).
-#if defined(__HIPCC__) || defined(PX_DCU_PORT)
+#if defined(__HIPCC__) || defined(PX_HCU_PORT)
     #define LOG2_WARP_SIZE 5
     #define WARP_SIZE (1U << LOG2_WARP_SIZE)  // 32
     #define FULL_MASK 0xffffffffULL             // full mask for 32 threads

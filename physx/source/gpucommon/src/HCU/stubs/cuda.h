@@ -63,7 +63,7 @@ struct CUtexObject_st; typedef CUtexObject_st* CUtexObject;
 // ---- Host-side CUDA compatibility macros ----
 // PxgHIPCompat.h provides these for HIP-compiled (.cu→HIP) files but NOT for
 // plain C++ host-side files compiled with g++.  We provide the essential ones
-// here since the DCU stub <cuda.h> is force-included (-include) before every
+// here since the HCU stub <cuda.h> is force-included (-include) before every
 // HipContext source file.
 
 // CUDA alignment attribute → GCC/Clang
@@ -89,7 +89,7 @@ typedef unsigned int CUdeviceptr;
 typedef int                      CUdevice;
 
 // Opaque struct pointers — compatible with both CUDA Driver API and our
-// CudaWrappersDCU.cpp which casts them to HIP types internally.
+// CudaWrappersHCU.cpp which casts them to HIP types internally.
 typedef struct CUctx_st*         CUcontext;
 typedef struct CUmod_st*         CUmodule;
 typedef struct CUfunc_st*        CUfunction;
@@ -177,7 +177,7 @@ typedef struct CUDA_MEMCPY3D_st {
 // must be a valid type.  Use int (hipError_t values fit in int).
 typedef int CUresult;
 
-// ---- CUDA error codes (map to HIP values, matched in CudaWrappersDCU.cpp) ----
+// ---- CUDA error codes (map to HIP values, matched in CudaWrappersHCU.cpp) ----
 #define CUDA_SUCCESS                    0   // hipSuccess
 #define CUDA_ERROR_UNKNOWN              1   // hipErrorUnknown
 #define CUDA_ERROR_INVALID_VALUE        2   // hipErrorInvalidValue
@@ -224,7 +224,7 @@ typedef int CUresult;
 typedef unsigned int CUjit_option;
 
 // ---- CUDA Driver API wrapper functions ----
-// Implemented in CudaWrappersDCU.cpp (which includes hip_runtime.h and
+// Implemented in CudaWrappersHCU.cpp (which includes hip_runtime.h and
 // performs opaque-pointer casts to the real HIP types internally).
 #ifdef __cplusplus
 extern "C" {
@@ -241,7 +241,7 @@ CUresult cuCtxGetStreamPriorityRange(int* leastPriority, int* greatestPriority);
 CUresult cuMemcpyDtoH(void* dstHost, CUdeviceptr srcDevice, size_t ByteCount);
 CUresult cuMemcpyHtoD(CUdeviceptr dstDevice, const void* srcHost, size_t ByteCount);
 
-// Texture / Array (SDF) — stubs, not yet implemented for DCU
+// Texture / Array (SDF) — stubs, not yet implemented for HCU
 CUresult cuArray3DCreate(CUarray* pHandle, const CUDA_ARRAY3D_DESCRIPTOR* pAllocateArray);
 CUresult cuArrayDestroy(CUarray hArray);
 CUresult cuTexObjectCreate(CUtexObject* pTexObject, const void* pResDesc, const void* pTexDesc, const void* pResViewDesc);

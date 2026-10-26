@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -45,11 +45,11 @@
 
 using namespace physx;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_VOLUME_RIGID_DELTA_O3_P37) && PX_DCU_VOLUME_RIGID_DELTA_O3_P37
-extern "C" __device__ __constant__ char gPxgDcuRigidDeltaO3P37Version[] = "PX_DCU_RIGID_DELTA_O3_P37_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_VOLUME_RIGID_DELTA_O3_P37) && PX_HCU_VOLUME_RIGID_DELTA_O3_P37
+extern "C" __device__ __constant__ char gPxgHcuRigidDeltaO3P37Version[] = "PX_HCU_RIGID_DELTA_O3_P37_GFX936_DEVICE_V1";
 #endif
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_DELTA_ACCUM_O3_P43) && PX_DCU_RIGID_DELTA_ACCUM_O3_P43
-extern "C" __device__ __constant__ char gPxgDcuRigidDeltaAccumO3P43Version[] = "PX_DCU_RIGID_DELTA_ACCUM_O3_P43_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_DELTA_ACCUM_O3_P43) && PX_HCU_RIGID_DELTA_ACCUM_O3_P43
+extern "C" __device__ __constant__ char gPxgHcuRigidDeltaAccumO3P43Version[] = "PX_HCU_RIGID_DELTA_ACCUM_O3_P43_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __host__ void initSimulationControllerKernels2() {}

@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -645,7 +645,7 @@ void sortTriangleIndices(
 
 	assert((startIndex & 3) == 0);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (nbTriangles <= WARP_SIZE * 4)
 	{
 		if (threadIdx.x == 0)

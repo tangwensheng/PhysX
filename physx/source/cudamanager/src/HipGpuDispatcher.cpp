@@ -72,7 +72,7 @@ PX_PHYSX_CORE_API PxU32 PxGpuGetCudaFunctionTableSize() { return 0; }
 PX_PHYSX_CORE_API PxKernelIndex* PxGpuGetCudaFunctionTable() { return nullptr; }
 
 // PxGpuCudaRegisterFunction is called by __hipRegisterFunction (in
-// gpu_module_table.cpp inside libPhysXGpuDCU.so) during static init.
+// gpu_module_table.cpp inside libPhysXGpuHCU.so) during static init.
 // On HCU we track registrations but the KernelWrangler bypasses this table.
 static const PxU32 MAX_FUNCTIONS = 1024;
 static PxKernelIndex s_FunctionTable[MAX_FUNCTIONS];

@@ -54,22 +54,22 @@
 
 #define PLANE_TRI_MAX_CONTACTS 6
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
-#define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 32
-extern "C" __device__ __constant__ char gPxgDcuTrimeshPlaneVersion[] =
-	"PX_DCU_TRIMESH_PLANE_V1_32_THREAD_BATCHED_LAUNCH";
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
+#define HCU_TRIMESH_PLANE_THREADS_PER_BLOCK 32
+extern "C" __device__ __constant__ char gPxgHcuTrimeshPlaneVersion[] =
+	"PX_HCU_TRIMESH_PLANE_V1_32_THREAD_BATCHED_LAUNCH";
 #else
-#define DCU_TRIMESH_PLANE_THREADS_PER_BLOCK 1024
+#define HCU_TRIMESH_PLANE_THREADS_PER_BLOCK 1024
 #endif
 
-#define DCU_TRIMESH_PLANE_NUM_WARPS (DCU_TRIMESH_PLANE_THREADS_PER_BLOCK / WARP_SIZE)
+#define HCU_TRIMESH_PLANE_NUM_WARPS (HCU_TRIMESH_PLANE_THREADS_PER_BLOCK / WARP_SIZE)
 
 using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels22() {}
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
-static PX_FORCE_INLINE __device__ PxU32 reduceDcuTrimeshPlaneContacts(const PxReal separation, const PxU32 candidateMask)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
+static PX_FORCE_INLINE __device__ PxU32 reduceHcuTrimeshPlaneContacts(const PxReal separation, const PxU32 candidateMask)
 {
 	if (__popc(candidateMask) <= PLANE_TRI_MAX_CONTACTS)
 		return candidateMask;
@@ -103,7 +103,7 @@ static PX_FORCE_INLINE __device__ PxU32 reduceDcuTrimeshPlaneContacts(const PxRe
 
 //each block deal with one test
 extern "C" __global__ 
-__launch_bounds__(DCU_TRIMESH_PLANE_THREADS_PER_BLOCK, 1)
+__launch_bounds__(HCU_TRIMESH_PLANE_THREADS_PER_BLOCK, 1)
 void trimeshPlaneNarrowphase(
 	const PxReal toleranceLength,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
@@ -131,7 +131,7 @@ void trimeshPlaneNarrowphase(
 	PxVec3* contacts = reinterpret_cast<PxVec3*>(sContacts);
 	__shared__ PxReal separations[(WARP_SIZE+1)*PLANE_TRI_MAX_CONTACTS];
 	__shared__ PxU32 counters[WARP_SIZE];
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	__shared__ PxU32 gatheredContactCount;
 #endif
 
@@ -156,7 +156,7 @@ void trimeshPlaneNarrowphase(
 	PxsCachedTransform trimeshTransformCache = transformCache[trimeshCacheRef];
 	PxsCachedTransform planeTransformCache = transformCache[planeCacheRef];
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	PxReal trimeshContactDistance = 0.0f;
 	if (threadIndexInWarp == 0)
 		trimeshContactDistance = contactDistance[trimeshCacheRef];
@@ -165,7 +165,7 @@ void trimeshPlaneNarrowphase(
 	const PxReal trimeshContactDistance = contactDistance[trimeshCacheRef];
 #endif
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	PxReal planeContactDistance = 0.0f;
 	if (threadIndexInWarp == 0)
 		planeContactDistance = contactDistance[planeCacheRef];
@@ -184,7 +184,7 @@ void trimeshPlaneNarrowphase(
 
 	const Gu::BV32DataPacked* nodes;
 	const float4 * trimeshVerts;
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	PxU32 meshHeaderX = 0;
 	PxU32 meshHeaderY = 0;
 	PxU32 meshHeaderZ = 0;
@@ -215,7 +215,7 @@ void trimeshPlaneNarrowphase(
 
 	PxVec3 min(PX_MAX_F32), max(-PX_MAX_F32);
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	PxU32 rootNodeCount = 0;
 	if (threadIndexInWarp == 0)
 		rootNodeCount = nodes->mNbNodes;
@@ -342,9 +342,9 @@ void trimeshPlaneNarrowphase(
 
 			int mask = __ballot_sync(FULL_MASK, hasContact);
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 			if (gridDim.x > 1)
-				mask = int(reduceDcuTrimeshPlaneContacts(separation, PxU32(mask)));
+				mask = int(reduceHcuTrimeshPlaneContacts(separation, PxU32(mask)));
 			else
 #endif
 				mask = contactReduce<true, true, PLANE_TRI_MAX_CONTACTS, false>(worldPoint, separation, worldNormal, mask, clusterTolerance);
@@ -357,11 +357,11 @@ void trimeshPlaneNarrowphase(
 
 			__syncthreads();
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 			if (threadIdx.x == 0)
 			{
 				PxU32 contactOffset = 0;
-				for (PxU32 warp = 0; warp < DCU_TRIMESH_PLANE_NUM_WARPS; ++warp)
+				for (PxU32 warp = 0; warp < HCU_TRIMESH_PLANE_NUM_WARPS; ++warp)
 				{
 					const PxU32 warpContactCount = counters[warp];
 					counters[warp] = contactOffset;
@@ -373,7 +373,7 @@ void trimeshPlaneNarrowphase(
 
 			const PxU32 contactWarpOffset = counters[warpIndex];
 #else
-			PxU32 counter = threadIndexInWarp < DCU_TRIMESH_PLANE_NUM_WARPS ? counters[threadIndexInWarp] : 0;
+			PxU32 counter = threadIndexInWarp < HCU_TRIMESH_PLANE_NUM_WARPS ? counters[threadIndexInWarp] : 0;
 
 			PxU32 contactCount = warpScan<AddOpPxU32, PxU32>(FULL_MASK, counter);
 
@@ -385,7 +385,7 @@ void trimeshPlaneNarrowphase(
 #endif
 
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 			PxU32 writeIndex = contactWarpOffset + retainedCount;
 			for (PxU32 remainingMask = contactMask; remainingMask; remainingMask = clearLowestSetBit(remainingMask))
 			{
@@ -411,7 +411,7 @@ void trimeshPlaneNarrowphase(
 #endif
 
 
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 			const PxU32 totalContacts = gatheredContactCount;
 #else
 			const PxU32 totalContacts = __shfl_sync(FULL_MASK, contactCount, 31) + retainedCount;

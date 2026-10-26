@@ -33,7 +33,7 @@
 #include <cstdio>
 
 // Verify that PxgCommonDefines.h correctly detects the HCU platform
-#define PX_DCU_PORT
+#define PX_HCU_PORT
 #include "PxgCommonDefines.h"
 
 // ---- Compile-time assertions ----

@@ -48,7 +48,7 @@ RUNNER_COMPAT_MARKER_R6="PX_DCU_CORRECTNESS_RUNNER_R6_PBD_SPATIAL_SORT_DIAG"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-CASE_FILE="${CASE_FILE:-$SCRIPT_DIR/dcu_correctness_cases.tsv}"
+CASE_FILE="${CASE_FILE:-$SCRIPT_DIR/hcu_correctness_cases.tsv}"
 MODE="run"
 if [[ "${1:-}" == "--pin" ]]; then
     MODE="pin"
@@ -66,8 +66,8 @@ else
     fi
 fi
 BIN_DIR="${BIN_DIR:-$SCRIPT_DIR/build}"
-GPU_LIBRARY="${GPU_LIBRARY:-$REPO_ROOT/build_dcu/libPhysXGpuDCU.so}"
-HSACO_DIR="${HSACO_DIR:-$REPO_ROOT/build_dcu/kernels}"
+GPU_LIBRARY="${GPU_LIBRARY:-$REPO_ROOT/build_hcu/libPhysXGpuHCU.so}"
+HSACO_DIR="${HSACO_DIR:-$REPO_ROOT/build_hcu/kernels}"
 CPU_BUILD_DIR="${CPU_BUILD_DIR:-$REPO_ROOT/build_cpu}"
 DEVICE="${TARGET_HIP_DEVICE:-1}"
 EXPECTED_HCU_COUNT="${EXPECTED_HCU_COUNT:-8}"
@@ -78,39 +78,39 @@ REPEAT_DELAY="${REPEAT_DELAY:-5}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-1800}"
 POST_HEALTH_SAMPLES="${POST_HEALTH_SAMPLES:-4}"
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-2}"
-BROADPHASE_DIAG="${PX_DCU_BROADPHASE_DIAG:-0}"
-BROADPHASE_UPDATE_DIAG="${PX_DCU_BROADPHASE_UPDATE_DIAG:-0}"
-BROADPHASE_UPDATE_COMPACT="${PX_DCU_BROADPHASE_UPDATE_COMPACT:-0}"
-PBD_PRIMITIVE_RADIX_CHUNKED="${PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED:-0}"
-PBD_PRIMITIVE_RADIX_INLINE="${PX_DCU_PBD_PRIMITIVE_RADIX_INLINE:-0}"
-PBD_PRIMITIVE_RADIX_FUSED64="${PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64:-0}"
-PBD_PRIMITIVE_RANK_DIAG="${PX_DCU_PBD_PRIMITIVE_RANK_DIAG:-0}"
-PBD_SPATIAL_RADIX_CHUNKED="${PX_DCU_PBD_SPATIAL_RADIX_CHUNKED:-0}"
-PBD_SPATIAL_RANK_DIAG="${PX_DCU_PBD_SPATIAL_RANK_DIAG:-0}"
-PBD_PARTICLE_RANGE_FUSED="${PX_DCU_PBD_PARTICLE_RANGE_FUSED:-0}"
-PBD_PARTICLE_RANGE_CHUNKED="${PX_DCU_PBD_PARTICLE_RANGE_CHUNKED:-0}"
-PBD_PARTICLE_RANGE_PARALLEL="${PX_DCU_PBD_PARTICLE_RANGE_PARALLEL:-0}"
-PBD_PARTICLE_RANGE_DIAG="${PX_DCU_PBD_PARTICLE_RANGE_DIAG:-0}"
+BROADPHASE_DIAG="${PX_HCU_BROADPHASE_DIAG:-0}"
+BROADPHASE_UPDATE_DIAG="${PX_HCU_BROADPHASE_UPDATE_DIAG:-0}"
+BROADPHASE_UPDATE_COMPACT="${PX_HCU_BROADPHASE_UPDATE_COMPACT:-0}"
+PBD_PRIMITIVE_RADIX_CHUNKED="${PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED:-0}"
+PBD_PRIMITIVE_RADIX_INLINE="${PX_HCU_PBD_PRIMITIVE_RADIX_INLINE:-0}"
+PBD_PRIMITIVE_RADIX_FUSED64="${PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64:-0}"
+PBD_PRIMITIVE_RANK_DIAG="${PX_HCU_PBD_PRIMITIVE_RANK_DIAG:-0}"
+PBD_SPATIAL_RADIX_CHUNKED="${PX_HCU_PBD_SPATIAL_RADIX_CHUNKED:-0}"
+PBD_SPATIAL_RANK_DIAG="${PX_HCU_PBD_SPATIAL_RANK_DIAG:-0}"
+PBD_PARTICLE_RANGE_FUSED="${PX_HCU_PBD_PARTICLE_RANGE_FUSED:-0}"
+PBD_PARTICLE_RANGE_CHUNKED="${PX_HCU_PBD_PARTICLE_RANGE_CHUNKED:-0}"
+PBD_PARTICLE_RANGE_PARALLEL="${PX_HCU_PBD_PARTICLE_RANGE_PARALLEL:-0}"
+PBD_PARTICLE_RANGE_DIAG="${PX_HCU_PBD_PARTICLE_RANGE_DIAG:-0}"
 LOG_ROOT="${LOG_ROOT:-$SCRIPT_DIR/logs}"
 
 case_tag="${CASE_FILE##*/}"
 case_tag="${case_tag%.tsv}"
 case_tag="$(printf '%s' "$case_tag" | tr -c 'A-Za-z0-9_.-' '_')"
-BASELINE_OVERRIDE="${DCU_CORRECTNESS_BASELINE:-}"
+BASELINE_OVERRIDE="${HCU_CORRECTNESS_BASELINE:-}"
 
 usage()
 {
     cat <<'EOF'
-Usage: ./run_dcu_correctness.sh [--list|all|BATCH|CASE]
-       ./run_dcu_correctness.sh --pin all|BATCH|CASE
+Usage: ./run_hcu_correctness.sh [--list|all|BATCH|CASE]
+       ./run_hcu_correctness.sh --pin all|BATCH|CASE
 
 Examples:
-  ./run_dcu_correctness.sh --list
-  ./run_dcu_correctness.sh --pin all
-  ./run_dcu_correctness.sh --pin trimesh_complex
-  ./run_dcu_correctness.sh all
-  ./run_dcu_correctness.sh batch2
-  ./run_dcu_correctness.sh trimesh_complex
+  ./run_hcu_correctness.sh --list
+  ./run_hcu_correctness.sh --pin all
+  ./run_hcu_correctness.sh --pin trimesh_complex
+  ./run_hcu_correctness.sh all
+  ./run_hcu_correctness.sh batch2
+  ./run_hcu_correctness.sh trimesh_complex
 
 Environment overrides:
   REPEAT=N                    repeat each selected case N times
@@ -121,23 +121,23 @@ Environment overrides:
   TIMEOUT_SECONDS=N           timeout for each benchmark process
   POST_HEALTH_SAMPLES=N       health samples after each benchmark
   HEALTH_INTERVAL=N           seconds between post-run health samples
-  PX_DCU_BROADPHASE_DIAG=0|1  enable expensive broadphase diagnostics (default 0)
-  PX_DCU_BROADPHASE_UPDATE_DIAG=0|1  print broadphase updated-pairs launch shape once (default 0)
-  PX_DCU_BROADPHASE_UPDATE_COMPACT=0|1  compact one-word updated-pairs launch to 1x32 on HCU (default 0)
-  PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=0|1  use opt-in chunked PBD primitive radix (default 0)
-  PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=0|1  use force-inlined radix extraction with the chunked primitive radix (default 0)
-  PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=0|1  fuse the two 32-bit primitive radix stages into one 64-bit kernel (default 0)
-  PX_DCU_PBD_PRIMITIVE_RANK_DIAG=0|1  compare low-32 and final 64-bit key/rank output with host stable_sort (default 0)
-  PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=0|1  use opt-in chunked PBD spatial radix (default 0)
-  PX_DCU_PBD_SPATIAL_RANK_DIAG=0|1  compare spatial key/rank output with host stable_sort (default 0)
-  PX_DCU_PBD_PARTICLE_RANGE_FUSED=0|1  use opt-in fused PBD particle contact range scan (default 0)
-  PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=0|1  use 32-thread chunked fused particle range scan (default 0)
-  PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=0|1  use 32-thread parallel-boundary fused particle range scan (default 0)
-  PX_DCU_PBD_PARTICLE_RANGE_DIAG=0|1  validate sorted contacts and generated ranges on host (default 0)
+  PX_HCU_BROADPHASE_DIAG=0|1  enable expensive broadphase diagnostics (default 0)
+  PX_HCU_BROADPHASE_UPDATE_DIAG=0|1  print broadphase updated-pairs launch shape once (default 0)
+  PX_HCU_BROADPHASE_UPDATE_COMPACT=0|1  compact one-word updated-pairs launch to 1x32 on HCU (default 0)
+  PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED=0|1  use opt-in chunked PBD primitive radix (default 0)
+  PX_HCU_PBD_PRIMITIVE_RADIX_INLINE=0|1  use force-inlined radix extraction with the chunked primitive radix (default 0)
+  PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64=0|1  fuse the two 32-bit primitive radix stages into one 64-bit kernel (default 0)
+  PX_HCU_PBD_PRIMITIVE_RANK_DIAG=0|1  compare low-32 and final 64-bit key/rank output with host stable_sort (default 0)
+  PX_HCU_PBD_SPATIAL_RADIX_CHUNKED=0|1  use opt-in chunked PBD spatial radix (default 0)
+  PX_HCU_PBD_SPATIAL_RANK_DIAG=0|1  compare spatial key/rank output with host stable_sort (default 0)
+  PX_HCU_PBD_PARTICLE_RANGE_FUSED=0|1  use opt-in fused PBD particle contact range scan (default 0)
+  PX_HCU_PBD_PARTICLE_RANGE_CHUNKED=0|1  use 32-thread chunked fused particle range scan (default 0)
+  PX_HCU_PBD_PARTICLE_RANGE_PARALLEL=0|1  use 32-thread parallel-boundary fused particle range scan (default 0)
+  PX_HCU_PBD_PARTICLE_RANGE_DIAG=0|1  validate sorted contacts and generated ranges on host (default 0)
   CASE_FILE=PATH              alternate compatible case table
   BIN_DIR=PATH                benchmark executable directory
   LOG_ROOT=PATH               parent directory for timestamped logs
-  DCU_CORRECTNESS_BASELINE=PATH  fingerprint baseline path
+  HCU_CORRECTNESS_BASELINE=PATH  fingerprint baseline path
 EOF
 }
 
@@ -164,80 +164,80 @@ if [[ ! "$DEVICE" =~ ^[0-9]+$ ]]; then
     exit 2
 fi
 if [[ ! "$BROADPHASE_DIAG" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_BROADPHASE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_DIAG" >&2
+    printf 'ERROR: PX_HCU_BROADPHASE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_DIAG" >&2
     exit 2
 fi
 if [[ ! "$BROADPHASE_UPDATE_DIAG" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_BROADPHASE_UPDATE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_DIAG" >&2
+    printf 'ERROR: PX_HCU_BROADPHASE_UPDATE_DIAG must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_DIAG" >&2
     exit 2
 fi
 if [[ ! "$BROADPHASE_UPDATE_COMPACT" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_BROADPHASE_UPDATE_COMPACT must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_COMPACT" >&2
+    printf 'ERROR: PX_HCU_BROADPHASE_UPDATE_COMPACT must be 0 or 1, got %s\n' "$BROADPHASE_UPDATE_COMPACT" >&2
     exit 2
 fi
 if [[ ! "$PBD_PRIMITIVE_RADIX_CHUNKED" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED" >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED" >&2
     exit 2
 fi
 if [[ ! "$PBD_PRIMITIVE_RADIX_INLINE" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_INLINE must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_INLINE" >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RADIX_INLINE must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_INLINE" >&2
     exit 2
 fi
 if [[ "$PBD_PRIMITIVE_RADIX_INLINE" -eq 1 && "$PBD_PRIMITIVE_RADIX_CHUNKED" -ne 1 ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=1 requires PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=1\n' >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RADIX_INLINE=1 requires PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED=1\n' >&2
     exit 2
 fi
 if [[ ! "$PBD_PRIMITIVE_RADIX_FUSED64" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64 must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_FUSED64" >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64 must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RADIX_FUSED64" >&2
     exit 2
 fi
 if [[ "$PBD_PRIMITIVE_RADIX_FUSED64" -eq 1 && \
     ( "$PBD_PRIMITIVE_RADIX_CHUNKED" -ne 1 || "$PBD_PRIMITIVE_RADIX_INLINE" -ne 1 ) ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=1 requires PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=1 and PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=1\n' >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64=1 requires PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED=1 and PX_HCU_PBD_PRIMITIVE_RADIX_INLINE=1\n' >&2
     exit 2
 fi
 if [[ ! "$PBD_PRIMITIVE_RANK_DIAG" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PRIMITIVE_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RANK_DIAG" >&2
+    printf 'ERROR: PX_HCU_PBD_PRIMITIVE_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_PRIMITIVE_RANK_DIAG" >&2
     exit 2
 fi
 if [[ ! "$PBD_SPATIAL_RADIX_CHUNKED" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_SPATIAL_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_SPATIAL_RADIX_CHUNKED" >&2
+    printf 'ERROR: PX_HCU_PBD_SPATIAL_RADIX_CHUNKED must be 0 or 1, got %s\n' "$PBD_SPATIAL_RADIX_CHUNKED" >&2
     exit 2
 fi
 if [[ ! "$PBD_SPATIAL_RANK_DIAG" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_SPATIAL_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_SPATIAL_RANK_DIAG" >&2
+    printf 'ERROR: PX_HCU_PBD_SPATIAL_RANK_DIAG must be 0 or 1, got %s\n' "$PBD_SPATIAL_RANK_DIAG" >&2
     exit 2
 fi
 if [[ "$PBD_SPATIAL_RANK_DIAG" -eq 1 && "$PBD_SPATIAL_RADIX_CHUNKED" -ne 1 ]]; then
-    printf 'ERROR: PX_DCU_PBD_SPATIAL_RANK_DIAG=1 requires PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=1\n' >&2
+    printf 'ERROR: PX_HCU_PBD_SPATIAL_RANK_DIAG=1 requires PX_HCU_PBD_SPATIAL_RADIX_CHUNKED=1\n' >&2
     exit 2
 fi
 if [[ ! "$PBD_PARTICLE_RANGE_FUSED" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_FUSED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_FUSED" >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_FUSED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_FUSED" >&2
     exit 2
 fi
 if [[ ! "$PBD_PARTICLE_RANGE_CHUNKED" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_CHUNKED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_CHUNKED" >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_CHUNKED must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_CHUNKED" >&2
     exit 2
 fi
 if [[ "$PBD_PARTICLE_RANGE_CHUNKED" -eq 1 && "$PBD_PARTICLE_RANGE_FUSED" -ne 1 ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=1 requires PX_DCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_CHUNKED=1 requires PX_HCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
     exit 2
 fi
 if [[ ! "$PBD_PARTICLE_RANGE_PARALLEL" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_PARALLEL" >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_PARALLEL must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_PARALLEL" >&2
     exit 2
 fi
 if [[ "$PBD_PARTICLE_RANGE_PARALLEL" -eq 1 && "$PBD_PARTICLE_RANGE_FUSED" -ne 1 ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=1 requires PX_DCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_PARALLEL=1 requires PX_HCU_PBD_PARTICLE_RANGE_FUSED=1\n' >&2
     exit 2
 fi
 if [[ "$PBD_PARTICLE_RANGE_PARALLEL" -eq 1 && "$PBD_PARTICLE_RANGE_CHUNKED" -eq 1 ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_PARALLEL and PX_DCU_PBD_PARTICLE_RANGE_CHUNKED are mutually exclusive\n' >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_PARALLEL and PX_HCU_PBD_PARTICLE_RANGE_CHUNKED are mutually exclusive\n' >&2
     exit 2
 fi
 if [[ ! "$PBD_PARTICLE_RANGE_DIAG" =~ ^[01]$ ]]; then
-    printf 'ERROR: PX_DCU_PBD_PARTICLE_RANGE_DIAG must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_DIAG" >&2
+    printf 'ERROR: PX_HCU_PBD_PARTICLE_RANGE_DIAG must be 0 or 1, got %s\n' "$PBD_PARTICLE_RANGE_DIAG" >&2
     exit 2
 fi
 for value_name in MAX_PREFLIGHT_VRAM_PERCENT MAX_PREFLIGHT_HCU_PERCENT; do
@@ -347,10 +347,10 @@ fingerprint_paths()
 {
     printf '%s\n' \
         "$CASE_FILE" \
-        "$SCRIPT_DIR/run_dcu_correctness.sh" \
+        "$SCRIPT_DIR/run_hcu_correctness.sh" \
         "$SCRIPT_DIR/build.sh" \
         "$SCRIPT_DIR/CMakeLists.txt" \
-        "$REPO_ROOT/build_dcu.sh" \
+        "$REPO_ROOT/build_hcu.sh" \
         "$GPU_LIBRARY"
 
     local case_name target source_dir
@@ -533,7 +533,7 @@ if ! verify_build_state; then
     exit 3
 fi
 
-current_fingerprint="/tmp/dcu_correctness_now_$$.md5"
+current_fingerprint="/tmp/hcu_correctness_now_$$.md5"
 compute_fingerprint > "$current_fingerprint"
 if diff -q "$BASELINE" "$current_fingerprint" >/dev/null 2>&1; then
     fingerprint_gate=1
@@ -550,7 +550,7 @@ if [[ "$fingerprint_gate" -ne 1 ]]; then
 fi
 
 timestamp="$(date +%Y%m%d_%H%M%S)"
-RUN_DIR="$LOG_ROOT/dcu_correctness_${SELECTOR}_${timestamp}"
+RUN_DIR="$LOG_ROOT/hcu_correctness_${SELECTOR}_${timestamp}"
 SUMMARY_LOG="$RUN_DIR/summary.log"
 ENVIRONMENT_LOG="$RUN_DIR/environment.log"
 mkdir -p "$RUN_DIR"
@@ -574,19 +574,19 @@ write_environment()
     printf 'timeout_seconds=%s\n' "$TIMEOUT_SECONDS"
     printf 'post_health_samples=%s\n' "$POST_HEALTH_SAMPLES"
     printf 'health_interval=%s\n' "$HEALTH_INTERVAL"
-    printf 'px_dcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
-    printf 'px_dcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
-    printf 'px_dcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
-    printf 'px_dcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
-    printf 'px_dcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
-    printf 'px_dcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
-    printf 'px_dcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
-    printf 'px_dcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
-    printf 'px_dcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
-    printf 'px_dcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
-    printf 'px_dcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
-    printf 'px_dcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
-    printf 'px_dcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
+    printf 'px_hcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
+    printf 'px_hcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
+    printf 'px_hcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
+    printf 'px_hcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
+    printf 'px_hcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
+    printf 'px_hcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
+    printf 'px_hcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
+    printf 'px_hcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
+    printf 'px_hcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
+    printf 'px_hcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
+    printf 'px_hcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
+    printf 'px_hcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
+    printf 'px_hcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
     printf 'fingerprint_gate=%s\n' "$fingerprint_gate"
     printf 'baseline_md5='; md5sum "$BASELINE" | awk '{print $1}'
     printf '\n--- hy-smi ---\n'
@@ -631,7 +631,7 @@ run_case()
     local post_failures sample result assignment
 
     [[ -n "$arguments_text" ]] && read -r -a arguments <<< "$arguments_text"
-    if strings "$executable" 2>/dev/null | grep -q 'PX_DCU_BENCH_SIMULATION_TIMING_V1'; then
+    if strings "$executable" 2>/dev/null | grep -q 'PX_HCU_BENCH_SIMULATION_TIMING_V1'; then
         perf_required=1
     else
         perf_required=0
@@ -655,19 +655,19 @@ run_case()
         printf 'target=%s\n' "$target"
         printf 'description=%s\n' "$description"
         printf 'case_environment=%s\n' "$environment_text"
-        printf 'px_dcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
-        printf 'px_dcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
-        printf 'px_dcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
-        printf 'px_dcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
-        printf 'px_dcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
-        printf 'px_dcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
-        printf 'px_dcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
-        printf 'px_dcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
-        printf 'px_dcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
-        printf 'px_dcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
-        printf 'px_dcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
-        printf 'px_dcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
-        printf 'px_dcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
+        printf 'px_hcu_broadphase_diag=%s\n' "$BROADPHASE_DIAG"
+        printf 'px_hcu_broadphase_update_diag=%s\n' "$BROADPHASE_UPDATE_DIAG"
+        printf 'px_hcu_broadphase_update_compact=%s\n' "$BROADPHASE_UPDATE_COMPACT"
+        printf 'px_hcu_pbd_primitive_radix_chunked=%s\n' "$PBD_PRIMITIVE_RADIX_CHUNKED"
+        printf 'px_hcu_pbd_primitive_radix_inline=%s\n' "$PBD_PRIMITIVE_RADIX_INLINE"
+        printf 'px_hcu_pbd_primitive_radix_fused64=%s\n' "$PBD_PRIMITIVE_RADIX_FUSED64"
+        printf 'px_hcu_pbd_primitive_rank_diag=%s\n' "$PBD_PRIMITIVE_RANK_DIAG"
+        printf 'px_hcu_pbd_spatial_radix_chunked=%s\n' "$PBD_SPATIAL_RADIX_CHUNKED"
+        printf 'px_hcu_pbd_spatial_rank_diag=%s\n' "$PBD_SPATIAL_RANK_DIAG"
+        printf 'px_hcu_pbd_particle_range_fused=%s\n' "$PBD_PARTICLE_RANGE_FUSED"
+        printf 'px_hcu_pbd_particle_range_chunked=%s\n' "$PBD_PARTICLE_RANGE_CHUNKED"
+        printf 'px_hcu_pbd_particle_range_parallel=%s\n' "$PBD_PARTICLE_RANGE_PARALLEL"
+        printf 'px_hcu_pbd_particle_range_diag=%s\n' "$PBD_PARTICLE_RANGE_DIAG"
         printf 'performance_required=%s\n' "$perf_required"
         printf 'normal_exit_case=%s\n' "$normal_exit"
         printf 'repeat_index=%s/%s\n' "$iteration" "$REPEAT"
@@ -677,19 +677,19 @@ run_case()
         printf 'physx_gpu_md5='; md5sum "$GPU_LIBRARY" | awk '{print $1}'
         printf 'command='
         printf '%q ' env "HIP_VISIBLE_DEVICES=$DEVICE" "${case_environment[@]}" \
-            "PX_DCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
-            "PX_DCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
-            "PX_DCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
-            "PX_DCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
-            "PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
-            "PX_DCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
-            "PX_DCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
-            "PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
-            "PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
-            "PX_DCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
+            "PX_HCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
+            "PX_HCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
+            "PX_HCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
+            "PX_HCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
+            "PX_HCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
+            "PX_HCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
+            "PX_HCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
+            "PX_HCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
+            "PX_HCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
+            "PX_HCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
             "$executable" "${arguments[@]}"
         printf '\n\n--- pre-run health ---\n'
         printf '%s\n' "$health_line"
@@ -717,19 +717,19 @@ run_case()
         printf '%s\n' '--- benchmark output ---' | tee -a "$log_file"
         timeout --signal=TERM --kill-after=10s "${TIMEOUT_SECONDS}s" \
             env "HIP_VISIBLE_DEVICES=$DEVICE" "${case_environment[@]}" \
-            "PX_DCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
-            "PX_DCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
-            "PX_DCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
-            "PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
-            "PX_DCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
-            "PX_DCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
-            "PX_DCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
-            "PX_DCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
-            "PX_DCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
-            "PX_DCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
-            "PX_DCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
+            "PX_HCU_BROADPHASE_DIAG=$BROADPHASE_DIAG" \
+            "PX_HCU_BROADPHASE_UPDATE_DIAG=$BROADPHASE_UPDATE_DIAG" \
+            "PX_HCU_BROADPHASE_UPDATE_COMPACT=$BROADPHASE_UPDATE_COMPACT" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED=$PBD_PRIMITIVE_RADIX_CHUNKED" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_INLINE=$PBD_PRIMITIVE_RADIX_INLINE" \
+            "PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64=$PBD_PRIMITIVE_RADIX_FUSED64" \
+            "PX_HCU_PBD_PRIMITIVE_RANK_DIAG=$PBD_PRIMITIVE_RANK_DIAG" \
+            "PX_HCU_PBD_SPATIAL_RADIX_CHUNKED=$PBD_SPATIAL_RADIX_CHUNKED" \
+            "PX_HCU_PBD_SPATIAL_RANK_DIAG=$PBD_SPATIAL_RANK_DIAG" \
+            "PX_HCU_PBD_PARTICLE_RANGE_FUSED=$PBD_PARTICLE_RANGE_FUSED" \
+            "PX_HCU_PBD_PARTICLE_RANGE_CHUNKED=$PBD_PARTICLE_RANGE_CHUNKED" \
+            "PX_HCU_PBD_PARTICLE_RANGE_PARALLEL=$PBD_PARTICLE_RANGE_PARALLEL" \
+            "PX_HCU_PBD_PARTICLE_RANGE_DIAG=$PBD_PARTICLE_RANGE_DIAG" \
             stdbuf -oL -eL "$executable" "${arguments[@]}" 2>&1 | tee -a "$log_file"
         run_exit=${PIPESTATUS[0]}
 
@@ -741,9 +741,9 @@ run_case()
         capacity_count="$(grep -Eic \
             'increase PxGpuDynamicsMemoryConfig|simulation will miss interactions|capacity[^[:alnum:]]*(is )?(exceeded|overflow)|buffer[^[:alnum:]]*(is )?(exceeded|overflow)' \
             "$log_file" || true)"
-        perf_count="$(grep -Ec '^PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 ' "$log_file" || true)"
+        perf_count="$(grep -Ec '^PERF marker=PX_HCU_BENCH_SIMULATION_TIMING_V1 ' "$log_file" || true)"
         if (( perf_count == 1 )); then
-            perf_line="$(grep -E '^PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 ' "$log_file")"
+            perf_line="$(grep -E '^PERF marker=PX_HCU_BENCH_SIMULATION_TIMING_V1 ' "$log_file")"
         else
             perf_line=
         fi

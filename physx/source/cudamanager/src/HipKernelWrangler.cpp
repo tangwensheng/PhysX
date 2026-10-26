@@ -33,7 +33,7 @@
 #include "cudamanager/PxCudaContext.h"
 #include <cstdio>
 
-extern unsigned int g_DCU_ModuleCount;
+extern unsigned int g_HCU_ModuleCount;
 
 using namespace physx;
 
@@ -58,7 +58,7 @@ KernelWrangler::KernelWrangler(
 	mKernelNames = funcNames;
 
 	CUmodule* cuModules = cudaContextManager.getCuModules();
-	PxU32 nbModules = g_DCU_ModuleCount;
+	PxU32 nbModules = g_HCU_ModuleCount;
 	if(nbModules == 0) nbModules = 1;
 	mCuFunctions.resize(numFuncs, NULL);
 

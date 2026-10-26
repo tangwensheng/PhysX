@@ -80,27 +80,27 @@ PX_IMPLEMENT_OUTPUT_ERROR
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 namespace
 {
-	PX_NOINLINE void dcuMaybeProbeCallerReturn(
+	PX_NOINLINE void hcuMaybeProbeCallerReturn(
 		PxgGpuNarrowphaseCore* narrowphaseCore, PxCudaContextManager* cudaContextManager,
 		PxU32 call, PxU32 numTests)
 	{
-		const char* site = std::getenv("PX_DCU_PROBE");
+		const char* site = std::getenv("PX_HCU_PROBE");
 		if (!site || std::strcmp(site, "post-convextrimesh-return") != 0)
 			return;
 
-		const char* callEnv = std::getenv("PX_DCU_PROBE_CALL");
+		const char* callEnv = std::getenv("PX_HCU_PROBE_CALL");
 		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 5u;
 		if (call != targetCall)
 			return;
 
-		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
+		const char* msEnv = std::getenv("PX_HCU_PROBE_HOLD_MS");
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
 		std::fprintf(stderr,
-			"[HCU CALLER RETURN ENTER] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"[HCU CALLER RETURN ENTER] marker=PX_HCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
 			"call=%u tests=%u\n", call, numTests);
 		std::fflush(stderr);
 
@@ -110,7 +110,7 @@ namespace
 		narrowphaseCore->releaseContext();
 
 		std::fprintf(stderr,
-			"[HCU CALLER RETURN] marker=PX_DCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
+			"[HCU CALLER RETURN] marker=PX_HCU_NARROWPHASE_STAGE_V52_CALLER_RETURN_BOUNDARY "
 			"call=%u tests=%u sync=%d\n",
 			call, numTests, syncResult);
 		std::fprintf(stderr,
@@ -130,28 +130,28 @@ namespace
 		std::_Exit(syncResult == int(CUDA_SUCCESS) ? 96 : 98);
 	}
 
-	PX_NOINLINE void dcuMaybeProbePostUpdateFriction(
+	PX_NOINLINE void hcuMaybeProbePostUpdateFriction(
 		PxgGpuNarrowphaseCore* narrowphaseCore, PxCudaContextManager* cudaContextManager,
 		PxU32 call, PxU32 numTests)
 	{
 		if (call == 0)
 			return;
 
-		const char* site = std::getenv("PX_DCU_PROBE");
+		const char* site = std::getenv("PX_HCU_PROBE");
 		if (!site || std::strcmp(site, "post-update-friction") != 0)
 			return;
 
-		const char* callEnv = std::getenv("PX_DCU_PROBE_CALL");
+		const char* callEnv = std::getenv("PX_HCU_PROBE_CALL");
 		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 5u;
 		if (call != targetCall)
 			return;
 
-		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
+		const char* msEnv = std::getenv("PX_HCU_PROBE_HOLD_MS");
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
 		std::fprintf(stderr,
 			"[HCU POST UPDATE FRICTION ENTER] "
-			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
+			"marker=PX_HCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
 			"call=%u tests=%u\n", call, numTests);
 		std::fflush(stderr);
 
@@ -162,7 +162,7 @@ namespace
 
 		std::fprintf(stderr,
 			"[HCU POST UPDATE FRICTION] "
-			"marker=PX_DCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
+			"marker=PX_HCU_NARROWPHASE_STAGE_V53_POST_UPDATE_FRICTION_BOUNDARY "
 			"call=%u tests=%u sync=%d\n",
 			call, numTests, syncResult);
 		std::fprintf(stderr,
@@ -198,8 +198,8 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 	if (numTests == 0)
 		return;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	PxU32 dcuConvexTrimeshCallerCall = 0;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	PxU32 hcuConvexTrimeshCallerCall = 0;
 #endif
 
 	PxU32 maxPatches = 1;
@@ -228,9 +228,9 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 		break;
 	case GPU_BUCKET_ID::eConvexTrimesh:
 	{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		static PxU32 s_dcuConvexTrimeshCallerCallCount = 0;
-		dcuConvexTrimeshCallerCall = ++s_dcuConvexTrimeshCallerCallCount;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		static PxU32 s_hcuConvexTrimeshCallerCallCount = 0;
+		hcuConvexTrimeshCallerCall = ++s_hcuConvexTrimeshCallerCallCount;
 #endif
 		mContext->mGpuNarrowphaseCore->testSDKConvexTriMeshSATGpu(managersGPU,
 			mContext->mContext.getCreateAveragePoint(), managers.mCpuContactManagerMapping.size(),
@@ -238,9 +238,9 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 			mContext->mContext.mForceAndIndiceStreamPool->mDataStream,
 			mContext->mContext.mPatchStreamPool->mDataStreamSize, mContext->mContext.mContactStreamPool->mDataStreamSize,
 			mContext->mContext.mForceAndIndiceStreamPool->mDataStreamSize);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuMaybeProbeCallerReturn(mContext->mGpuNarrowphaseCore,
-			mContext->mContext.getCudaContextManager(), dcuConvexTrimeshCallerCall, numTests);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuMaybeProbeCallerReturn(mContext->mGpuNarrowphaseCore,
+			mContext->mContext.getCudaContextManager(), hcuConvexTrimeshCallerCall, numTests);
 #endif
 		maxPatches = PXG_MULTIMANIFOLD_MAX_SUBMANIFOLDS;
 		break;
@@ -508,9 +508,9 @@ void PxgCMGpuDiscreteUpdateBase::processContactManagers(PxgContactManagers& mana
 	mContext->mGpuNarrowphaseCore->updateFrictionPatches(managersGPU, managers.mCpuContactManagerMapping.size(),
 		mContext->mContext.mPatchStreamPool->mDataStream, mContext->mContext.mFrictionPatchStreamPool->mDataStream);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	dcuMaybeProbePostUpdateFriction(mContext->mGpuNarrowphaseCore,
-		mContext->mContext.getCudaContextManager(), dcuConvexTrimeshCallerCall, numTests);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	hcuMaybeProbePostUpdateFriction(mContext->mGpuNarrowphaseCore,
+		mContext->mContext.getCudaContextManager(), hcuConvexTrimeshCallerCall, numTests);
 #endif
 
 	mContext->mMaxPatches = PxMax(mContext->mMaxPatches, maxPatches);
@@ -705,8 +705,8 @@ void PxgNphaseImplementationContext::processResults()
 	{
 		PX_PROFILE_ZONE("GpuNarrowPhase.processResults", 0);
 		const bool compactDiag =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			std::getenv("PX_HCU_NP_COMPACT_DIAG") != NULL;
 #else
 			false;
 #endif
@@ -757,7 +757,7 @@ void PxgNphaseImplementationContext::processResults()
 
 			PxU32 nbLostFoundPairs = mGpuNarrowphaseCore->getTotalNbLostFoundPairs();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			if (compactDiag)
 			{
 				std::fprintf(stderr,
@@ -786,7 +786,7 @@ void PxgNphaseImplementationContext::processResults()
 			{
 				PxsContactManager* cm = lostFoundIndIterator[a];
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				if (compactDiag)
 				{
 					std::fprintf(stderr,
@@ -837,7 +837,7 @@ void PxgNphaseImplementationContext::processResults()
 
 		mContext.putNpThreadContext(threadContext);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		if (compactDiag)
 			std::fprintf(stderr, "[HCU NP PROCESS DONE] newTouch=%u lostTouch=%u maxPatches=%u\n",
 				newTouchCMCount, lostTouchCMCount, maxPatches);
@@ -867,8 +867,8 @@ PxU32 PxgNphaseImplementationContext::getNbLostFoundPatchManagers()
 void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continuation*/)
 {
 	const bool compactDiag =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		std::getenv("PX_DCU_NP_COMPACT_DIAG") != NULL;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		std::getenv("PX_HCU_NP_COMPACT_DIAG") != NULL;
 #else
 		false;
 #endif
@@ -876,7 +876,7 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 
 	mContext.getCudaContextManager()->acquireContext();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (compactDiag)
 		std::fprintf(stderr, "[HCU NP MERGE BEGIN] totalPairs=%u outputCapacity=%u\n",
 			mTotalNbPairs, mContactManagerOutputs.capacity());
@@ -902,7 +902,7 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 		nbFallbackPairs, mFallbackForUnsupportedCMs->getLostFoundPatchOutputCounts(), 
 		mFallbackForUnsupportedCMs->getLostFoundPatchManagers(), mFallbackForUnsupportedCMs->getNbLostFoundPatchManagers());
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (compactDiag)
 		std::fprintf(stderr, "[HCU NP MERGE FETCHED] totalPairs=%u outputs=%u lostFound=%u lostPatches=%u\n",
 			mTotalNbPairs, mContactManagerOutputs.size(), mGpuNarrowphaseCore->getTotalNbLostFoundPairs(),
@@ -963,13 +963,13 @@ void PxgNphaseImplementationContext::mergeContactManagers(PxBaseTask* /*continua
 
 	processResults();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (compactDiag)
 		std::fprintf(stderr, "[HCU NP MERGE PROCESSED]\n");
 #endif
 	mContext.getCudaContextManager()->releaseContext();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (compactDiag)
 		std::fprintf(stderr, "[HCU NP MERGE DONE]\n");
 #endif

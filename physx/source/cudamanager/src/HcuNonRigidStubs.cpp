@@ -24,7 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// DcuNonRigidStubs — method stubs for non-rigid-body modules
+// HcuNonRigidStubs — method stubs for non-rigid-body modules
 // (soft body, FEM cloth, particles, articulation) not yet ported to HCU.
 // Only provides the method implementations; class declarations come from
 // the existing PhysX GPU headers which ARE in the include path.
@@ -40,10 +40,10 @@
 
 using namespace physx;
 
-#define DCU_STUB(CLASS, METHOD, ...) \
+#define HCU_STUB(CLASS, METHOD, ...) \
 	void CLASS::METHOD(__VA_ARGS__) {}
 
-#define DCU_STUB_RET(RET, CLASS, METHOD, ...) \
+#define HCU_STUB_RET(RET, CLASS, METHOD, ...) \
 	RET CLASS::METHOD(__VA_ARGS__) { return RET(); }
 
 // ---- PxgArticulationCore ----

@@ -68,11 +68,11 @@
 
 namespace physx
 {
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	void dcuPbdPipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	void hcuPbdPipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
 		CUdeviceptr deviceCount, PxU32 hostValue)
 	{
-		const char* enabled = std::getenv("PX_DCU_PBD_PIPELINE_DIAG");
+		const char* enabled = std::getenv("PX_HCU_PBD_PIPELINE_DIAG");
 		if (!enabled || enabled[0] != '1')
 			return;
 
@@ -84,15 +84,15 @@ namespace physx
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[HCU PBD PIPELINE] marker=PX_DCU_PBD_PIPELINE_DIAG_V1 seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PIPELINE] marker=PX_HCU_PBD_PIPELINE_DIAG_V1 seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
 
-	void dcuPbdPrimitiveSortCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
+	void hcuPbdPrimitiveSortCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
 		CUdeviceptr deviceCount, PxU32 hostValue)
 	{
-		const char* enabled = std::getenv("PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG");
+		const char* enabled = std::getenv("PX_HCU_PBD_PRIMITIVE_PIPELINE_DIAG");
 		if (!enabled || std::strcmp(enabled, "1") != 0)
 			return;
 
@@ -104,111 +104,111 @@ namespace physx
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=sort seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_HCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=sort seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
 
-	bool dcuPbdUseChunkedPrimitiveRadix()
+	bool hcuPbdUseChunkedPrimitiveRadix()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_RADIX_CHUNKED");
+			const char* value = std::getenv("PX_HCU_PBD_PRIMITIVE_RADIX_CHUNKED");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdUseInlinePrimitiveRadix()
+	bool hcuPbdUseInlinePrimitiveRadix()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_RADIX_INLINE");
+			const char* value = std::getenv("PX_HCU_PBD_PRIMITIVE_RADIX_INLINE");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdUseFused64PrimitiveRadix()
+	bool hcuPbdUseFused64PrimitiveRadix()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_RADIX_FUSED64");
+			const char* value = std::getenv("PX_HCU_PBD_PRIMITIVE_RADIX_FUSED64");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdPrimitiveSortDiagEnabled()
+	bool hcuPbdPrimitiveSortDiagEnabled()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_RANK_DIAG");
+			const char* value = std::getenv("PX_HCU_PBD_PRIMITIVE_RANK_DIAG");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdUseFusedParticleRanges()
+	bool hcuPbdUseFusedParticleRanges()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PARTICLE_RANGE_FUSED");
+			const char* value = std::getenv("PX_HCU_PBD_PARTICLE_RANGE_FUSED");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdUseChunkedParticleRanges()
+	bool hcuPbdUseChunkedParticleRanges()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PARTICLE_RANGE_CHUNKED");
+			const char* value = std::getenv("PX_HCU_PBD_PARTICLE_RANGE_CHUNKED");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdUseParallelParticleRanges()
+	bool hcuPbdUseParallelParticleRanges()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PARTICLE_RANGE_PARALLEL");
+			const char* value = std::getenv("PX_HCU_PBD_PARTICLE_RANGE_PARALLEL");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdParticleRangeDiagEnabled()
+	bool hcuPbdParticleRangeDiagEnabled()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_PARTICLE_RANGE_DIAG");
+			const char* value = std::getenv("PX_HCU_PBD_PARTICLE_RANGE_DIAG");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	void dcuPbdPrintParticleRangeModeOnce(bool fused, bool chunked, bool parallel)
+	void hcuPbdPrintParticleRangeModeOnce(bool fused, bool chunked, bool parallel)
 	{
 		static std::atomic<bool> printed(false);
 		if (!printed.exchange(true, std::memory_order_relaxed))
 		{
 			std::printf("[HCU PBD RANGE] host_marker=%s mode=%s device_marker=%s scans_per_frame=%u first_launch_grid=%ux%ux%u second_launch_grid=%ux%ux%u second_launch_block=%ux%ux%u\n",
-				parallel ? "PX_DCU_PBD_PARTICLE_RANGE_HOST_V62_PARALLEL_OPT_IN" : (chunked ? "PX_DCU_PBD_PARTICLE_RANGE_HOST_V61_CHUNKED_OPT_IN" : "PX_DCU_PBD_PARTICLE_RANGE_HOST_V60_OPT_IN"),
+				parallel ? "PX_HCU_PBD_PARTICLE_RANGE_HOST_V62_PARALLEL_OPT_IN" : (chunked ? "PX_HCU_PBD_PARTICLE_RANGE_HOST_V61_CHUNKED_OPT_IN" : "PX_HCU_PBD_PARTICLE_RANGE_HOST_V60_OPT_IN"),
 				parallel ? "parallel_v62" : (chunked ? "chunked_v61" : (fused ? "fused_v60" : "two_scan_v59")),
-				parallel ? "PX_DCU_PBD_PARTICLE_RANGE_V62_PARALLEL_BOUNDARY_32" : (chunked ? "PX_DCU_PBD_PARTICLE_RANGE_V61_CHUNKED_SINGLE_SCAN" : (fused ? "PX_DCU_PBD_PARTICLE_RANGE_V60_FUSED_SINGLE_SCAN" : "PX_DCU_PARTICLE_CONTACT_RANGE_V59_DETERMINISTIC_LARGE")),
+				parallel ? "PX_HCU_PBD_PARTICLE_RANGE_V62_PARALLEL_BOUNDARY_32" : (chunked ? "PX_HCU_PBD_PARTICLE_RANGE_V61_CHUNKED_SINGLE_SCAN" : (fused ? "PX_HCU_PBD_PARTICLE_RANGE_V60_FUSED_SINGLE_SCAN" : "PX_HCU_PARTICLE_CONTACT_RANGE_V59_DETERMINISTIC_LARGE")),
 				fused ? 1u : 2u, fused ? 0u : 32u, 1u, 1u,
 				fused ? 1u : 32u, 1u, 1u, (parallel || chunked) ? 32u : (fused ? 1u : 256u), 1u, 1u);
 			std::fflush(stdout);
 		}
 	}
 
-	bool dcuPbdValidateParticleRanges(PxCudaContext* cudaContext, CUstream stream,
+	bool hcuPbdValidateParticleRanges(PxCudaContext* cudaContext, CUstream stream,
 		CUdeviceptr sortedContactsd, CUdeviceptr contactCountd, CUdeviceptr pairCountd,
 		CUdeviceptr rangeStartd, CUdeviceptr rangeEndd, PxU32 maxContacts)
 	{
-		if (!dcuPbdParticleRangeDiagEnabled())
+		if (!hcuPbdParticleRangeDiagEnabled())
 			return true;
 
 		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
@@ -222,7 +222,7 @@ namespace physx
 		if (syncResult != CUDA_SUCCESS || contactCountResult != CUDA_SUCCESS || pairCountResult != CUDA_SUCCESS ||
 			contactCount > maxContacts || pairCount > contactCount)
 		{
-			std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_OR_COUNT_FAILED sync=%d contact_copy=%d pair_copy=%d contacts=%u pairs=%u max_contacts=%u\n",
+			std::printf("[HCU PBD RANGE DIAG] marker=PX_HCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_OR_COUNT_FAILED sync=%d contact_copy=%d pair_copy=%d contacts=%u pairs=%u max_contacts=%u\n",
 				int(syncResult), int(contactCountResult), int(pairCountResult), contactCount, pairCount, maxContacts);
 			std::fflush(stdout);
 			return false;
@@ -245,7 +245,7 @@ namespace physx
 
 		if (contactsResult != CUDA_SUCCESS || startsResult != CUDA_SUCCESS || endsResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_FAILED contacts_copy=%d starts_copy=%d ends_copy=%d contacts=%u pairs=%u\n",
+			std::printf("[HCU PBD RANGE DIAG] marker=PX_HCU_PBD_PARTICLE_RANGE_DIAG_V60 verdict=READBACK_FAILED contacts_copy=%d starts_copy=%d ends_copy=%d contacts=%u pairs=%u\n",
 				int(contactsResult), int(startsResult), int(endsResult), contactCount, pairCount);
 			std::fflush(stdout);
 			return false;
@@ -293,54 +293,54 @@ namespace physx
 		const PxU32 expectedEnd = firstMismatch == 0xffffffffu ? 0xffffffffu : expectedEnds[firstMismatch];
 		const PxU32 actualStart = firstMismatch == 0xffffffffu ? 0xffffffffu : rangeStarts[firstMismatch];
 		const PxU32 actualEnd = firstMismatch == 0xffffffffu ? 0xffffffffu : rangeEnds[firstMismatch];
-		std::printf("[HCU PBD RANGE DIAG] marker=PX_DCU_PBD_PARTICLE_RANGE_DIAG_V60 contacts=%u pairs=%u expected_pairs=%u pair_count_mismatch=%u start_mismatches=%u end_mismatches=%u particle_order_violations=%u first_mismatch=%u expected_start=%u expected_end=%u actual_start=%u actual_end=%u verdict=%s\n",
+		std::printf("[HCU PBD RANGE DIAG] marker=PX_HCU_PBD_PARTICLE_RANGE_DIAG_V60 contacts=%u pairs=%u expected_pairs=%u pair_count_mismatch=%u start_mismatches=%u end_mismatches=%u particle_order_violations=%u first_mismatch=%u expected_start=%u expected_end=%u actual_start=%u actual_end=%u verdict=%s\n",
 			contactCount, pairCount, expectedPairs, pairCountMismatch, startMismatches, endMismatches, orderViolations, firstMismatch,
 			expectedStart, expectedEnd, actualStart, actualEnd, valid ? "VALID" : "INVALID");
 		std::fflush(stdout);
 		return valid;
 	}
 
-	void dcuPbdPrintPrimitiveRadixModeOnce(bool chunked, bool inlineRadix, bool fused64)
+	void hcuPbdPrintPrimitiveRadixModeOnce(bool chunked, bool inlineRadix, bool fused64)
 	{
 		static std::atomic<bool> printed(false);
 		if(!printed.exchange(true, std::memory_order_relaxed))
 		{
 			std::printf("[HCU PBD RADIX] host_marker=%s mode=%s device_marker=%s launches_per_64bit_sort=%u launch_grid=1x2x1 launch_block=%ux1x1\n",
-				fused64 ? "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V63_FUSED64_OPT_IN" : (inlineRadix ? "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V7_INLINE_OPT_IN" : "PX_DCU_PBD_PRIMITIVE_RADIX_HOST_V5_OPT_IN"),
+				fused64 ? "PX_HCU_PBD_PRIMITIVE_RADIX_HOST_V63_FUSED64_OPT_IN" : (inlineRadix ? "PX_HCU_PBD_PRIMITIVE_RADIX_HOST_V7_INLINE_OPT_IN" : "PX_HCU_PBD_PRIMITIVE_RADIX_HOST_V5_OPT_IN"),
 				fused64 ? "fused64_v63" : (inlineRadix ? "inline_v7" : (chunked ? "chunked_v5" : "serial_v4")),
-				fused64 ? "PX_DCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE" : (inlineRadix ? "PX_DCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32" : (chunked ? "PX_DCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32" : "PX_DCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096")),
+				fused64 ? "PX_HCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE" : (inlineRadix ? "PX_HCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32" : (chunked ? "PX_HCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32" : "PX_HCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096")),
 				fused64 ? 1u : (chunked ? 2u : 16u), chunked ? 32u : 1u);
 			std::fflush(stdout);
 		}
 	}
 
-	struct DcuPbdPrimitiveSortItem
+	struct HcuPbdPrimitiveSortItem
 	{
 		PxU32 key;
 		PxU32 rank;
 	};
 
-	struct DcuPbdPrimitiveSortItem64
+	struct HcuPbdPrimitiveSortItem64
 	{
 		PxU64 key;
 		PxU32 rank;
 	};
 
-	struct DcuPbdPrimitiveSortReference
+	struct HcuPbdPrimitiveSortReference
 	{
 		bool enabled;
 		PxU32 count;
-		std::vector<DcuPbdPrimitiveSortItem> rigid;
-		std::vector<DcuPbdPrimitiveSortItem> particle;
-		std::vector<DcuPbdPrimitiveSortItem64> rigid64;
-		std::vector<DcuPbdPrimitiveSortItem64> particle64;
+		std::vector<HcuPbdPrimitiveSortItem> rigid;
+		std::vector<HcuPbdPrimitiveSortItem> particle;
+		std::vector<HcuPbdPrimitiveSortItem64> rigid64;
+		std::vector<HcuPbdPrimitiveSortItem64> particle64;
 
-		DcuPbdPrimitiveSortReference() : enabled(false), count(0)
+		HcuPbdPrimitiveSortReference() : enabled(false), count(0)
 		{
 		}
 	};
 
-	struct DcuPbdRankStats
+	struct HcuPbdRankStats
 	{
 		PxU32 minRank;
 		PxU32 maxRank;
@@ -353,9 +353,9 @@ namespace physx
 		PxU32 firstDuplicateValue;
 	};
 
-	DcuPbdRankStats dcuPbdAnalyzeRanks(const std::vector<PxU32>& ranks)
+	HcuPbdRankStats hcuPbdAnalyzeRanks(const std::vector<PxU32>& ranks)
 	{
-		DcuPbdRankStats stats;
+		HcuPbdRankStats stats;
 		stats.minRank = 0xffffffffu;
 		stats.maxRank = 0;
 		stats.outOfRangeCount = 0;
@@ -402,12 +402,12 @@ namespace physx
 		return stats;
 	}
 
-	bool dcuPbdCapturePrimitiveSortReference(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
+	bool hcuPbdCapturePrimitiveSortReference(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
 		CUdeviceptr rigidKeys, CUdeviceptr rigidRanks, CUdeviceptr particleKeys, CUdeviceptr particleRanks,
 		CUdeviceptr rigidKeys64, CUdeviceptr particleKeys64,
-		PxU32 maxCount, DcuPbdPrimitiveSortReference& reference)
+		PxU32 maxCount, HcuPbdPrimitiveSortReference& reference)
 	{
-		if (!dcuPbdPrimitiveSortDiagEnabled())
+		if (!hcuPbdPrimitiveSortDiagEnabled())
 			return true;
 
 		reference.enabled = true;
@@ -417,14 +417,14 @@ namespace physx
 			? cudaContext->memcpyDtoH(&reference.count, deviceCount, sizeof(reference.count)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d count=%u action=abort_before_low32_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d count=%u action=abort_before_low32_sort\n",
 				int(syncResult), int(countCopyResult), reference.count);
 			std::fflush(stdout);
 			return false;
 		}
 		if (reference.count > maxCount)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=COUNT_OUT_OF_RANGE count=%u max_count=%u action=abort_before_low32_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=COUNT_OUT_OF_RANGE count=%u max_count=%u action=abort_before_low32_sort\n",
 				reference.count, maxCount);
 			std::fflush(stdout);
 			return false;
@@ -458,7 +458,7 @@ namespace physx
 			particleKeyCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS ||
 			rigidKey64CopyResult != CUDA_SUCCESS || particleKey64CopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sort\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=READBACK_FAILED sync=%d count_copy=%d rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sort\n",
 				int(syncResult), int(countCopyResult), int(rigidKeyCopyResult), int(rigidRankCopyResult),
 				int(particleKeyCopyResult), int(particleRankCopyResult), int(rigidKey64CopyResult),
 				int(particleKey64CopyResult), reference.count);
@@ -478,7 +478,7 @@ namespace physx
 			reference.particle[i].rank = particleInputRanks[i];
 			if (rigidInputRanks[i] >= reference.count || particleInputRanks[i] >= reference.count)
 			{
-				std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=pre_64 verdict=INPUT_RANK_OUT_OF_RANGE count=%u index=%u rigid_rank=%u particle_rank=%u action=abort_before_sort\n",
+				std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=pre_64 verdict=INPUT_RANK_OUT_OF_RANGE count=%u index=%u rigid_rank=%u particle_rank=%u action=abort_before_sort\n",
 					reference.count, i, rigidInputRanks[i], particleInputRanks[i]);
 				std::fflush(stdout);
 				return false;
@@ -488,28 +488,28 @@ namespace physx
 			reference.particle64[i].key = particleInputKeys64[particleInputRanks[i]];
 			reference.particle64[i].rank = particleInputRanks[i];
 		}
-		const auto keyLess = [](const DcuPbdPrimitiveSortItem& a, const DcuPbdPrimitiveSortItem& b)
+		const auto keyLess = [](const HcuPbdPrimitiveSortItem& a, const HcuPbdPrimitiveSortItem& b)
 		{
 			return a.key < b.key;
 		};
 		std::stable_sort(reference.rigid.begin(), reference.rigid.end(), keyLess);
 		std::stable_sort(reference.particle.begin(), reference.particle.end(), keyLess);
-		const auto keyLess64 = [](const DcuPbdPrimitiveSortItem64& a, const DcuPbdPrimitiveSortItem64& b)
+		const auto keyLess64 = [](const HcuPbdPrimitiveSortItem64& a, const HcuPbdPrimitiveSortItem64& b)
 		{
 			return a.key < b.key;
 		};
 		std::stable_sort(reference.rigid64.begin(), reference.rigid64.end(), keyLess64);
 		std::stable_sort(reference.particle64.begin(), reference.particle64.end(), keyLess64);
 
-		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n",
+		std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=pre_low32 verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n",
 			reference.count);
 		std::fflush(stdout);
 		return true;
 	}
 
-	bool dcuPbdValidatePrimitiveSortOutput(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
+	bool hcuPbdValidatePrimitiveSortOutput(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
 		CUdeviceptr rigidKeys, CUdeviceptr rigidRanks, CUdeviceptr particleKeys, CUdeviceptr particleRanks,
-		const DcuPbdPrimitiveSortReference& reference)
+		const HcuPbdPrimitiveSortReference& reference)
 	{
 		if (!reference.enabled)
 			return true;
@@ -520,7 +520,7 @@ namespace physx
 			? cudaContext->memcpyDtoH(&outputCount, deviceCount, sizeof(outputCount)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS || outputCount != reference.count)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_high32_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_high32_copy\n",
 				(syncResult == CUDA_SUCCESS && countCopyResult == CUDA_SUCCESS) ? "COUNT_CHANGED" : "READBACK_FAILED",
 				int(syncResult), int(countCopyResult), reference.count, outputCount);
 			std::fflush(stdout);
@@ -546,7 +546,7 @@ namespace physx
 		if (rigidKeyCopyResult != CUDA_SUCCESS || rigidRankCopyResult != CUDA_SUCCESS ||
 			particleKeyCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=READBACK_FAILED rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d count=%u action=abort_before_high32_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=READBACK_FAILED rigid_key_copy=%d rigid_rank_copy=%d particle_key_copy=%d particle_rank_copy=%d count=%u action=abort_before_high32_copy\n",
 				int(rigidKeyCopyResult), int(rigidRankCopyResult), int(particleKeyCopyResult),
 				int(particleRankCopyResult), outputCount);
 			std::fflush(stdout);
@@ -557,7 +557,7 @@ namespace physx
 		for (PxU32 setIndex = 0; setIndex < 2; ++setIndex)
 		{
 			const char* label = setIndex == 0 ? "rigid" : "particle";
-			const std::vector<DcuPbdPrimitiveSortItem>& expected = setIndex == 0 ? reference.rigid : reference.particle;
+			const std::vector<HcuPbdPrimitiveSortItem>& expected = setIndex == 0 ? reference.rigid : reference.particle;
 			const std::vector<PxU32>& actualKeys = setIndex == 0 ? rigidOutputKeys : particleOutputKeys;
 			const std::vector<PxU32>& actualRanks = setIndex == 0 ? rigidOutputRanks : particleOutputRanks;
 			PxU32 keyMismatches = 0;
@@ -581,35 +581,35 @@ namespace physx
 					++orderViolations;
 			}
 
-			const DcuPbdRankStats rankStats = dcuPbdAnalyzeRanks(actualRanks);
+			const HcuPbdRankStats rankStats = hcuPbdAnalyzeRanks(actualRanks);
 			const bool valid = pairMismatches == 0 && orderViolations == 0 && rankStats.outOfRangeCount == 0 &&
 				rankStats.duplicateCount == 0 && rankStats.missingCount == 0;
 			const PxU32 expectedKey = firstMismatch == 0xffffffffu ? 0xffffffffu : expected[firstMismatch].key;
 			const PxU32 expectedRank = firstMismatch == 0xffffffffu ? 0xffffffffu : expected[firstMismatch].rank;
 			const PxU32 actualKey = firstMismatch == 0xffffffffu ? 0xffffffffu : actualKeys[firstMismatch];
 			const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : actualRanks[firstMismatch];
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 label=%s count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 label=%s count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
 				label, outputCount, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 				rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 				expectedKey, expectedRank, actualKey, actualRank, valid ? "VALID" : "INVALID");
 			allValid = allValid && valid;
 		}
 
-		const bool chunked = dcuPbdUseChunkedPrimitiveRadix();
-		const bool inlineRadix = chunked && dcuPbdUseInlinePrimitiveRadix();
-		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=%ux1x1\n",
+		const bool chunked = hcuPbdUseChunkedPrimitiveRadix();
+		const bool inlineRadix = chunked && hcuPbdUseInlinePrimitiveRadix();
+		std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V4 phase=post_low32 verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=%ux1x1\n",
 			allValid ? "VALID" : "INVALID", outputCount,
 			allValid ? "continue_high32_copy" : "abort_before_high32_copy",
 			inlineRadix ? "inline_v7" : (chunked ? "chunked_v5" : "serial_v4"),
-			inlineRadix ? "PX_DCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32" : (chunked ? "PX_DCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32" : "PX_DCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096"),
+			inlineRadix ? "PX_HCU_PBD_PRIMITIVE_RADIX_V7_INLINE_RADIX_32" : (chunked ? "PX_HCU_PBD_PRIMITIVE_RADIX_V5_CHUNKED_COUNTING_32" : "PX_HCU_PBD_PRIMITIVE_RADIX_V4_SERIAL_COUNTING_4096"),
 			chunked ? 32u : 1u);
 		std::fflush(stdout);
 		return allValid;
 	}
 
-	bool dcuPbdValidatePrimitiveSortOutput64(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
+	bool hcuPbdValidatePrimitiveSortOutput64(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr deviceCount,
 		CUdeviceptr rigidRanks, CUdeviceptr particleRanks, CUdeviceptr rigidKeys64, CUdeviceptr particleKeys64,
-		const DcuPbdPrimitiveSortReference& reference)
+		const HcuPbdPrimitiveSortReference& reference)
 	{
 		if (!reference.enabled)
 			return true;
@@ -620,7 +620,7 @@ namespace physx
 			? cudaContext->memcpyDtoH(&outputCount, deviceCount, sizeof(outputCount)) : syncResult;
 		if (syncResult != CUDA_SUCCESS || countCopyResult != CUDA_SUCCESS || outputCount != reference.count)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_sorted_value_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s sync=%d count_copy=%d input_count=%u output_count=%u action=abort_before_sorted_value_copy\n",
 				(syncResult == CUDA_SUCCESS && countCopyResult == CUDA_SUCCESS) ? "COUNT_CHANGED" : "READBACK_FAILED",
 				int(syncResult), int(countCopyResult), reference.count, outputCount);
 			std::fflush(stdout);
@@ -649,7 +649,7 @@ namespace physx
 		if (rigidRankCopyResult != CUDA_SUCCESS || particleRankCopyResult != CUDA_SUCCESS ||
 			rigidKey64CopyResult != CUDA_SUCCESS || particleKey64CopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=READBACK_FAILED rigid_rank_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sorted_value_copy\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=READBACK_FAILED rigid_rank_copy=%d particle_rank_copy=%d rigid_key64_copy=%d particle_key64_copy=%d count=%u action=abort_before_sorted_value_copy\n",
 				int(rigidRankCopyResult), int(particleRankCopyResult), int(rigidKey64CopyResult),
 				int(particleKey64CopyResult), outputCount);
 			std::fflush(stdout);
@@ -660,10 +660,10 @@ namespace physx
 		for (PxU32 setIndex = 0; setIndex < 2; ++setIndex)
 		{
 			const char* label = setIndex == 0 ? "rigid" : "particle";
-			const std::vector<DcuPbdPrimitiveSortItem64>& expected = setIndex == 0 ? reference.rigid64 : reference.particle64;
+			const std::vector<HcuPbdPrimitiveSortItem64>& expected = setIndex == 0 ? reference.rigid64 : reference.particle64;
 			const std::vector<PxU32>& actualRanks = setIndex == 0 ? rigidOutputRanks : particleOutputRanks;
 			const std::vector<PxU64>& originalKeys = setIndex == 0 ? rigidInputKeys64 : particleInputKeys64;
-			const DcuPbdRankStats rankStats = dcuPbdAnalyzeRanks(actualRanks);
+			const HcuPbdRankStats rankStats = hcuPbdAnalyzeRanks(actualRanks);
 			PxU32 keyMismatches = 0;
 			PxU32 rankMismatches = 0;
 			PxU32 pairMismatches = 0;
@@ -698,7 +698,7 @@ namespace physx
 			const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : actualRanks[firstMismatch];
 			const PxU64 actualKey = firstMismatch == 0xffffffffu || actualRank >= outputCount
 				? 0xffffffffffffffffull : originalKeys[actualRank];
-			std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 label=%s count=%u key64_mismatches=%u rank_mismatches=%u pair_mismatches=%u key64_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key64=%llu expected_rank=%u actual_key64=%llu actual_rank=%u verdict=%s\n",
+			std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 label=%s count=%u key64_mismatches=%u rank_mismatches=%u pair_mismatches=%u key64_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key64=%llu expected_rank=%u actual_key64=%llu actual_rank=%u verdict=%s\n",
 				label, outputCount, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 				rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 				static_cast<unsigned long long>(expectedKey), expectedRank,
@@ -706,13 +706,13 @@ namespace physx
 			allValid = allValid && valid;
 		}
 
-		const bool fused64 = dcuPbdUseChunkedPrimitiveRadix() && dcuPbdUseInlinePrimitiveRadix() &&
-			dcuPbdUseFused64PrimitiveRadix();
-		std::printf("[HCU PBD SORT] marker=PX_DCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s count=%u reference=host_stable_sort_key64_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=32x1x1\n",
+		const bool fused64 = hcuPbdUseChunkedPrimitiveRadix() && hcuPbdUseInlinePrimitiveRadix() &&
+			hcuPbdUseFused64PrimitiveRadix();
+		std::printf("[HCU PBD SORT] marker=PX_HCU_PBD_PRIMITIVE_SORT_DIAG_V63 phase=post_64 verdict=%s count=%u reference=host_stable_sort_key64_rank action=%s radix_mode=%s device_marker=%s launch_grid=1x2x1 launch_block=32x1x1\n",
 			allValid ? "VALID" : "INVALID", outputCount,
 			allValid ? "continue_sorted_value_copy" : "abort_before_sorted_value_copy",
 			fused64 ? "fused64_v63" : "legacy_64bit_two_stage",
-			fused64 ? "PX_DCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE" : "legacy_low32_high32_sequence");
+			fused64 ? "PX_HCU_PBD_PRIMITIVE_RADIX_V63_FUSED_64_INLINE" : "legacy_low32_high32_sequence");
 		std::fflush(stdout);
 		return allValid;
 	}
@@ -1401,10 +1401,10 @@ namespace physx
 #endif
 
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// Host-side validation of the ordinary-particle grid. Keep this opt-in so
 		// normal HCU and NVIDIA runs do not pay for synchronous readbacks.
-		const char* gridDiag = std::getenv("PX_DCU_PBD_GRID_DIAG");
+		const char* gridDiag = std::getenv("PX_HCU_PBD_GRID_DIAG");
 		if (gridDiag && gridDiag[0] != '0' && particleSystem.mCommonData.mNumParticles > 0)
 		{
 			const PxU32 ordinaryParticles = particleSystem.mCommonData.mNumParticles;
@@ -1413,7 +1413,7 @@ namespace physx
 
 			if (syncResult != CUDA_SUCCESS)
 			{
-				std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=0 result=%d particles=%u cells=%u\n",
+				std::printf("[HCU PBD GRID] marker=PX_HCU_PBD_GRID_DIAG_V1 id=%u sync=0 result=%d particles=%u cells=%u\n",
 					id, int(syncResult), ordinaryParticles, gridCellCount);
 			}
 			else
@@ -1446,7 +1446,7 @@ namespace physx
 					cellEndResult != CUDA_SUCCESS || sortedPositionResult != CUDA_SUCCESS ||
 					unsortedPositionResult != CUDA_SUCCESS)
 				{
-					std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=0 hash=%d s2u=%d u2s=%d cellStart=%d cellEnd=%d sortedPos=%d unsortedPos=%d particles=%u cells=%u\n",
+					std::printf("[HCU PBD GRID] marker=PX_HCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=0 hash=%d s2u=%d u2s=%d cellStart=%d cellEnd=%d sortedPos=%d unsortedPos=%d particles=%u cells=%u\n",
 						id, int(hashResult), int(sortedToUnsortedResult), int(unsortedToSortedResult),
 						int(cellStartResult), int(cellEndResult), int(sortedPositionResult),
 						int(unsortedPositionResult), ordinaryParticles, gridCellCount);
@@ -1534,7 +1534,7 @@ namespace physx
 						const PxU32 lastHash = ordinaryParticles ? hashes[ordinaryParticles - 1] : EMPTY_CELL;
 						const PxU32 firstMapping = ordinaryParticles ? sortedToUnsorted[0] : EMPTY_CELL;
 						const PxU32 lastMapping = ordinaryParticles ? sortedToUnsorted[ordinaryParticles - 1] : EMPTY_CELL;
-					std::printf("[HCU PBD GRID] marker=PX_DCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=1 particles=%u cells=%u grid=%ux%ux%u cellWidth=%.9g hashFirst=%u hashLast=%u hashOrderErrors=%u hashOutOfRange=%u s2uFirst=%u s2uLast=%u s2uOutOfRange=%u s2uDuplicates=%u s2uMissing=%u u2sOutOfRange=%u reverseErrors=%u positionMismatches=%u nonFiniteSorted=%u nonEmptyCells=%u invalidCellRanges=%u cellCoverage=%u cellHashMismatches=%u\n",
+					std::printf("[HCU PBD GRID] marker=PX_HCU_PBD_GRID_DIAG_V1 id=%u sync=1 copy=1 particles=%u cells=%u grid=%ux%ux%u cellWidth=%.9g hashFirst=%u hashLast=%u hashOrderErrors=%u hashOutOfRange=%u s2uFirst=%u s2uLast=%u s2uOutOfRange=%u s2uDuplicates=%u s2uMissing=%u u2sOutOfRange=%u reverseErrors=%u positionMismatches=%u nonFiniteSorted=%u nonEmptyCells=%u invalidCellRanges=%u cellCoverage=%u cellHashMismatches=%u\n",
 							id, ordinaryParticles, gridCellCount, particleSystem.mCommonData.mGridSizeX,
 							particleSystem.mCommonData.mGridSizeY, particleSystem.mCommonData.mGridSizeZ,
 							particleSystem.mCommonData.mGridCellWidth, firstHash, lastHash, hashOrderErrors,
@@ -1547,8 +1547,8 @@ namespace physx
 		}
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "grid_reorder_complete", 0,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "grid_reorder_complete", 0,
 			particleSystem.mCommonData.mNumParticles);
 #endif
 
@@ -1560,7 +1560,7 @@ namespace physx
 	{
 		const CUfunction preIntegrateKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::PS_UPDATE_UNSORTED_ARRAY);
 
-		#if defined(PX_DCU_PORT) && PX_DCU_PORT
+		#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		const PxU32 numThreadsPerBlock = 256;
 		#else
 		const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
@@ -1598,7 +1598,7 @@ namespace physx
 		{
 			const CUfunction copyToDiffuseUnsortedFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::PS_UPDATE_DIFFUSE_UNSORTED_ARRAY);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::PS_SOLVE;
 #else
 			const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;
@@ -1926,8 +1926,8 @@ namespace physx
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU clampMaxValue fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "contact_clamp_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "contact_clamp_complete",
 				totalContactCountsd, nbActiveParticleSystems);
 #endif
 
@@ -1961,11 +1961,11 @@ namespace physx
 				totalContactCountsd, &mRSDesc[2 * nbActiveParticleSystems + 2], mRadixSortDescBuf[0].getDevicePtr() + sizeof(PxgRadixSortBlockDesc),
 				mRadixSortDescBuf[1].getDevicePtr() + sizeof(PxgRadixSortBlockDesc));
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_descriptors_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_descriptors_complete",
 				totalContactCountsd, nbActiveParticleSystems);
-			DcuPbdPrimitiveSortReference primitiveSortReference;
-			if (!dcuPbdCapturePrimitiveSortReference(mCudaContext, mStream, totalContactCountsd,
+			HcuPbdPrimitiveSortReference primitiveSortReference;
+			if (!hcuPbdCapturePrimitiveSortReference(mCudaContext, mStream, totalContactCountsd,
 				inputKeyd, inputRankd, inputKeyd2, inputRankd2, mContactByRigidBuf.getDevicePtr(),
 				mContactSortedByParticleBuf.getDevicePtr(), mMaxContacts, primitiveSortReference))
 				std::abort();
@@ -1975,23 +1975,23 @@ namespace physx
 			CUdeviceptr contactByRigidd = mContactByRigidBuf.getDevicePtr();
 			CUdeviceptr contactByParticled = mContactSortedByParticleBuf.getDevicePtr();
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			const bool useChunkedPrimitiveRadix = dcuPbdUseChunkedPrimitiveRadix();
-			const bool useInlinePrimitiveRadix = useChunkedPrimitiveRadix && dcuPbdUseInlinePrimitiveRadix();
-			const bool useFused64PrimitiveRadix = useInlinePrimitiveRadix && dcuPbdUseFused64PrimitiveRadix();
-			dcuPbdPrintPrimitiveRadixModeOnce(useChunkedPrimitiveRadix, useInlinePrimitiveRadix, useFused64PrimitiveRadix);
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			const bool useChunkedPrimitiveRadix = hcuPbdUseChunkedPrimitiveRadix();
+			const bool useInlinePrimitiveRadix = useChunkedPrimitiveRadix && hcuPbdUseInlinePrimitiveRadix();
+			const bool useFused64PrimitiveRadix = useInlinePrimitiveRadix && hcuPbdUseFused64PrimitiveRadix();
+			hcuPbdPrintPrimitiveRadixModeOnce(useChunkedPrimitiveRadix, useInlinePrimitiveRadix, useFused64PrimitiveRadix);
 			CUfunction pbdPrimitiveRadixFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
-				useFused64PrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_64_INLINE_DCU_V63
-					: useInlinePrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_INLINE_DCU_V7
-					: useChunkedPrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_DCU_V5
-					: PxgKernelIds::RS_PBD_PRIMITIVE_SERIAL_COUNTING_PASS_DCU_V4);
+				useFused64PrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_64_INLINE_HCU_V63
+					: useInlinePrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_INLINE_HCU_V7
+					: useChunkedPrimitiveRadix ? PxgKernelIds::RS_PBD_PRIMITIVE_CHUNKED_COUNTING_32_HCU_V5
+					: PxgKernelIds::RS_PBD_PRIMITIVE_SERIAL_COUNTING_PASS_HCU_V4);
 			#else
 			CUfunction radixFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::RS_MULTIBLOCK);
 			CUfunction calculateRanksFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::RS_CALCULATERANKS_MULTIBLOCK);
 			#endif
 
 			{
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				if(useChunkedPrimitiveRadix)
 				{
 					CUdeviceptr rsDesc0 = radixSortDescBuf[0].getDevicePtr();
@@ -2041,7 +2041,7 @@ namespace physx
 						PX_CUDA_KERNEL_PARAM(startBit)
 					};
 
-					#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					CUresult resultR = mCudaContext->launchKernel(pbdPrimitiveRadixFunction, 1, 2, 1, 1, 1, 1, 0,
 						mStream, radixSortKernelParams, sizeof(radixSortKernelParams), 0, PX_FL);
 					#else
@@ -2060,11 +2060,11 @@ namespace physx
 				}
 				}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream,
 					useFused64PrimitiveRadix ? "radix_fused64_complete" : "radix_low32_complete",
 					totalContactCountsd, nbActiveParticleSystems);
-				if (!useFused64PrimitiveRadix && !dcuPbdValidatePrimitiveSortOutput(mCudaContext, mStream, totalContactCountsd,
+				if (!useFused64PrimitiveRadix && !hcuPbdValidatePrimitiveSortOutput(mCudaContext, mStream, totalContactCountsd,
 					inputKeyd, inputRankd, inputKeyd2, inputRankd2, primitiveSortReference))
 					std::abort();
 #endif
@@ -2080,7 +2080,7 @@ namespace physx
 #endif
 			}
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			if(!useFused64PrimitiveRadix)
 			#endif
 			{
@@ -2106,7 +2106,7 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(totalContactCountsd)
 				};
 
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				const PxU32 copyBlockSize = 256;
 				#else
 				const PxU32 copyBlockSize = PxgRadixSortKernelBlockDim::RADIX_SORT;
@@ -2115,8 +2115,8 @@ namespace physx
 				if (resultR != CUDA_SUCCESS)
 					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopyBits fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_high32_copy_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_high32_copy_complete",
 					totalContactCountsd, nbActiveParticleSystems);
 #endif
 
@@ -2127,11 +2127,11 @@ namespace physx
 #endif
 			}
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			if(!useFused64PrimitiveRadix)
 			#endif
 			{
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				if(useChunkedPrimitiveRadix)
 				{
 					CUdeviceptr rsDesc0 = radixSortDescBuf[0].getDevicePtr();
@@ -2165,7 +2165,7 @@ namespace physx
 						PX_CUDA_KERNEL_PARAM(startBit)
 					};
 
-					#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					CUresult resultR = mCudaContext->launchKernel(pbdPrimitiveRadixFunction, 1, 2, 1, 1, 1, 1, 0,
 						mStream, radixSortKernelParams, sizeof(radixSortKernelParams), 0, PX_FL);
 					#else
@@ -2184,14 +2184,14 @@ namespace physx
 				}
 				}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_high32_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_high32_complete",
 					totalContactCountsd, nbActiveParticleSystems);
 #endif
 			}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			if (!dcuPbdValidatePrimitiveSortOutput64(mCudaContext, mStream, totalContactCountsd,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			if (!hcuPbdValidatePrimitiveSortOutput64(mCudaContext, mStream, totalContactCountsd,
 				mContactRemapSortedByRigidBuf.getDevicePtr(), mContactRemapSortedByParticleBuf.getDevicePtr(),
 				contactByRigidd, contactByParticled, primitiveSortReference))
 				std::abort();
@@ -2218,7 +2218,7 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(totalContactCountsd)
 				};
 
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				const PxU32 copyBlockSize = 256;
 				#else
 				const PxU32 copyBlockSize = PxgRadixSortKernelBlockDim::RADIX_SORT;
@@ -2227,8 +2227,8 @@ namespace physx
 				if (resultR != CUDA_SUCCESS)
 					PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU radixSortCopy fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_sorted_value_copy_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "radix_sorted_value_copy_complete",
 					totalContactCountsd, nbActiveParticleSystems);
 #endif
 
@@ -2262,7 +2262,7 @@ namespace physx
 				PX_CUDA_KERNEL_PARAM(sortedContactsByParticled)
 			};
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			const PxU32 reorderBlockSize = 256;
 			#else
 			const PxU32 reorderBlockSize = PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE;
@@ -2271,8 +2271,8 @@ namespace physx
 			if (resultR != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sortParticles fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "primitive_contact_reorder_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitiveSortCheckpoint(mCudaContext, mStream, "primitive_contact_reorder_complete",
 				totalContactCountsd, nbActiveParticleSystems);
 #endif
 
@@ -2305,8 +2305,8 @@ namespace physx
 #endif
 		}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "primitive_contact_sort_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "primitive_contact_sort_complete",
 			totalContactCountsd, nbActiveParticleSystems);
 #endif
 
@@ -2607,8 +2607,8 @@ namespace physx
 			PX_ASSERT(result == CUDA_SUCCESS);
 			PX_UNUSED(result);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPipelineCheckpoint(mCudaContext, solverStream, "rigid_constraint_prepare_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPipelineCheckpoint(mCudaContext, solverStream, "rigid_constraint_prepare_complete",
 				totalContactCountsd, 0);
 #endif
 #if PS_GPU_DEBUG
@@ -2626,20 +2626,20 @@ namespace physx
 			CUdeviceptr startd = mTempContactBuf.getDevicePtr();
 			CUdeviceptr	endd = mTempContactRemapBuf.getDevicePtr();
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			const bool useFusedParticleRanges = dcuPbdUseFusedParticleRanges();
-			const bool useChunkedParticleRanges = useFusedParticleRanges && dcuPbdUseChunkedParticleRanges();
-			const bool useParallelParticleRanges = useFusedParticleRanges && dcuPbdUseParallelParticleRanges();
-			dcuPbdPrintParticleRangeModeOnce(useFusedParticleRanges, useChunkedParticleRanges, useParallelParticleRanges);
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			const bool useFusedParticleRanges = hcuPbdUseFusedParticleRanges();
+			const bool useChunkedParticleRanges = useFusedParticleRanges && hcuPbdUseChunkedParticleRanges();
+			const bool useParallelParticleRanges = useFusedParticleRanges && hcuPbdUseParallelParticleRanges();
+			hcuPbdPrintParticleRangeModeOnce(useFusedParticleRanges, useChunkedParticleRanges, useParallelParticleRanges);
 			const PxU32 rangeBlockSize = (useParallelParticleRanges || useChunkedParticleRanges) ? 32u : (useFusedParticleRanges ? 1u : 256u);
-			const PxU32 dcuRangeMode = useParallelParticleRanges ? 2u : (useChunkedParticleRanges ? 1u : 0u);
+			const PxU32 hcuRangeMode = useParallelParticleRanges ? 2u : (useChunkedParticleRanges ? 1u : 0u);
 			#else
 			const PxU32 rangeBlockSize = PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA;
-			const PxU32 dcuRangeMode = 0;
+			const PxU32 hcuRangeMode = 0;
 			#endif
 
 			//compute blockOffset and offset array for particle
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			if (!useFusedParticleRanges)
 			#endif
 			{
@@ -2695,10 +2695,10 @@ namespace physx
 					PX_CUDA_KERNEL_PARAM(pairCountd),
 					PX_CUDA_KERNEL_PARAM(startd),
 					PX_CUDA_KERNEL_PARAM(endd),
-					PX_CUDA_KERNEL_PARAM(dcuRangeMode)
+					PX_CUDA_KERNEL_PARAM(hcuRangeMode)
 				};
 
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				const PxU32 numBlocks = useFusedParticleRanges ? 1u : PxgParticleSystemKernelGridDim::ACCUMULATE_DELTA;
 				#else
 				const PxU32 numBlocks = PxgParticleSystemKernelGridDim::ACCUMULATE_DELTA;
@@ -2731,15 +2731,15 @@ namespace physx
 #endif
 			}
 
-			#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			if (!dcuPbdValidateParticleRanges(mCudaContext, mStream, contactsd, totalContactCountsd,
+			#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			if (!hcuPbdValidateParticleRanges(mCudaContext, mStream, contactsd, totalContactCountsd,
 				pairCountd, startd, endd, mMaxContacts))
 				std::abort();
 			#endif
 		}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_contact_ranges_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_contact_ranges_complete",
 			totalContactCountsd, 0);
 #endif
 
@@ -2851,7 +2851,7 @@ namespace physx
 		CUdeviceptr sharedDescd, CUdeviceptr artiCoreDescd, CUdeviceptr rigidIdsd, CUdeviceptr numIdsd, CUstream stream,
 		const bool isTGS)
 	{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		const PxU32 rigidDeltaBlockSize = 256;
 #else
 		const PxU32 rigidDeltaBlockSize = PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA;
@@ -3029,7 +3029,7 @@ namespace physx
 						PX_CUDA_KERNEL_PARAM(deltaVd)
 					};
 
-					#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					const PxU32 numThreadsPerBlock = 256;
 					#else
 					const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::ACCUMULATE_DELTA;
@@ -3536,7 +3536,7 @@ namespace physx
 
 		const CUfunction preIntegrateKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::PS_UPDATE_BUFFER_DATA);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		const PxU32 numThreadsPerBlock = 256;
 #else
 		const PxU32 numThreadsPerBlock = PxgParticleSystemKernelBlockDim::UPDATEBOUND;

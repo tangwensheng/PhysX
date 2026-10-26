@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -73,11 +73,11 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels6() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuLostFoundCompactStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V54_SERIAL_LOST_FOUND_COMPACT";
-#if defined(PX_DCU_RIGID_GJKEPA_O3_P45) && PX_DCU_RIGID_GJKEPA_O3_P45
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuLostFoundCompactStageVersion[] = "PX_HCU_NARROWPHASE_STAGE_V54_SERIAL_LOST_FOUND_COMPACT";
+#if defined(PX_HCU_RIGID_GJKEPA_O3_P45) && PX_HCU_RIGID_GJKEPA_O3_P45
 // Product identity only; no kernel algorithm or memory ownership change.
-extern "C" __device__ __constant__ char gPxgDcuRigidGjkEpaO3P45Version[] = "PX_DCU_RIGID_GJKEPA_O3_P45_GFX936_DEVICE_V1";
+extern "C" __device__ __constant__ char gPxgHcuRigidGjkEpaO3P45Version[] = "PX_HCU_RIGID_GJKEPA_O3_P45_GFX936_DEVICE_V1";
 #endif
 #endif
 
@@ -1542,48 +1542,48 @@ protected:
 	PxU32							mNumPairs;
 };
 
-#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2IndexP54Version[] = "PX_DCU_RIGID_STAGE2_INDEX_P54_GFX936_DEVICE_V1";
+#if defined(PX_HCU_RIGID_STAGE2_INDEX_P54) && PX_HCU_RIGID_STAGE2_INDEX_P54
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2IndexP54Version[] = "PX_HCU_RIGID_STAGE2_INDEX_P54_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedSplitP64Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_HCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2BoundedSplitP64Version[] = "PX_HCU_RIGID_STAGE2_BOUNDED_SPLIT_P64_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetchP65Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2BoundedPrefetchP65Version[] = "PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetch8P68Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2BoundedPrefetch8P68Version[] = "PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2BoundedPrefetch16P70Version[] = "PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2BoundedPrefetch16P70Version[] = "PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2MetadataPrefetchP72Version[] = "PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2MetadataPrefetchP72Version[] = "PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2EmptyBatchSkipP73Version[] = "PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2EmptyBatchSkipP73Version[] = "PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2SetBitCompactP74Version[] = "PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2SetBitCompactP74Version[] = "PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2DualGroupSkipP75Version[] = "PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2DualGroupSkipP75Version[] = "PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2PackedOutputCountsP76Version[] = "PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2PackedOutputCountsP76Version[] = "PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76_GFX936_DEVICE_V1";
 #endif
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_FLAGS4_P60) && PX_DCU_RIGID_STAGE2_FLAGS4_P60
-extern "C" __device__ __constant__ char gPxgDcuRigidStage2Flags4P60Version[] = "PX_DCU_RIGID_STAGE2_FLAGS4_P60_GFX936_DEVICE_V1";
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_FLAGS4_P60) && PX_HCU_RIGID_STAGE2_FLAGS4_P60
+extern "C" __device__ __constant__ char gPxgHcuRigidStage2Flags4P60Version[] = "PX_HCU_RIGID_STAGE2_FLAGS4_P60_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __global__ void prepareLostFoundPairs_Stage2(
@@ -1596,15 +1596,15 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 															PxU32* PX_RESTRICT blockAccumulationArray,
 															PxU32 numPairs,
 															PxsContactManager** PX_RESTRICT contactManagerArray
-#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+#if defined(PX_HCU_RIGID_STAGE2_INDEX_P54) && PX_HCU_RIGID_STAGE2_INDEX_P54
                                                             , PxU32 useBoundedIndexP54
 #endif
                                                             )
 {
-#if defined(__HIPCC__) || (defined(PX_DCU_PORT) && PX_DCU_PORT)
+#if defined(__HIPCC__) || (defined(PX_HCU_PORT) && PX_HCU_PORT)
 	if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
 	{
-#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+#if defined(PX_HCU_RIGID_STAGE2_INDEX_P54) && PX_HCU_RIGID_STAGE2_INDEX_P54
         // The loop visits [0, 2*numPairs); n==0 visits nothing. Preserve the
         // original serial copy/count order and all mapped-memory plain stores.
         if (useBoundedIndexP54)
@@ -1612,11 +1612,11 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
             PxU32 outputCount = 0;
             lostAndTotalReportedPairsCount->x = 0;
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_DCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_BOUNDED_SPLIT_P64) && PX_HCU_RIGID_STAGE2_BOUNDED_SPLIT_P64
             // Preserve the original serial order while making each half's index
             // affine: the first half reads [0, numPairs), then the second half
             // reads [numPairs, 2*numPairs) with the same output order.
-#if defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+#if defined(PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
             // P76 retains P73's eight-flag empty-group skip. For each emitted
             // entry, load the contiguous source count bytes once, reorder the
             // three live bytes into destination order, and store one dword.
@@ -1661,7 +1661,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+#elif defined(PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
             // P75 batches two P73 groups. A fully empty 16-lane window costs one
             // branch; mixed windows retain two ordered eight-lane sub-loops.
             PxU32 index = 0;
@@ -1742,7 +1742,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+#elif defined(PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
             // P74 converts each eight-flag group to a lane mask, then visits only
             // set lanes from lowest to highest. First-occurrence output order and
             // the scalar field/pointer stores remain unchanged.
@@ -1780,7 +1780,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+#elif defined(PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
             // P73 starts from P68's eight-flag load and skips the per-lane loop
             // only when all eight flags are zero. Non-empty groups retain the
             // original ascending emission order and scalar store sequence.
@@ -1817,7 +1817,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+#elif defined(PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72
             // P72 keeps the P68 eight-flag batch and additionally loads each
             // group's manager-output metadata and manager pointer up front, so
             // those reads no longer serialize behind the per-lane flag test.
@@ -1856,7 +1856,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
             PxU32 index = 0;
             for (; numPairs - index >= 16; index += 16)
             {
@@ -1887,7 +1887,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
             PxU32 index = 0;
             for (; numPairs - index >= 8; index += 8)
             {
@@ -1918,7 +1918,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
             // P65 only batches input-flag loads. It does not batch or reorder
             // output stores, and the tail keeps the exact scalar behavior.
             PxU32 index = 0;
@@ -1967,7 +1967,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 
             lostAndTotalReportedPairsCount->x = outputCount;
 
-#if defined(PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_DCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
+#if defined(PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76) && PX_HCU_RIGID_STAGE2_PACKED_OUTPUT_COUNTS_P76
             // P76 applies the same packed count transfer to the second affine half.
             index = 0;
             for (; numPairs - index >= 8; index += 8)
@@ -2010,7 +2010,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_DCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
+#elif defined(PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75) && PX_HCU_RIGID_STAGE2_DUAL_GROUP_SKIP_P75
             // P75 applies the same dual-group window skip to the second affine half.
             index = 0;
             for (; numPairs - index >= 16; index += 16)
@@ -2090,7 +2090,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_DCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
+#elif defined(PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74) && PX_HCU_RIGID_STAGE2_SET_BIT_COMPACT_P74
             // P74 applies the same set-bit compaction to the second affine half.
             index = 0;
             for (; numPairs - index >= 8; index += 8)
@@ -2126,7 +2126,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_DCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
+#elif defined(PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73) && PX_HCU_RIGID_STAGE2_EMPTY_BATCH_SKIP_P73
             // P73 applies the same all-zero-group skip to the second affine half.
             index = 0;
             for (; numPairs - index >= 8; index += 8)
@@ -2161,7 +2161,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_DCU_RIGID_STAGE2_METADATA_PREFETCH_P72
+#elif defined(PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72) && PX_HCU_RIGID_STAGE2_METADATA_PREFETCH_P72
             // P72 applies the same metadata prefetch to the second affine half.
             index = 0;
             for (; numPairs - index >= 8; index += 8)
@@ -2196,7 +2196,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH16_P70
             index = 0;
             for (; numPairs - index >= 16; index += 16)
             {
@@ -2227,7 +2227,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH8_P68
             index = 0;
             for (; numPairs - index >= 8; index += 8)
             {
@@ -2258,7 +2258,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
                     ++outputCount;
                 }
             }
-#elif defined(PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_DCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
+#elif defined(PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65) && PX_HCU_RIGID_STAGE2_BOUNDED_PREFETCH_P65
             index = 0;
             for (; numPairs - index >= 4; index += 4)
             {
@@ -2327,7 +2327,7 @@ extern "C" __global__ void prepareLostFoundPairs_Stage2(
 		PxU32 outputCount = 0;
 		lostAndTotalReportedPairsCount->x = 0;
 
-#if defined(__HIPCC__) && defined(PX_DCU_RIGID_STAGE2_FLAGS4_P60) && PX_DCU_RIGID_STAGE2_FLAGS4_P60
+#if defined(__HIPCC__) && defined(PX_HCU_RIGID_STAGE2_FLAGS4_P60) && PX_HCU_RIGID_STAGE2_FLAGS4_P60
         // Flags are immutable device-buffer input on this stream. Read only complete
         // groups, then keep the original per-index copy/count order and modulo.
         // memcpy avoids stronger alignment or aliasing requirements on the parameter.

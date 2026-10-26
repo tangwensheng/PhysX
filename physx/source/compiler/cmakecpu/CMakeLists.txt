@@ -31,13 +31,13 @@
 # Usage:
 #   cd physx/source/compiler/cmakecpu
 #   mkdir build && cd build
-#   cmake .. -DPHYSX_ROOT_DIR=/path/to/PhysX -DDCU_ARCH=gfx936
+#   cmake .. -DPHYSX_ROOT_DIR=/path/to/PhysX -DHCU_ARCH=gfx936
 #   cmake --build .
 
 cmake_minimum_required(VERSION 3.21)
 project(PhysXCPU LANGUAGES CXX HIP)
 
-# Find DTK Clang for HIP (same logic as build_dcu.sh)
+# Find DTK Clang for HIP (same logic as build_hcu.sh)
 if(NOT DEFINED CMAKE_HIP_COMPILER)
     foreach(clang_path /opt/dtk/bin/clang++ /opt/rocm/bin/clang++)
         if(EXISTS ${clang_path})
@@ -47,11 +47,11 @@ if(NOT DEFINED CMAKE_HIP_COMPILER)
     endforeach()
 endif()
 
-if(NOT DEFINED DCU_ARCH)
-    set(DCU_ARCH "gfx936" CACHE STRING "HCU device architecture")
+if(NOT DEFINED HCU_ARCH)
+    set(HCU_ARCH "gfx936" CACHE STRING "HCU device architecture")
 endif()
-set(CMAKE_HIP_ARCHITECTURES ${DCU_ARCH})
-set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_DCU_PORT -ffast-math -fgpu-flush-denormals-to-zero")
+set(CMAKE_HIP_ARCHITECTURES ${HCU_ARCH})
+set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -include PxgHIPCompat.h -DPX_HCU_PORT -ffast-math -fgpu-flush-denormals-to-zero")
 
 if(NOT DEFINED PHYSX_ROOT_DIR)
     get_filename_component(PHYSX_ROOT_DIR "${CMAKE_SOURCE_DIR}/../../.." ABSOLUTE)
@@ -140,7 +140,7 @@ target_compile_options(Common PRIVATE -fPIC -O2)
 set(GPU_INCLUDES
     ${PHYSX_ROOT_DIR}/source/gpucommon/include
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/CUDA
-    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/HCU/stubs
 )
 
 # Build test executable
@@ -319,7 +319,7 @@ target_compile_options(PhysXCharacterKinematic PRIVATE -fPIC -O2 -Wno-unused-par
 #     for HCU with CUDA→HIP type mapping via the stub <cuda.h>.
 #
 # The GPU kernel .cu files themselves are compiled separately by cmakehip/
-# into libPhysXGpuDCU.so and loaded at runtime via hipModuleLoad.
+# into libPhysXGpuHCU.so and loaded at runtime via hipModuleLoad.
 
 set(GPU_HOST_SRC
     # ---- HCU adapter files ----
@@ -327,8 +327,8 @@ set(GPU_HOST_SRC
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipGpuDispatcher.cpp
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipPhysXGpu.cpp
     ${PHYSX_ROOT_DIR}/source/cudamanager/src/HipKernelWrangler.cpp
-    ${PHYSX_ROOT_DIR}/source/cudamanager/src/CudaWrappersDCU.cpp
-    ${PHYSX_ROOT_DIR}/source/cudamanager/src/DcuKernelInitStubs.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/CudaWrappersHCU.cpp
+    ${PHYSX_ROOT_DIR}/source/cudamanager/src/HcuKernelInitStubs.cpp
     # ---- GPU common (memory, buffers, kernel wrangler) ----
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCommon.cpp
     ${PHYSX_ROOT_DIR}/source/gpucommon/src/PxgCopyManager.cpp
@@ -383,33 +383,33 @@ target_include_directories(HipContext PUBLIC
     ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
     ${PHYSX_ROOT_DIR}/include/cudamanager
     ${PHYSX_ROOT_DIR}/source/gpucommon/include
-    ${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs
+    ${PHYSX_ROOT_DIR}/source/gpucommon/src/HCU/stubs
     ${PHYSX_ROOT_DIR}/source/physxgpu/include
     ${PHYSX_ROOT_DIR}/source/simulationcontroller/include
     /opt/dtk/include
 )
-target_compile_definitions(HipContext PRIVATE PX_DCU_PORT __HIP_PLATFORM_AMD__ PX_SUPPORT_GPU_PHYSX)
+target_compile_definitions(HipContext PRIVATE PX_HCU_PORT __HIP_PLATFORM_AMD__ PX_SUPPORT_GPU_PHYSX)
 # Match the gfx936 device kernel argument layout only for the explicit P54 product.
-option(PX_DCU_RIGID_STAGE2_INDEX_P54 "Opt-in gfx936 ordinary-rigid Stage2 host dispatch" OFF)
-if(PX_DCU_RIGID_STAGE2_INDEX_P54)
-    if(NOT DEFINED DCU_ARCH OR NOT DCU_ARCH STREQUAL "gfx936")
-        message(FATAL_ERROR "P54 host dispatch requires explicit DCU_ARCH=gfx936")
+option(PX_HCU_RIGID_STAGE2_INDEX_P54 "Opt-in gfx936 ordinary-rigid Stage2 host dispatch" OFF)
+if(PX_HCU_RIGID_STAGE2_INDEX_P54)
+    if(NOT DEFINED HCU_ARCH OR NOT HCU_ARCH STREQUAL "gfx936")
+        message(FATAL_ERROR "P54 host dispatch requires explicit HCU_ARCH=gfx936")
     endif()
     set_property(SOURCE ${PHYSX_ROOT_DIR}/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp
-        APPEND PROPERTY COMPILE_OPTIONS -DPX_DCU_RIGID_STAGE2_INDEX_P54=1)
+        APPEND PROPERTY COMPILE_OPTIONS -DPX_HCU_RIGID_STAGE2_INDEX_P54=1)
 endif()
 # -include forces the HCU stub <cuda.h> to be included before EVERY header,
 # ensuring CUDA_VERSION is set and PxCudaTypes.h skips its own definitions
 # (which would otherwise pull in <hip/hip_runtime.h> and break float4/float2).
 target_compile_options(HipContext PRIVATE -fPIC -O2 -Wno-unused-parameter -Wno-reorder
-    -include${PHYSX_ROOT_DIR}/source/gpucommon/src/DCU/stubs/cuda.h
+    -include${PHYSX_ROOT_DIR}/source/gpucommon/src/HCU/stubs/cuda.h
     -include${PHYSX_ROOT_DIR}/source/gpucommon/include/PxgHIPCompat.h
 )
 target_link_directories(HipContext PUBLIC /opt/dtk/hip/lib)
 target_link_libraries(HipContext PUBLIC amdhip64)
 
 # ---- PhysX Scene Benchmark (CPU, GPU info via HipContext) ----
-add_executable(bench_physx_scene ${PHYSX_ROOT_DIR}/../examples/dcu/bench_physx_scene.cpp)
+add_executable(bench_physx_scene ${PHYSX_ROOT_DIR}/../examples/hcu/bench_physx_scene.cpp)
 target_include_directories(bench_physx_scene PRIVATE
     ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
     ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}
@@ -425,7 +425,7 @@ target_link_libraries(bench_physx_scene PRIVATE
 target_compile_options(bench_physx_scene PRIVATE -fPIC -O2)
 
 # ---- CPU vs GPU Comparison Test ----
-add_executable(bench_compare ${PHYSX_ROOT_DIR}/../examples/dcu/bench_compare.cpp)
+add_executable(bench_compare ${PHYSX_ROOT_DIR}/../examples/hcu/bench_compare.cpp)
 target_include_directories(bench_compare PRIVATE
     ${PHYSX_PUBLIC_INC} ${PHYSX_FOUNDATION} ${PHYSX_COMMON_INC} ${PHYSX_COMMON_SRC}
     ${PHYSX_ALL_INCLUDES} ${PHYSX_ALL_PUBLIC}

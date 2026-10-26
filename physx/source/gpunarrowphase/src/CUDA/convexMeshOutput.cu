@@ -48,8 +48,8 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels5() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuFinishContactsStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V41_SERIAL_FINISH_CONTACTS";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuFinishContactsStageVersion[] = "PX_HCU_NARROWPHASE_STAGE_V41_SERIAL_FINISH_CONTACTS";
 #endif
 
 __device__ void writeCompressedContact(
@@ -149,7 +149,7 @@ void convexTrimeshFinishContacts(
 	if(globalWarpIndex >= numPairs)
 		return;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	const PxU32 threadIndexInWarp = threadIdx.x & (WARP_SIZE - 1);
 	if (threadIndexInWarp != 0)
 		return;

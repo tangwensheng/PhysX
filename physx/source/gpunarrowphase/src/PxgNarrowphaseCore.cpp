@@ -95,7 +95,7 @@
 #include "cudamanager/PxCudaContext.h"
 #include "PxgRadixSortKernelIndices.h"
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 // Support for the HCU device-drop probe defined below.
 #include "foundation/PxThread.h"
 #include <atomic>
@@ -112,37 +112,37 @@
 using namespace physx;
 using namespace Gu;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 // Both histogram passes must use the same width because the second pass
 // reconstructs offsets from the first pass's per-block aggregates.
-static const PxU32 gDcuParticlePrimitiveBoundBlockSize = 256;
+static const PxU32 gHcuParticlePrimitiveBoundBlockSize = 256;
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 namespace
 {
-	bool dcuPbdContactDiagEnabled()
+	bool hcuPbdContactDiagEnabled()
 	{
-		const char* value = std::getenv("PX_DCU_PBD_CONTACT_DIAG");
+		const char* value = std::getenv("PX_HCU_PBD_CONTACT_DIAG");
 		return value && std::strcmp(value, "1") == 0;
 	}
 
-	bool dcuPbdContactDiagOnceEnabled()
+	bool hcuPbdContactDiagOnceEnabled()
 	{
-		const char* value = std::getenv("PX_DCU_PBD_CONTACT_DIAG_ONCE");
+		const char* value = std::getenv("PX_HCU_PBD_CONTACT_DIAG_ONCE");
 		return value && std::strcmp(value, "1") == 0;
 	}
 
-	bool dcuPbdPrimitivePipelineDiagEnabled()
+	bool hcuPbdPrimitivePipelineDiagEnabled()
 	{
-		const char* value = std::getenv("PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG");
+		const char* value = std::getenv("PX_HCU_PBD_PRIMITIVE_PIPELINE_DIAG");
 		return value && std::strcmp(value, "1") == 0;
 	}
 
-	void dcuPbdPrimitivePipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream,
+	void hcuPbdPrimitivePipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream,
 		const char* phase, CUdeviceptr deviceCount, PxU32 hostValue)
 	{
-		if (!dcuPbdPrimitivePipelineDiagEnabled())
+		if (!hcuPbdPrimitivePipelineDiagEnabled())
 			return;
 
 		static std::atomic<unsigned long long> sequence(0);
@@ -153,31 +153,31 @@ namespace
 		if (syncResult == CUDA_SUCCESS && deviceCount)
 			copyResult = cudaContext->memcpyDtoH(&count, deviceCount, sizeof(count));
 
-		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_DCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=narrowphase seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
+		std::printf("[HCU PBD PRIMITIVE PIPELINE] marker=PX_HCU_PBD_PRIMITIVE_PIPELINE_DIAG_V2 source=narrowphase seq=%llu phase=%s sync=%d copy=%d device_count=%u host_value=%u\n",
 			checkpoint, phase, int(syncResult), int(copyResult), count, hostValue);
 		std::fflush(stdout);
 	}
 
-	void dcuPbdPrintPairCount(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr pairCount,
+	void hcuPbdPrintPairCount(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr pairCount,
 		const char* phase, bool& printed)
 	{
-		if (!dcuPbdContactDiagEnabled() || (dcuPbdContactDiagOnceEnabled() && printed))
+		if (!hcuPbdContactDiagEnabled() || (hcuPbdContactDiagOnceEnabled() && printed))
 			return;
 
 		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
 		PxU32 count = 0;
 		PxCUresult copyResult = syncResult == CUDA_SUCCESS
 			? cudaContext->memcpyDtoH(&count, pairCount, sizeof(PxU32)) : syncResult;
-		std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=%s sync=%d copy=%d pairs=%u\n",
+		std::printf("[HCU PBD CONTACT] marker=PX_HCU_PBD_CONTACT_DIAG_V1 phase=%s sync=%d copy=%d pairs=%u\n",
 			phase, int(syncResult), int(copyResult), count);
 		std::fflush(stdout);
 		printed = true;
 	}
 
-	void dcuPbdPrintCollisionContact(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr contactCount,
+	void hcuPbdPrintCollisionContact(PxCudaContext* cudaContext, CUstream stream, CUdeviceptr contactCount,
 		CUdeviceptr contacts, bool& printed)
 	{
-		if (!dcuPbdContactDiagEnabled() || (dcuPbdContactDiagOnceEnabled() && printed))
+		if (!hcuPbdContactDiagEnabled() || (hcuPbdContactDiagOnceEnabled() && printed))
 			return;
 
 		const PxCUresult syncResult = cudaContext->streamSynchronize(stream);
@@ -190,7 +190,7 @@ namespace
 
 		if (count > 0 && copyResult == CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u firstParticle=%llu firstRigid=%llu normal=(%.9g,%.9g,%.9g) pen=%.9g\n",
+			std::printf("[HCU PBD CONTACT] marker=PX_HCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u firstParticle=%llu firstRigid=%llu normal=(%.9g,%.9g,%.9g) pen=%.9g\n",
 				int(syncResult), int(copyResult), count,
 				static_cast<unsigned long long>(firstContact.particleId),
 				static_cast<unsigned long long>(firstContact.rigidId),
@@ -199,7 +199,7 @@ namespace
 		}
 		else
 		{
-			std::printf("[HCU PBD CONTACT] marker=PX_DCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u\n",
+			std::printf("[HCU PBD CONTACT] marker=PX_HCU_PBD_CONTACT_DIAG_V1 phase=primitive_collision sync=%d copy=%d contacts=%u\n",
 				int(syncResult), int(copyResult), count);
 		}
 		std::fflush(stdout);
@@ -215,7 +215,7 @@ namespace
 // device is left holding exactly the work up to that point and we can watch
 // whether it drops.
 //
-//   PX_DCU_PROBE=<site>  where <site> is one of:
+//   PX_HCU_PROBE=<site>  where <site> is one of:
 //        pre-midphase          before any kernel of this call is queued
 //        post-midphase         after CONVEX_TRIMESH_MIDPHASE
 //        post-core             after CONVEX_TRIMESH_CORE
@@ -224,18 +224,18 @@ namespace
 //        post-correlate        after CONVEX_TRIMESH_CORRELATE
 //        post-finishcontacts   after CONVEX_TRIMESH_FINISHCONTACTS
 //        post-compact          after both compactLostFoundPairs kernels
-//   PX_DCU_PROBE_CALL     which call of this function to trap (default 5)
-//   PX_DCU_PROBE_HOLD_MS  hold duration in ms (default 90000)
-//   PX_DCU_PROBE_NOSYNC   set to skip the streamSynchronize before holding
+//   PX_HCU_PROBE_CALL     which call of this function to trap (default 5)
+//   PX_HCU_PROBE_HOLD_MS  hold duration in ms (default 90000)
+//   PX_HCU_PROBE_NOSYNC   set to skip the streamSynchronize before holding
 //
 // Midphase metadata validation, performed on the host before the core launch:
-//   PX_DCU_MIDPHASE_DIAG=1
-//   PX_DCU_MIDPHASE_DIAG_CALL=N       validate only call N (default: all)
-//   PX_DCU_MIDPHASE_MAX_TRIANGLES=N   optional triangle-index upper bound
-//   PX_DCU_MIDPHASE_DIAG_ABORT=0      continue after invalid metadata
+//   PX_HCU_MIDPHASE_DIAG=1
+//   PX_HCU_MIDPHASE_DIAG_CALL=N       validate only call N (default: all)
+//   PX_HCU_MIDPHASE_MAX_TRIANGLES=N   optional triangle-index upper bound
+//   PX_HCU_MIDPHASE_DIAG_ABORT=0      continue after invalid metadata
 //
-// Core stage bisect, active only on PX_DCU_PROBE_CALL:
-//   PX_DCU_CORE_STAGE=1..53
+// Core stage bisect, active only on PX_HCU_PROBE_CALL:
+//   PX_HCU_CORE_STAGE=1..53
 //     1 allocation/pointer setup     6 convex hull/contact-distance reads
 //     2 pair record read             7 triangle-mesh metadata/adjacency reads
 //     3 contact-manager input read   8 triangle index/vertex/normal reads
@@ -266,65 +266,65 @@ namespace
 //    52 edge 2 plane                    53 edge 2 classify/full masks
 //
 // Read the existing midphase pair count and temporary-contact index after the
-// core kernel, active only on PX_DCU_PROBE_CALL:
-//   PX_DCU_CORE_TEMP_INDEX=1
+// core kernel, active only on PX_HCU_PROBE_CALL:
+//   PX_HCU_CORE_TEMP_INDEX=1
 //
 // Read the finished world-space contact stream after finishContacts, active
-// only on PX_DCU_PROBE_CALL:
-//   PX_DCU_FINISH_STREAM_DIAG=1
+// only on PX_HCU_PROBE_CALL:
+//   PX_HCU_FINISH_STREAM_DIAG=1
 //
 // ---------------------------------------------------------------------------
 namespace
 {
-	const char* dcuProbeSite()
+	const char* hcuProbeSite()
 	{
-		const char* v = std::getenv("PX_DCU_PROBE");
+		const char* v = std::getenv("PX_HCU_PROBE");
 		return (v && v[0]) ? v : NULL;
 	}
 
-	bool dcuProbeSiteIs(const char* site)
+	bool hcuProbeSiteIs(const char* site)
 	{
-		const char* v = dcuProbeSite();
+		const char* v = hcuProbeSite();
 		return v && std::strcmp(v, site) == 0;
 	}
 
-	PxU32 dcuProbeTargetCall()
+	PxU32 hcuProbeTargetCall()
 	{
-		const char* v = std::getenv("PX_DCU_PROBE_CALL");
+		const char* v = std::getenv("PX_HCU_PROBE_CALL");
 		return v ? PxU32(std::strtoul(v, NULL, 10)) : 5u;
 	}
 
-	PxU32 dcuCoreStage(PxU32 call)
+	PxU32 hcuCoreStage(PxU32 call)
 	{
-		if (call != dcuProbeTargetCall())
+		if (call != hcuProbeTargetCall())
 			return 0u;
 
-		const char* value = std::getenv("PX_DCU_CORE_STAGE");
+		const char* value = std::getenv("PX_HCU_CORE_STAGE");
 		const PxU32 stage = value ? PxU32(std::strtoul(value, NULL, 10)) : 0u;
 		return stage <= 53u ? stage : 0u;
 	}
 
-	bool dcuCoreTempIndexArmed(PxU32 call)
+	bool hcuCoreTempIndexArmed(PxU32 call)
 	{
-		const char* value = std::getenv("PX_DCU_CORE_TEMP_INDEX");
-		return value && std::strcmp(value, "1") == 0 && call == dcuProbeTargetCall();
+		const char* value = std::getenv("PX_HCU_CORE_TEMP_INDEX");
+		return value && std::strcmp(value, "1") == 0 && call == hcuProbeTargetCall();
 	}
 
-	PX_NOINLINE bool dcuContactGeomDiagArmed(PxU32 call)
+	PX_NOINLINE bool hcuContactGeomDiagArmed(PxU32 call)
 	{
-		const char* value = std::getenv("PX_DCU_CONTACT_GEOM_DIAG");
-		return value && std::strcmp(value, "1") == 0 && call == dcuProbeTargetCall();
+		const char* value = std::getenv("PX_HCU_CONTACT_GEOM_DIAG");
+		return value && std::strcmp(value, "1") == 0 && call == hcuProbeTargetCall();
 	}
 
-	PX_NOINLINE bool dcuFinishStreamDiagArmed(PxU32 call)
+	PX_NOINLINE bool hcuFinishStreamDiagArmed(PxU32 call)
 	{
-		const char* value = std::getenv("PX_DCU_FINISH_STREAM_DIAG");
-		return value && std::strcmp(value, "1") == 0 && call == dcuProbeTargetCall();
+		const char* value = std::getenv("PX_HCU_FINISH_STREAM_DIAG");
+		return value && std::strcmp(value, "1") == 0 && call == hcuProbeTargetCall();
 	}
 
-	void dcuProbeHoldAndExit(const char* site, PxU32 call, PxU32 numTests, int syncResult)
+	void hcuProbeHoldAndExit(const char* site, PxU32 call, PxU32 numTests, int syncResult)
 	{
-		const char* msEnv = std::getenv("PX_DCU_PROBE_HOLD_MS");
+		const char* msEnv = std::getenv("PX_HCU_PROBE_HOLD_MS");
 		const PxU32 holdMs = msEnv ? PxU32(std::strtoul(msEnv, NULL, 10)) : 90000u;
 
 		std::fprintf(stderr, "[HCU PROBE] site=%s call=%u tests=%u holdMs=%u sync=%d phase=begin\n",
@@ -342,24 +342,24 @@ namespace
 		std::_Exit((syncResult == -1 || syncResult == int(CUDA_SUCCESS)) ? 96 : 98);
 	}
 
-	bool dcuMidphaseDiagArmed(PxU32 call)
+	bool hcuMidphaseDiagArmed(PxU32 call)
 	{
-		const char* enabled = std::getenv("PX_DCU_MIDPHASE_DIAG");
+		const char* enabled = std::getenv("PX_HCU_MIDPHASE_DIAG");
 		if (!enabled || std::strcmp(enabled, "1") != 0)
 			return false;
 
-		const char* callEnv = std::getenv("PX_DCU_MIDPHASE_DIAG_CALL");
+		const char* callEnv = std::getenv("PX_HCU_MIDPHASE_DIAG_CALL");
 		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 0u;
 		return targetCall == 0u || targetCall == call;
 	}
 
-	bool dcuMidphaseDiagAbortOnError()
+	bool hcuMidphaseDiagAbortOnError()
 	{
-		const char* value = std::getenv("PX_DCU_MIDPHASE_DIAG_ABORT");
+		const char* value = std::getenv("PX_HCU_MIDPHASE_DIAG_ABORT");
 		return !value || std::strcmp(value, "0") != 0;
 	}
 
-	bool dcuValidateConvexTrimeshMidphase(
+	bool hcuValidateConvexTrimeshMidphase(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -524,7 +524,7 @@ namespace
 			}
 		}
 
-		const char* maxTrianglesEnv = std::getenv("PX_DCU_MIDPHASE_MAX_TRIANGLES");
+		const char* maxTrianglesEnv = std::getenv("PX_HCU_MIDPHASE_MAX_TRIANGLES");
 		const PxU32 maxTriangles = maxTrianglesEnv ? PxU32(std::strtoul(maxTrianglesEnv, NULL, 10)) : 0u;
 		if (nbPairs <= maxPairs)
 		{
@@ -601,7 +601,7 @@ namespace
 		return errors == 0u;
 	}
 
-	PX_NOINLINE void dcuReportConvexTrimeshContactGeometry(
+	PX_NOINLINE void hcuReportConvexTrimeshContactGeometry(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -729,7 +729,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-			"[HCU CONTACT GEOM] marker=PX_DCU_NARROWPHASE_STAGE_V43_NOINLINE_CONTACT_GEOMETRY_AGGREGATE "
+			"[HCU CONTACT GEOM] marker=PX_HCU_NARROWPHASE_STAGE_V43_NOINLINE_CONTACT_GEOMETRY_AGGREGATE "
 			"call=%u tests=%u sync=%d pair_copy=%d manifold_copy=%d active_pairs=%u invalid_pair_mappings=%u "
 			"pairs_with_manifolds=%u declared_manifolds=%llu valid_manifolds=%llu invalid_manifolds=%llu "
 			"contacts=%llu finite=%llu invalid=%llu normal_y_min=%.9g normal_y_max=%.9g up=%llu down=%llu side=%llu "
@@ -748,7 +748,7 @@ namespace
 		std::fflush(stderr);
 	}
 
-	PX_NOINLINE void dcuMaybeReportConvexTrimeshContactGeometry(
+	PX_NOINLINE void hcuMaybeReportConvexTrimeshContactGeometry(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -756,14 +756,14 @@ namespace
 		CUdeviceptr gpuIntermCvxMeshPair,
 		CUdeviceptr cmPersistentMultiManifolds)
 	{
-		if (dcuContactGeomDiagArmed(call))
+		if (hcuContactGeomDiagArmed(call))
 		{
-			dcuReportConvexTrimeshContactGeometry(cudaContext, stream, call, numTests,
+			hcuReportConvexTrimeshContactGeometry(cudaContext, stream, call, numTests,
 				gpuIntermCvxMeshPair, cmPersistentMultiManifolds);
 		}
 	}
 
-	PX_NOINLINE void dcuReportConvexTrimeshFinishStream(
+	PX_NOINLINE void hcuReportConvexTrimeshFinishStream(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -954,7 +954,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-			"[HCU FINISH STREAM] marker=PX_DCU_NARROWPHASE_STAGE_V44_NOINLINE_FINISH_STREAM_AGGREGATE "
+			"[HCU FINISH STREAM] marker=PX_HCU_NARROWPHASE_STAGE_V44_NOINLINE_FINISH_STREAM_AGGREGATE "
 			"call=%u tests=%u sync=%d output_copy=%d touch=%u no_touch=%u touch_unknown=%u stream_managers=%u "
 			"invalid_descriptors=%u null_streams=%u range_errors=%u patch_copy_failures=%u contact_copy_failures=%u "
 			"declared_patches=%llu declared_output_contacts=%llu valid_patches=%llu invalid_patches=%llu "
@@ -976,7 +976,7 @@ namespace
 		std::fflush(stderr);
 	}
 
-	PX_NOINLINE void dcuMaybeReportConvexTrimeshFinishStream(
+	PX_NOINLINE void hcuMaybeReportConvexTrimeshFinishStream(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -991,104 +991,104 @@ namespace
 		PxU32 contactBytesLimit,
 		PxU32 forceBytesLimit)
 	{
-		if (dcuFinishStreamDiagArmed(call))
+		if (hcuFinishStreamDiagArmed(call))
 		{
-			dcuReportConvexTrimeshFinishStream(cudaContext, stream, call, numTests, cmOutputs,
+			hcuReportConvexTrimeshFinishStream(cudaContext, stream, call, numTests, cmOutputs,
 				devicePatchStream, deviceContactStream,
 				baseContactPatches, baseContactPoints, baseContactForces,
 				patchBytesLimit, contactBytesLimit, forceBytesLimit);
 		}
 	}
 
-	bool dcuTriTriOverlapDiagArmed(PxU32 call)
+	bool hcuTriTriOverlapDiagArmed(PxU32 call)
 	{
-		const char* enabled = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG");
+		const char* enabled = std::getenv("PX_HCU_TRITRI_OVERLAP_DIAG");
 		if (!enabled || std::strcmp(enabled, "1") != 0)
 			return false;
 
-		const char* callEnv = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG_CALL");
+		const char* callEnv = std::getenv("PX_HCU_TRITRI_OVERLAP_DIAG_CALL");
 		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 0u;
 		return targetCall == 0u || targetCall == call;
 	}
 
-	bool dcuTriTriOverlapSyncBatchArmed(PxU32 call)
+	bool hcuTriTriOverlapSyncBatchArmed(PxU32 call)
 	{
-		const char* enabled = std::getenv("PX_DCU_TRITRI_OVERLAP_SYNC_BATCH");
+		const char* enabled = std::getenv("PX_HCU_TRITRI_OVERLAP_SYNC_BATCH");
 		if (!enabled || std::strcmp(enabled, "1") != 0)
 			return false;
 
-		const char* callEnv = std::getenv("PX_DCU_TRITRI_OVERLAP_DIAG_CALL");
+		const char* callEnv = std::getenv("PX_HCU_TRITRI_OVERLAP_DIAG_CALL");
 		const PxU32 targetCall = callEnv ? PxU32(std::strtoul(callEnv, NULL, 10)) : 0u;
 		return targetCall == 0u || targetCall == call;
 	}
 
-	bool dcuTriTriOverlapPack2Enabled()
+	bool hcuTriTriOverlapPack2Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK2");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK2");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTrimeshPlaneBatch2Enabled()
+	bool hcuTrimeshPlaneBatch2Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH2");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_PLANE_BATCH2");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriOverlapPack4Enabled()
+	bool hcuTriTriOverlapPack4Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK4");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_PACK4");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriOverlapLaunchBounds64Enabled()
+	bool hcuTriTriOverlapLaunchBounds64Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionSdfInlineEnabled()
+	bool hcuTriTriCollisionSdfInlineEnabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_SDF_INLINE");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_SDF_INLINE");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionInverseCacheEnabled()
+	bool hcuTriTriCollisionInverseCacheEnabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_INVERSE_CACHE");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_INVERSE_CACHE");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionPack2Enabled()
+	bool hcuTriTriCollisionPack2Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_PACK2");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_COLLISION_PACK2");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionOccupancy2Enabled()
+	bool hcuTriTriCollisionOccupancy2Enabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_OCCUPANCY2");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_COLLISION_OCCUPANCY2");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionCreatePatchNoInlineEnabled()
+	bool hcuTriTriCollisionCreatePatchNoInlineEnabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_CREATE_PATCH_NOINLINE");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_COLLISION_CREATE_PATCH_NOINLINE");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionContactPredicateEnabled()
+	bool hcuTriTriCollisionContactPredicateEnabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_CONTACT_PREDICATE");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_COLLISION_CONTACT_PREDICATE");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	bool dcuTriTriCollisionNativeBlockCountEnabled()
+	bool hcuTriTriCollisionNativeBlockCountEnabled()
 	{
-		const char* enabled = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_COLLISION_NATIVE_BLOCK_COUNT");
+		const char* enabled = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_COLLISION_NATIVE_BLOCK_COUNT");
 		return enabled && std::strcmp(enabled, "1") == 0;
 	}
 
-	PX_NOINLINE bool dcuValidateTriTriOverlapInputs(
+	PX_NOINLINE bool hcuValidateTriTriOverlapInputs(
 		PxCudaContext* cudaContext,
 		CUstream stream,
 		PxU32 call,
@@ -1105,7 +1105,7 @@ namespace
 		if (syncResult != CUDA_SUCCESS)
 		{
 			std::fprintf(stderr,
-				"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=pre_sync sync=%d verdict=UPSTREAM_FAILED\n",
+				"[HCU TRITRI OVERLAP DIAG] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=pre_sync sync=%d verdict=UPSTREAM_FAILED\n",
 				call, numTests, int(syncResult));
 			std::fflush(stderr);
 			return false;
@@ -1119,7 +1119,7 @@ namespace
 		if (copyResult != CUDA_SUCCESS)
 		{
 			std::fprintf(stderr,
-				"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=cm_copy copy=%d verdict=COPY_FAILED\n",
+				"[HCU TRITRI OVERLAP DIAG] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=cm_copy copy=%d verdict=COPY_FAILED\n",
 				call, numTests, int(copyResult));
 			std::fflush(stderr);
 			return false;
@@ -1308,7 +1308,7 @@ namespace
 		}
 
 		std::fprintf(stderr,
-		"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u sync=%d "
+		"[HCU TRITRI OVERLAP DIAG] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u sync=%d "
 			"shape_capacity=%llu transform_capacity=%llu distance_capacity=%llu unique_meshes=%u mesh_headers=%u packed_roots=%u "
 			"copy_failures=%u errors=%u verdict=%s\n",
 			call, numTests, int(syncResult), static_cast<unsigned long long>(shapeCapacity),
@@ -1573,14 +1573,14 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(numTests)
 		};
 
-#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+#if defined(PX_HCU_RIGID_STAGE2_INDEX_P54) && PX_HCU_RIGID_STAGE2_INDEX_P54
         // Only the ordinary-rigid benchmark explicitly supplies these tokens.
         // No environment token: preserve the original path without extra output.
         static const PxU32 useBoundedIndexP54 = []() -> PxU32 {
-            const char* value = std::getenv("PX_DCU_RIGID_STAGE2_INDEX_P54");
+            const char* value = std::getenv("PX_HCU_RIGID_STAGE2_INDEX_P54");
             const bool bounded = value && std::strcmp(value, "ordinary-rigid/p54/1") == 0;
             if (bounded || (value && std::strcmp(value, "ordinary-rigid/p54/0") == 0))
-                std::printf("p54_stage2_dispatch=%s marker=PX_DCU_RIGID_STAGE2_INDEX_P54_HOST_V1\n",
+                std::printf("p54_stage2_dispatch=%s marker=PX_HCU_RIGID_STAGE2_INDEX_P54_HOST_V1\n",
                             bounded ? "bounded_subtract" : "original_modulo");
             return bounded ? 1u : 0u;
         }();
@@ -1596,7 +1596,7 @@ void PxgGpuNarrowphaseCore::compactLostFoundPairs(PxgGpuContactManagers& gpuMana
 			PX_CUDA_KERNEL_PARAM(blockAccumArray),
 			PX_CUDA_KERNEL_PARAM(numTests),
 			PX_CUDA_KERNEL_PARAM(cmArray)
-#if defined(PX_DCU_RIGID_STAGE2_INDEX_P54) && PX_DCU_RIGID_STAGE2_INDEX_P54
+#if defined(PX_HCU_RIGID_STAGE2_INDEX_P54) && PX_HCU_RIGID_STAGE2_INDEX_P54
             , PX_CUDA_KERNEL_PARAM(useBoundedIndexP54)
 #endif
 		};
@@ -2474,27 +2474,27 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshPlaneGpu(PxgGpuContactManagers& gpuMan
 
 		PxU32 blocksPerLaunch = numTests;
 		PxU32 numThreadsPerBlock = 1024;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		blocksPerLaunch = 1;
 		numThreadsPerBlock = WARP_SIZE;
-		const bool planeBatch2Enabled = dcuTrimeshPlaneBatch2Enabled();
+		const bool planeBatch2Enabled = hcuTrimeshPlaneBatch2Enabled();
 		if (planeBatch2Enabled)
 		{
 			blocksPerLaunch = PxMin(2u, numTests);
 
-			static bool s_dcuTrimeshPlaneBatch2Reported = false;
-			if (!s_dcuTrimeshPlaneBatch2Reported)
+			static bool s_hcuTrimeshPlaneBatch2Reported = false;
+			if (!s_hcuTrimeshPlaneBatch2Reported)
 			{
-				const bool legacyOverridePresent = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH") != NULL;
-				std::printf("[HCU TRIMESH PLANE] marker=PX_DCU_TRIMESH_PLANE_HOST_V2_BATCH2_OPT_IN requested=1 active=1 "
-					"blocks_per_launch=2 launch_block=32x1x1 reducer=reduceDcuTrimeshPlaneContacts "
+				const bool legacyOverridePresent = std::getenv("PX_HCU_NP_TRIMESH_PLANE_BATCH") != NULL;
+				std::printf("[HCU TRIMESH PLANE] marker=PX_HCU_TRIMESH_PLANE_HOST_V2_BATCH2_OPT_IN requested=1 active=1 "
+					"blocks_per_launch=2 launch_block=32x1x1 reducer=reduceHcuTrimeshPlaneContacts "
 					"legacy_override_precedence=batch2 legacy_override_present=%u\n",
 					legacyOverridePresent ? 1u : 0u);
 				std::fflush(stdout);
-				s_dcuTrimeshPlaneBatch2Reported = true;
+				s_hcuTrimeshPlaneBatch2Reported = true;
 			}
 		}
-		else if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_PLANE_BATCH"))
+		else if (const char* batchEnv = std::getenv("PX_HCU_NP_TRIMESH_PLANE_BATCH"))
 		{
 			const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
 			if (requestedBatch > 0)
@@ -2533,9 +2533,9 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshPlaneGpu(PxgGpuContactManagers& gpuMan
 			result = mCudaContext->launchKernel(triMeshPlaneKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 			{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-					"GPU trimeshPlaneNarrowphase fail to launch kernel; marker=PX_DCU_TRIMESH_PLANE_HOST_V1_BATCHED_32_THREAD_LAUNCH\n");
+					"GPU trimeshPlaneNarrowphase fail to launch kernel; marker=PX_HCU_TRIMESH_PLANE_HOST_V1_BATCHED_32_THREAD_LAUNCH\n");
 #else
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU trimeshPlaneNarrowphase fail to launch kernel!!\n");
 #endif
@@ -2662,11 +2662,11 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 	PxU32* touchFoundFlags = reinterpret_cast<PxU32*>(gpuManagers.mTempRunsumArray.getDevicePtr() + sizeof(PxU32) * numTests);
 	CUresult result;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	static PxU32 s_dcuTriTriOverlapCallCount = 0;
-	const PxU32 dcuTriTriOverlapCall = ++s_dcuTriTriOverlapCallCount;
-	const bool dcuTriTriOverlapDiagEnabled = dcuTriTriOverlapDiagArmed(dcuTriTriOverlapCall);
-	const bool dcuTriTriOverlapSyncBatchEnabled = dcuTriTriOverlapSyncBatchArmed(dcuTriTriOverlapCall);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	static PxU32 s_hcuTriTriOverlapCallCount = 0;
+	const PxU32 hcuTriTriOverlapCall = ++s_hcuTriTriOverlapCallCount;
+	const bool hcuTriTriOverlapDiagEnabled = hcuTriTriOverlapDiagArmed(hcuTriTriOverlapCall);
+	const bool hcuTriTriOverlapSyncBatchEnabled = hcuTriTriOverlapSyncBatchArmed(hcuTriTriOverlapCall);
 #endif
 
 	mIntermStackAlloc.mMutex.lock();
@@ -2674,14 +2674,14 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 	CUdeviceptr gpuIntermOverlap = reinterpret_cast<CUdeviceptr>(mIntermStackAlloc.allocateAligned(256, numTests * sizeof(PxU8)));
 
 	{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		const bool overlapPack2Enabled = dcuTriTriOverlapPack2Enabled();
-		const bool overlapPack4Enabled = overlapPack2Enabled && dcuTriTriOverlapPack4Enabled();
-		const bool overlapLaunchBounds64Enabled = overlapPack2Enabled && !overlapPack4Enabled && dcuTriTriOverlapLaunchBounds64Enabled();
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		const bool overlapPack2Enabled = hcuTriTriOverlapPack2Enabled();
+		const bool overlapPack4Enabled = overlapPack2Enabled && hcuTriTriOverlapPack4Enabled();
+		const bool overlapLaunchBounds64Enabled = overlapPack2Enabled && !overlapPack4Enabled && hcuTriTriOverlapLaunchBounds64Enabled();
 #endif
 		CUfunction tritriOverlapKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			overlapLaunchBounds64Enabled ? PxgKernelIds::TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64_DCU_V10 :
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			overlapLaunchBounds64Enabled ? PxgKernelIds::TRIMESH_TRIMESH_OVERLAP_LAUNCH_BOUNDS64_HCU_V10 :
 #endif
 			PxgKernelIds::TRIMESH_TRIMESH_OVERLAP);
 
@@ -2689,20 +2689,20 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 		PxU32 launchWarpsPerBlock = kernelWarpsPerBlock;
 		const PxU32 numThreadsPerWarp = 32;
 		PxU32 itemsPerLaunch = numTests;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// gfx936 is unstable when this mesh-mesh path submits several independent
 		// work items together. Keep one logical warp and one item per launch by
 		// default; the environment controls below remain available for experiments.
 		launchWarpsPerBlock = 1u;
 		itemsPerLaunch = PxMin(1u, numTests);
-		if (const char* warpsEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK"))
+		if (const char* warpsEnv = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK"))
 		{
 			const PxU32 requestedWarps = PxU32(std::strtoul(warpsEnv, NULL, 10));
 			if (requestedWarps > 0u && requestedWarps <= kernelWarpsPerBlock)
 				launchWarpsPerBlock = requestedWarps;
 		}
 
-		if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH"))
+		if (const char* batchEnv = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH"))
 		{
 			const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
 			if (requestedBatch > 0)
@@ -2717,18 +2717,18 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			launchWarpsPerBlock = 4u;
 			itemsPerLaunch = PxMin(4u, numTests);
 
-			static bool s_dcuTriTriOverlapPack4Reported = false;
-			if (!s_dcuTriTriOverlapPack4Reported)
+			static bool s_hcuTriTriOverlapPack4Reported = false;
+			if (!s_hcuTriTriOverlapPack4Reported)
 			{
 				const bool manualOverridesPresent =
-					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
-					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
-				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V11_PACK4_OPT_IN requested=1 active=1 "
+					std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
+					std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_HCU_TRITRI_OVERLAP_HOST_V11_PACK4_OPT_IN requested=1 active=1 "
 					"base_pack2_requested=1 items_per_launch=4 launch_warps_per_block=4 launch_grid=1x1x1 launch_block=32x4x1 "
 					"manual_overrides_precedence=pack4 manual_overrides_present=%u\n",
 					manualOverridesPresent ? 1u : 0u);
 				std::fflush(stdout);
-				s_dcuTriTriOverlapPack4Reported = true;
+				s_hcuTriTriOverlapPack4Reported = true;
 			}
 		}
 		// Pack exactly two 32-lane logical warps in one wave64 workgroup. This
@@ -2738,37 +2738,37 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			launchWarpsPerBlock = 2u;
 			itemsPerLaunch = PxMin(2u, numTests);
 
-			static bool s_dcuTriTriOverlapPack2Reported = false;
-			if (!s_dcuTriTriOverlapPack2Reported)
+			static bool s_hcuTriTriOverlapPack2Reported = false;
+			if (!s_hcuTriTriOverlapPack2Reported)
 			{
 				const bool manualOverridesPresent =
-					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
-					std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
-				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V5_PACK2_OPT_IN requested=1 active=1 "
+					std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_WARPS_PER_BLOCK") != NULL ||
+					std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_OVERLAP_BATCH") != NULL;
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_HCU_TRITRI_OVERLAP_HOST_V5_PACK2_OPT_IN requested=1 active=1 "
 					"items_per_launch=2 launch_warps_per_block=2 launch_grid=1x1x1 launch_block=32x2x1 "
 					"manual_overrides_precedence=pack2 manual_overrides_present=%u\n",
 					manualOverridesPresent ? 1u : 0u);
 				std::fflush(stdout);
-				s_dcuTriTriOverlapPack2Reported = true;
+				s_hcuTriTriOverlapPack2Reported = true;
 			}
 		}
 
 		if (overlapLaunchBounds64Enabled)
 		{
-			static bool s_dcuTriTriOverlapLaunchBounds64Reported = false;
-			if (!s_dcuTriTriOverlapLaunchBounds64Reported)
+			static bool s_hcuTriTriOverlapLaunchBounds64Reported = false;
+			if (!s_hcuTriTriOverlapLaunchBounds64Reported)
 			{
-				std::printf("[HCU TRITRI OVERLAP] marker=PX_DCU_TRITRI_OVERLAP_HOST_V10_LAUNCH_BOUNDS64_OPT_IN requested=1 active=1 "
+				std::printf("[HCU TRITRI OVERLAP] marker=PX_HCU_TRITRI_OVERLAP_HOST_V10_LAUNCH_BOUNDS64_OPT_IN requested=1 active=1 "
 					"launch_bounds_max_threads=64 launch_bounds_min_blocks=1 launch_grid=1x1x1 launch_block=32x2x1 "
-					"kernel=triangleTriangleOverlapsLaunchBounds64DcuV10\n");
+					"kernel=triangleTriangleOverlapsLaunchBounds64HcuV10\n");
 				std::fflush(stdout);
-				s_dcuTriTriOverlapLaunchBounds64Reported = true;
+				s_hcuTriTriOverlapLaunchBounds64Reported = true;
 			}
 		}
 
-		if (dcuTriTriOverlapDiagEnabled)
+		if (hcuTriTriOverlapDiagEnabled)
 		{
-			const bool inputsValid = dcuValidateTriTriOverlapInputs(mCudaContext, mStream, dcuTriTriOverlapCall, numTests,
+			const bool inputsValid = hcuValidateTriTriOverlapInputs(mCudaContext, mStream, hcuTriTriOverlapCall, numTests,
 				reinterpret_cast<CUdeviceptr>(cmInputs), reinterpret_cast<CUdeviceptr>(gpuShapes),
 				mGpuShapesManager.mGpuShapesBuffer.getSize() / sizeof(PxgShape),
 				reinterpret_cast<CUdeviceptr>(transformCache), mGpuTransformCache.getSize() / sizeof(PxsCachedTransform),
@@ -2776,8 +2776,8 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			if (!inputsValid)
 			{
 				std::fprintf(stderr,
-					"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort reason=invalid_inputs exit=97\n",
-					dcuTriTriOverlapCall, numTests);
+					"[HCU TRITRI OVERLAP DIAG] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort reason=invalid_inputs exit=97\n",
+					hcuTriTriOverlapCall, numTests);
 				std::fflush(stderr);
 				std::_Exit(97);
 			}
@@ -2803,14 +2803,14 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			};
 
 			const PxU32 numBlocks = (batchSize + launchWarpsPerBlock - 1) / launchWarpsPerBlock;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			if (dcuTriTriOverlapDiagEnabled || dcuTriTriOverlapSyncBatchEnabled)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			if (hcuTriTriOverlapDiagEnabled || hcuTriTriOverlapSyncBatchEnabled)
 			{
 				std::fprintf(stderr,
-					"[HCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_begin "
+					"[HCU TRITRI OVERLAP BATCH] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_begin "
 					"work_offset=%u batch_size=%u blocks=%u launch_warps_per_block=%u shared_warps_per_block=%u "
 					"cm_inputs=0x%llx cm_outputs=0x%llx overlaps=0x%llx\n",
-					dcuTriTriOverlapCall, numTests, workOffset, batchSize, numBlocks, launchWarpsPerBlock, kernelWarpsPerBlock,
+					hcuTriTriOverlapCall, numTests, workOffset, batchSize, numBlocks, launchWarpsPerBlock, kernelWarpsPerBlock,
 					static_cast<unsigned long long>(reinterpret_cast<CUdeviceptr>(cmInputsBatch)),
 					static_cast<unsigned long long>(reinterpret_cast<CUdeviceptr>(cmOutputsBatch)),
 					static_cast<unsigned long long>(gpuIntermOverlapBatch));
@@ -2823,31 +2823,31 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 				sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 			{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-					"GPU triangleTriangleOverlaps fail to launch; marker=PX_DCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
+					"GPU triangleTriangleOverlaps fail to launch; marker=PX_HCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
 #else
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleOverlaps fail to launch !!\n");
 #endif
 				break;
 			}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			if (dcuTriTriOverlapSyncBatchEnabled)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			if (hcuTriTriOverlapSyncBatchEnabled)
 			{
 				const PxCUresult syncResult = mCudaContext->streamSynchronize(mStream);
 				std::fprintf(stderr,
-					"[HCU TRITRI OVERLAP BATCH] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_end "
+					"[HCU TRITRI OVERLAP BATCH] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=batch_end "
 					"work_offset=%u batch_size=%u sync=%d verdict=%s\n",
-					dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult),
+					hcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult),
 					syncResult == CUDA_SUCCESS ? "STABLE" : "FAILED");
 				std::fflush(stderr);
 				if (syncResult != CUDA_SUCCESS)
 				{
 					std::fprintf(stderr,
-						"[HCU TRITRI OVERLAP DIAG] marker=PX_DCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort "
+						"[HCU TRITRI OVERLAP DIAG] marker=PX_HCU_TRITRI_OVERLAP_DIAG_V4 call=%u tests=%u phase=abort "
 						"reason=batch_sync_failed work_offset=%u batch_size=%u sync=%d exit=98\n",
-						dcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult));
+						hcuTriTriOverlapCall, numTests, workOffset, batchSize, int(syncResult));
 					std::fflush(stderr);
 					std::_Exit(98);
 				}
@@ -2864,40 +2864,40 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 
 	{
 		PxgDevicePointer<PxgPatchAndContactCounters> patchAndContactCountersD = mPatchAndContactCountersOnDevice.getTypedDevicePtr();
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		const bool sdfInlineEnabled = dcuTriTriCollisionSdfInlineEnabled();
-		const bool inverseCacheEnabled = dcuTriTriCollisionInverseCacheEnabled() && !sdfInlineEnabled;
-		const bool collisionPack2Enabled = dcuTriTriCollisionPack2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled;
-		const bool collisionOccupancy2Enabled = dcuTriTriCollisionOccupancy2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled;
-		const bool collisionCreatePatchNoInlineEnabled = dcuTriTriCollisionCreatePatchNoInlineEnabled() &&
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		const bool sdfInlineEnabled = hcuTriTriCollisionSdfInlineEnabled();
+		const bool inverseCacheEnabled = hcuTriTriCollisionInverseCacheEnabled() && !sdfInlineEnabled;
+		const bool collisionPack2Enabled = hcuTriTriCollisionPack2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled;
+		const bool collisionOccupancy2Enabled = hcuTriTriCollisionOccupancy2Enabled() && !sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled;
+		const bool collisionCreatePatchNoInlineEnabled = hcuTriTriCollisionCreatePatchNoInlineEnabled() &&
 			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled;
-		const bool collisionContactPredicateEnabled = dcuTriTriCollisionContactPredicateEnabled() &&
+		const bool collisionContactPredicateEnabled = hcuTriTriCollisionContactPredicateEnabled() &&
 			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled &&
 			!collisionCreatePatchNoInlineEnabled;
-		const bool collisionNativeBlockCountEnabled = dcuTriTriCollisionNativeBlockCountEnabled() &&
+		const bool collisionNativeBlockCountEnabled = hcuTriTriCollisionNativeBlockCountEnabled() &&
 			!sdfInlineEnabled && !inverseCacheEnabled && !collisionPack2Enabled && !collisionOccupancy2Enabled &&
 			!collisionCreatePatchNoInlineEnabled && !collisionContactPredicateEnabled;
 #endif
 		CUfunction tritriKernelFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			sdfInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_SDF_INLINE_DCU_V1 :
-			inverseCacheEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_INVERSE_CACHE_DCU_V2 :
-			collisionPack2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_PACK2_SERIAL_DCU_V3 :
-			collisionOccupancy2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_OCCUPANCY2_DCU_V5 :
-			collisionCreatePatchNoInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CREATE_PATCH_NOINLINE_DCU_V6 :
-			collisionContactPredicateEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CONTACT_PREDICATE_DCU_V7 :
-			collisionNativeBlockCountEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_NATIVE_BLOCK_COUNT_DCU_V8 :
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			sdfInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_SDF_INLINE_HCU_V1 :
+			inverseCacheEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_INVERSE_CACHE_HCU_V2 :
+			collisionPack2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_PACK2_SERIAL_HCU_V3 :
+			collisionOccupancy2Enabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_OCCUPANCY2_HCU_V5 :
+			collisionCreatePatchNoInlineEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CREATE_PATCH_NOINLINE_HCU_V6 :
+			collisionContactPredicateEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_CONTACT_PREDICATE_HCU_V7 :
+			collisionNativeBlockCountEnabled ? PxgKernelIds::TRIMESH_TRIMESH_CORE_NATIVE_BLOCK_COUNT_HCU_V8 :
 #endif
 			PxgKernelIds::TRIMESH_TRIMESH_CORE);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		if (sdfInlineEnabled)
 		{
 			static std::atomic<bool> markerPrinted(false);
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V1_SDF_INLINE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionSdfInlineDcuV1\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V1_SDF_INLINE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionSdfInlineHcuV1\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2907,7 +2907,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V2_INVERSE_CACHE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionInverseCacheDcuV2\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V2_INVERSE_CACHE_OPT_IN requested=1 active=1 kernel=triangleTriangleCollisionInverseCacheHcuV2\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2917,7 +2917,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V3_PACK2_SERIAL_OPT_IN requested=1 active=1 items_per_launch=2 launch_grid=1x1x1 launch_block=1024x1x1 concurrent_blocks=1 kernel=triangleTriangleCollisionPack2SerialDcuV3\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V3_PACK2_SERIAL_OPT_IN requested=1 active=1 items_per_launch=2 launch_grid=1x1x1 launch_block=1024x1x1 concurrent_blocks=1 kernel=triangleTriangleCollisionPack2SerialHcuV3\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2927,7 +2927,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V5_OCCUPANCY2_OPT_IN requested=1 active=1 launch_bounds_min_blocks_request=2 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionOccupancy2DcuV5\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V5_OCCUPANCY2_OPT_IN requested=1 active=1 launch_bounds_min_blocks_request=2 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionOccupancy2HcuV5\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2937,7 +2937,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V6_CREATE_PATCH_NOINLINE_OPT_IN requested=1 active=1 helper=createNewPatchesNoInlineDcuV6 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionCreatePatchNoInlineDcuV6\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V6_CREATE_PATCH_NOINLINE_OPT_IN requested=1 active=1 helper=createNewPatchesNoInlineHcuV6 launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionCreatePatchNoInlineHcuV6\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2947,7 +2947,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V7_CONTACT_PREDICATE_OPT_IN requested=1 active=1 payload_writes=candidate_only processed_clear=candidate_only launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionContactPredicateDcuV7\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V7_CONTACT_PREDICATE_OPT_IN requested=1 active=1 payload_writes=candidate_only processed_clear=candidate_only launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionContactPredicateHcuV7\n");
 				std::fflush(stdout);
 			}
 		}
@@ -2957,18 +2957,18 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			bool expected = false;
 			if (markerPrinted.compare_exchange_strong(expected, true, std::memory_order_relaxed))
 			{
-				std::printf("[HCU TRITRI COLLISION] marker=PX_DCU_TRITRI_COLLISION_HOST_V8_NATIVE_BLOCK_COUNT_OPT_IN requested=1 active=1 count_scope=generated_contacts primitive=__syncthreads_count launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionNativeBlockCountDcuV8\n");
+				std::printf("[HCU TRITRI COLLISION] marker=PX_HCU_TRITRI_COLLISION_HOST_V8_NATIVE_BLOCK_COUNT_OPT_IN requested=1 active=1 count_scope=generated_contacts primitive=__syncthreads_count launch_grid=1x1x1 launch_block=1024x1x1 kernel=triangleTriangleCollisionNativeBlockCountHcuV8\n");
 				std::fflush(stdout);
 			}
 		}
 #endif
 
 		PxU32 blocksPerLaunch = numTests;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		blocksPerLaunch = PxMin(collisionPack2Enabled ? 2u : 1u, numTests);
 		if (!collisionPack2Enabled)
 		{
-			if (const char* batchEnv = std::getenv("PX_DCU_NP_TRIMESH_TRIMESH_BATCH"))
+			if (const char* batchEnv = std::getenv("PX_HCU_NP_TRIMESH_TRIMESH_BATCH"))
 			{
 				const PxU32 requestedBatch = PxU32(std::strtoul(batchEnv, NULL, 10));
 				if (requestedBatch > 0)
@@ -3012,7 +3012,7 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 
 			// Each baseline block handles one item; Pack2 keeps one block and processes two items serially.
 			const PxU32 launchBlocks =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				collisionPack2Enabled ? 1u : batchSize;
 #else
 				batchSize;
@@ -3020,9 +3020,9 @@ void PxgGpuNarrowphaseCore::testSDKTriMeshTriMeshGpu(PxgGpuContactManagers& gpuM
 			result = mCudaContext->launchKernel(tritriKernelFunction, launchBlocks, 1, 1, 1024, 1, 1, 0, mStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 			{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-					"GPU triangleTriangleCollision fail to launch; marker=PX_DCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
+					"GPU triangleTriangleCollision fail to launch; marker=PX_HCU_TRIMESH_TRIMESH_HOST_V4_SERIAL_LAUNCH\n");
 #else
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU triangleTriangleCollision fail to launch !!\n");
 #endif
@@ -4123,10 +4123,10 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 	CUdeviceptr cvxTriSecondPassPairsGPU = reinterpret_cast<CUdeviceptr>(mIntermStackAlloc.allocateAligned(256, sizeof(void*)));
 	CUdeviceptr gpuSecondPassPairsNum = reinterpret_cast<CUdeviceptr>(mIntermStackAlloc.allocateAligned(sizeof(PxU32), sizeof(PxU32)));
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	static PxU32 s_dcuProbeCallCount = 0;
-	const PxU32 dcuProbeCall = ++s_dcuProbeCallCount;
-	const bool dcuProbeArmed = dcuProbeSite() != NULL && dcuProbeCall == dcuProbeTargetCall();
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	static PxU32 s_hcuProbeCallCount = 0;
+	const PxU32 hcuProbeCall = ++s_hcuProbeCallCount;
+	const bool hcuProbeArmed = hcuProbeSite() != NULL && hcuProbeCall == hcuProbeTargetCall();
 #endif
 
 	const PxU32 stackSizeBytes = mCollisionStackSizeBytes;
@@ -4142,17 +4142,17 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 	CUdeviceptr gpuTempContactIndex = reinterpret_cast<CUdeviceptr>(mIntermStackAlloc.allocateAligned(256, sizeof(PxU32)));
 	mCudaContext->memsetD32Async(gpuTempContactIndex, 0, 1, mStream);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const bool dcuCoreTempIndexEnabled = dcuCoreTempIndexArmed(dcuProbeCall);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	const bool hcuCoreTempIndexEnabled = hcuCoreTempIndexArmed(hcuProbeCall);
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	if (dcuProbeArmed && dcuProbeSiteIs("pre-midphase"))
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	if (hcuProbeArmed && hcuProbeSiteIs("pre-midphase"))
 	{
 		int syncResult = -1;
-		if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+		if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 			syncResult = int(mCudaContext->streamSynchronize(mStream));
-		dcuProbeHoldAndExit("pre-midphase", dcuProbeCall, numTests, syncResult);
+		hcuProbeHoldAndExit("pre-midphase", hcuProbeCall, numTests, syncResult);
 	}
 #endif
 
@@ -4189,22 +4189,22 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,"GPU convexTrimeshMidphase fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		if (dcuMidphaseDiagArmed(dcuProbeCall))
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		if (hcuMidphaseDiagArmed(hcuProbeCall))
 		{
-			const bool valid = dcuValidateConvexTrimeshMidphase(mCudaContext, mStream, dcuProbeCall, numTests,
+			const bool valid = hcuValidateConvexTrimeshMidphase(mCudaContext, mStream, hcuProbeCall, numTests,
 				stackSizeBytes, gpuIntermStack, gpuIntermCvxMeshPair, gpuMidphasePairsNumOnDevice,
 				gpuMidphasePairsNumOnDevicePadded, gpuStackShift);
-			if (!valid && dcuMidphaseDiagAbortOnError())
+			if (!valid && hcuMidphaseDiagAbortOnError())
 				std::_Exit(97);
 		}
 
-		if (dcuProbeArmed && dcuProbeSiteIs("post-midphase"))
+		if (hcuProbeArmed && hcuProbeSiteIs("post-midphase"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-midphase", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-midphase", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4225,15 +4225,15 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 		PxU32 numWarpsPerBlock = NP_TRIMESH_WARPS_PER_BLOCK;
 		PxU32 numBlocks = PxMax(2048u, (numTests*coreGridMultiplier + numWarpsPerBlock - 1) / numWarpsPerBlock);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// Diagnostic only, off by default. The 2048 floor above means that for
 		// a handful of pairs we still launch 2048 blocks; the grid-stride loop
 		// then leaves nearly all of them without work, yet every block still
-		// runs midphaseAllocate. PX_DCU_CORE_BLOCKS=fit drops the floor so the
+		// runs midphaseAllocate. PX_HCU_CORE_BLOCKS=fit drops the floor so the
 		// grid matches the actual pair count, which tells us whether those idle
 		// blocks are involved in the device drop.
 		{
-			const char* blocksMode = std::getenv("PX_DCU_CORE_BLOCKS");
+			const char* blocksMode = std::getenv("PX_HCU_CORE_BLOCKS");
 			if (blocksMode && std::strcmp(blocksMode, "fit") == 0)
 			{
 				const PxU32 fitted = PxMax(1u, (numTests*coreGridMultiplier + numWarpsPerBlock - 1) / numWarpsPerBlock);
@@ -4250,11 +4250,11 @@ void PxgGpuNarrowphaseCore::testSDKConvexTriMeshSATGpu(PxgGpuContactManagers& gp
 // host mapped target would turn that into an unsupported PCIe AtomicOp.
 PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDevice.getTypedDevicePtr();
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		const PxU32 coreStage = dcuCoreStage(dcuProbeCall);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		const PxU32 coreStage = hcuCoreStage(hcuProbeCall);
 		if (coreStage)
 		{
-			std::fprintf(stderr, "[HCU CORE STAGE] call=%u stage=%u tests=%u\n", dcuProbeCall, coreStage, numTests);
+			std::fprintf(stderr, "[HCU CORE STAGE] call=%u stage=%u tests=%u\n", hcuProbeCall, coreStage, numTests);
 			std::fflush(stderr);
 		}
 #endif
@@ -4286,7 +4286,7 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 			PX_CUDA_KERNEL_PARAM(maxConvexMeshTempMemoryD),
 			PX_CUDA_KERNEL_PARAM(gpuStackShift),
 			PX_CUDA_KERNEL_PARAM(numTests)
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			, PX_CUDA_KERNEL_PARAM(coreStage)
 #endif
 		};
@@ -4296,8 +4296,8 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,"GPU convexTrimeshCore fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		if (dcuCoreTempIndexEnabled)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		if (hcuCoreTempIndexEnabled)
 		{
 			PxU32 midphasePairs = 0;
 			PxU32 tempIndex = 0;
@@ -4313,16 +4313,16 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 
 			std::fprintf(stderr,
 				"[HCU CORE TEMP INDEX] call=%u tests=%u sync=%d pairs_copy=%d temp_copy=%d midphase_pairs=%u temp_index=%u\n",
-				dcuProbeCall, numTests, int(syncResult), int(pairsCopyResult), int(tempCopyResult), midphasePairs, tempIndex);
+				hcuProbeCall, numTests, int(syncResult), int(pairsCopyResult), int(tempCopyResult), midphasePairs, tempIndex);
 			std::fflush(stderr);
 		}
 
-		if (dcuProbeArmed && dcuProbeSiteIs("post-core"))
+		if (hcuProbeArmed && hcuProbeSiteIs("post-core"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-core", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-core", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4350,13 +4350,13 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sortTriangles fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		if (dcuProbeArmed && dcuProbeSiteIs("post-sorttriangles"))
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		if (hcuProbeArmed && hcuProbeSiteIs("post-sorttriangles"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-sorttriangles", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-sorttriangles", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4394,13 +4394,13 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU convexTrimeshPostProcess fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		if (dcuProbeArmed && dcuProbeSiteIs("post-postprocess"))
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		if (hcuProbeArmed && hcuProbeSiteIs("post-postprocess"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-postprocess", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-postprocess", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4438,16 +4438,16 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,"GPU convexTrimeshCorrelate fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuMaybeReportConvexTrimeshContactGeometry(mCudaContext, mStream, dcuProbeCall, numTests,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuMaybeReportConvexTrimeshContactGeometry(mCudaContext, mStream, hcuProbeCall, numTests,
 			gpuIntermCvxMeshPair, reinterpret_cast<CUdeviceptr>(cmPersistentMultiManifolds));
 
-		if (dcuProbeArmed && dcuProbeSiteIs("post-correlate"))
+		if (hcuProbeArmed && hcuProbeSiteIs("post-correlate"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-correlate", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-correlate", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4503,19 +4503,19 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		if(result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,"GPU convexTrimesh finishContacts fail to launch kernel!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuMaybeReportConvexTrimeshFinishStream(mCudaContext, mStream, dcuProbeCall, numTests,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuMaybeReportConvexTrimeshFinishStream(mCudaContext, mStream, hcuProbeCall, numTests,
 			reinterpret_cast<CUdeviceptr>(cmOutputs), reinterpret_cast<CUdeviceptr>(mPatchStream),
 			reinterpret_cast<CUdeviceptr>(mContactStream), reinterpret_cast<CUdeviceptr>(baseContactPatches),
 			reinterpret_cast<CUdeviceptr>(baseContactPoints), reinterpret_cast<CUdeviceptr>(baseContactForces),
 			patchBytesLimit, contactBytesLimit, forceBytesLimit);
 
-		if (dcuProbeArmed && dcuProbeSiteIs("post-finishcontacts"))
+		if (hcuProbeArmed && hcuProbeSiteIs("post-finishcontacts"))
 		{
 			int syncResult = -1;
-			if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+			if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 				syncResult = int(mCudaContext->streamSynchronize(mStream));
-			dcuProbeHoldAndExit("post-finishcontacts", dcuProbeCall, numTests, syncResult);
+			hcuProbeHoldAndExit("post-finishcontacts", hcuProbeCall, numTests, syncResult);
 		}
 #endif
 
@@ -4531,11 +4531,11 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 
 	compactLostFoundPairs(gpuManagers, numTests, touchChangeFlags, cmOutputs);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	if (dcuProbeArmed && dcuProbeSiteIs("post-compact"))
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	if (hcuProbeArmed && hcuProbeSiteIs("post-compact"))
 	{
 		int syncResult = -1;
-		if (!std::getenv("PX_DCU_PROBE_NOSYNC"))
+		if (!std::getenv("PX_HCU_PROBE_NOSYNC"))
 			syncResult = int(mCudaContext->streamSynchronize(mStream));
 
 		PxU32 touchChanges = 0;
@@ -4549,12 +4549,12 @@ PxgDevicePointer<PxU32> maxConvexMeshTempMemoryD = mMaxConvexMeshTempMemoryOnDev
 		const bool boundsValid = countsValid && touchChanges <= totalChanges && totalChanges <= 2u * numTests;
 
 		std::fprintf(stderr,
-			"[HCU POST COMPACT] marker=PX_DCU_NARROWPHASE_STAGE_V51_POST_COMPACT_BOUNDARY "
+			"[HCU POST COMPACT] marker=PX_HCU_NARROWPHASE_STAGE_V51_POST_COMPACT_BOUNDARY "
 			"call=%u tests=%u sync=%d counts_valid=%u bounds_valid=%u touch=%u total=%u\n",
-			dcuProbeCall, numTests, syncResult, countsValid ? 1u : 0u, boundsValid ? 1u : 0u,
+			hcuProbeCall, numTests, syncResult, countsValid ? 1u : 0u, boundsValid ? 1u : 0u,
 			touchChanges, totalChanges);
 		std::fflush(stderr);
-		dcuProbeHoldAndExit("post-compact", dcuProbeCall, numTests, syncResult);
+		hcuProbeHoldAndExit("post-compact", hcuProbeCall, numTests, syncResult);
 	}
 #endif
 
@@ -4939,23 +4939,23 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 			};
 
 			result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				gDcuParticlePrimitiveBoundBlockSize,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				gHcuParticlePrimitiveBoundBlockSize,
 #else
 				PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
 #endif
 				1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-					"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+					"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_HCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
 #else
 					"GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
 #endif
 
 			PX_ASSERT(result == CUDA_SUCCESS);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
 				"primitive_bound_first_complete", 0, numTests);
 #endif
 #if GPU_NP_DEBUG
@@ -4988,24 +4988,24 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 			};
 
 			result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				gDcuParticlePrimitiveBoundBlockSize,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				gHcuParticlePrimitiveBoundBlockSize,
 #else
 				PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
 #endif
 				1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-					"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+					"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_HCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
 #else
 					"GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
 				"primitive_bound_second_complete", reinterpret_cast<CUdeviceptr>(totalPairsd), numTests);
-			dcuPbdPrintPairCount(mCudaContext, particleStream, reinterpret_cast<CUdeviceptr>(totalPairsd),
+			hcuPbdPrintPairCount(mCudaContext, particleStream, reinterpret_cast<CUdeviceptr>(totalPairsd),
 				"bound_second", pbdContactDiagBoundPrinted);
 #endif
 #if GPU_NP_DEBUG
@@ -5061,10 +5061,10 @@ void PxgGpuNarrowphaseCore::testSDKParticleSystemGpu(PxgGpuContactManagers& gpuM
 			if (result != CUDA_SUCCESS)
 				PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU particlePrimitivesCollisionLaunch fail to launch!!\n");
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPrimitivePipelineCheckpoint(mCudaContext, particleStream,
 				"primitive_collision_complete", reinterpret_cast<CUdeviceptr>(writer.numTotalContacts), numTests);
-			dcuPbdPrintCollisionContact(mCudaContext, particleStream,
+			hcuPbdPrintCollisionContact(mCudaContext, particleStream,
 				reinterpret_cast<CUdeviceptr>(writer.numTotalContacts),
 				reinterpret_cast<CUdeviceptr>(writer.particleContacts), pbdContactDiagCollisionPrinted);
 #endif
@@ -5546,16 +5546,16 @@ void PxgGpuNarrowphaseCore::testSDKConvexParticle(PxgGpuContactManagers& gpuMana
 		};
 
 		result = mCudaContext->launchKernel(firstPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			gDcuParticlePrimitiveBoundBlockSize,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			gHcuParticlePrimitiveBoundBlockSize,
 #else
 			PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
 #endif
 			1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				"GPU ps_primitivesBoundFirstPassLaunch fail to launch!! PX_HCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
 #else
 				"GPU ps_primitivesBoundFirstPassLaunch fail to launch!!\n");
 #endif
@@ -5577,16 +5577,16 @@ void PxgGpuNarrowphaseCore::testSDKConvexParticle(PxgGpuContactManagers& gpuMana
 		};
 
 		result = mCudaContext->launchKernel(secondPassFunction, PxgParticleSystemKernelGridDim::BOUNDCELLUPDATE, 1, 1,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			gDcuParticlePrimitiveBoundBlockSize,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			gHcuParticlePrimitiveBoundBlockSize,
 #else
 			PxgParticleSystemKernelBlockDim::BOUNDCELLUPDATE,
 #endif
 			1, 1, 0, /*mStream*/particleStream, kernelParams_stage, sizeof(kernelParams_stage), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_DCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				"GPU ps_primitivesBoundSecondPassLaunch fail to launch!! PX_HCU_PARTICLE_PRIMITIVE_BOUND_V57_BLOCK256\n");
 #else
 				"GPU ps_primitivesBoundSecondPassLaunch fail to launch!!\n");
 #endif
@@ -5949,7 +5949,7 @@ void PxgGpuNarrowphaseCore::softbodyOtherContactApplyCollisionToSimMeshMapping(
 	};
 
 	PxU32 numWarpsPerBlock =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		8;
 #else
 		16;
@@ -5960,9 +5960,9 @@ void PxgGpuNarrowphaseCore::softbodyOtherContactApplyCollisionToSimMeshMapping(
 
 	if (result != CUDA_SUCCESS)
 	{
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-			"GPU sb_other_contact_remap_to_simLaunch fail to launch kernel!! PX_DCU_SOFTBODY_OTHER_CONTACT_REMAP_V3_8_WARPS\n");
+			"GPU sb_other_contact_remap_to_simLaunch fail to launch kernel!! PX_HCU_SOFTBODY_OTHER_CONTACT_REMAP_V3_8_WARPS\n");
 #else
 		PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU sb_other_contact_remap_to_simLaunch fail to launch kernel!!\n");
 #endif
@@ -7719,7 +7719,7 @@ void PxgGpuNarrowphaseCore::testSDKFemClothPlane(PxgGpuContactManagers& gpuManag
 		};
 
 		const PxU32 numVertBlocks = numTests;
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		const PxU32 numWarpPerBlock = 8;
 	#else
 		const PxU32 numWarpPerBlock = 16;
@@ -7730,9 +7730,9 @@ void PxgGpuNarrowphaseCore::testSDKFemClothPlane(PxgGpuContactManagers& gpuManag
 		result = mCudaContext->launchKernel(fcVertCollisionKernelFunction, numVertBlocks, 1, 1, numThreadsPerWarp, numWarpPerBlock, 1, 0, femClothStream, vertKernelParams, sizeof(vertKernelParams), 0, PX_FL);
 		if (result != CUDA_SUCCESS)
 		{
-	#if defined(PX_DCU_PORT) && PX_DCU_PORT
+	#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL,
-				"GPU cloth_planeVertContactGenLaunch fail to launch kernel!! PX_DCU_CLOTH_PLANE_VERTEX_V1_8_WARPS\n");
+				"GPU cloth_planeVertContactGenLaunch fail to launch kernel!! PX_HCU_CLOTH_PLANE_VERTEX_V1_8_WARPS\n");
 	#else
 			PxGetFoundation().error(PxErrorCode::eINTERNAL_ERROR, PX_FL, "GPU cloth_planeVertContactGenLaunch fail to launch kernel!!\n");
 	#endif

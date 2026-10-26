@@ -49,8 +49,8 @@
 
 using namespace physx;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuBroadphaseReportStageVersion[] = "PX_DCU_GPU_BROADPHASE_REPORT_V5_SERIAL_FULL_COMPACTION";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuBroadphaseReportStageVersion[] = "PX_HCU_GPU_BROADPHASE_REPORT_V5_SERIAL_FULL_COMPACTION";
 #endif
 
 extern "C" __host__ void initBroadphaseKernels0() {}
@@ -2388,7 +2388,7 @@ extern "C" __global__ void accumulateReportsStage_2(PxgBroadPhaseDesc* bpDesc)	/
 {
 	const bool outputAggReport = ((blockIdx.y % 2) == 0);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	// The generic Stage2 ballot/scan path can produce a valid-sized but incorrect
 	// compaction on gfx936. Build each of the four report lists deterministically;
 	// Stage1 remains unchanged, but its per-block histograms are not consumed here.

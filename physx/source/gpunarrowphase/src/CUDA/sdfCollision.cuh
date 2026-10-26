@@ -412,7 +412,7 @@ static __device__ PxReal doTetrahedronSDFCollision(SparseSDFTexture& texture, co
 	return dist;
 }
 
-template<bool InlineDcuV1>
+template<bool InlineHcuV1>
 static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionBody(SparseSDFTexture& texture, const PxVec3& v0, const PxVec3& v1, const PxVec3& v2,
 	PxVec3& point, PxVec3& dir, PxReal tolerance)
 {
@@ -513,8 +513,8 @@ static __device__ PxReal doTriangleSDFCollision(SparseSDFTexture& texture, const
 	return doTriangleSDFCollisionBody<false>(texture, v0, v1, v2, point, dir, tolerance);
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionInlineDcuV1(SparseSDFTexture& texture,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionInlineHcuV1(SparseSDFTexture& texture,
 	const PxVec3& v0, const PxVec3& v1, const PxVec3& v2, PxVec3& point, PxVec3& dir, PxReal tolerance)
 {
 	return doTriangleSDFCollisionBody<true>(texture, v0, v1, v2, point, dir, tolerance);

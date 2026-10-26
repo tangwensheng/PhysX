@@ -47,7 +47,7 @@ set(HIP_SUPPRESS_WARNINGS "-Wno-unused-function -Wno-inconsistent-missing-overri
 
 # Force-include PxgHIPCompat.h to all HIP translation units
 # This provides: HIP intrinsics, PhysX foundation types, CUDA compatibility
-set(HIP_INCLUDE_FLAGS "-include PxgHIPCompat.h -DPX_DCU_PORT")
+set(HIP_INCLUDE_FLAGS "-include PxgHIPCompat.h -DPX_HCU_PORT")
 
 set(PHYSX_HIP_FLAGS "${HIP_INCLUDE_FLAGS} ${HIP_FAST_MATH_FLAGS} ${HIP_SUPPRESS_WARNINGS}")
 
@@ -66,10 +66,10 @@ set(CMAKE_HIP_FLAGS_RELEASE "${PHYSX_HIP_FLAGS_RELEASE}")
 
 # ---- GPU Architecture ----
 # Default HCU architectures
-if(NOT DEFINED DCU_ARCHITECTURES)
-    set(DCU_ARCHITECTURES "gfx936" CACHE STRING "HCU device architectures")
+if(NOT DEFINED HCU_ARCHITECTURES)
+    set(HCU_ARCHITECTURES "gfx936" CACHE STRING "HCU device architectures")
 endif()
-set(CMAKE_HIP_ARCHITECTURES "${DCU_ARCHITECTURES}")
+set(CMAKE_HIP_ARCHITECTURES "${HCU_ARCHITECTURES}")
 
 # ---- Static library defines ----
 if(PX_GENERATE_GPU_STATIC_LIBRARIES)

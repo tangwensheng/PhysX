@@ -1,4 +1,5 @@
 bin/
+probe_hcu
 compiler/linux-*
 compiler/vc*
 include/PxConfig.h

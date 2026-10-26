@@ -51,16 +51,16 @@
 #include "stdio.h"
 
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CONTACT_PREP_O3_P59) && PX_DCU_RIGID_CONTACT_PREP_O3_P59
-extern "C" __device__ __constant__ char gPxgDcuRigidContactPrepO3P59Version[] = "PX_DCU_RIGID_CONTACT_PREP_O3_P59_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_CONTACT_PREP_O3_P59) && PX_HCU_RIGID_CONTACT_PREP_O3_P59
+extern "C" __device__ __constant__ char gPxgHcuRigidContactPrepO3P59Version[] = "PX_HCU_RIGID_CONTACT_PREP_O3_P59_GFX936_DEVICE_V1";
 #endif
 
 using namespace physx;
 
 extern "C" __host__ void initSolverKernels1() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuContactPrepStageVersion[] = "PX_DCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuContactPrepStageVersion[] = "PX_HCU_SOLVER_STAGE_V40_VALIDATE_FRICTION_HISTORY_BOUNDS";
 #endif
 
 #define LOAD_BODY_DATA 0
@@ -272,7 +272,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 	__shared__ PxAlignedTransform* bodyFrames;
 
 	
-#if !defined(PX_DCU_PORT) || !PX_DCU_PORT
+#if !defined(PX_HCU_PORT) || !PX_HCU_PORT
 	volatile __shared__ char sInertias[sizeof(PxMat33) * (PxgKernelBlockDim::CONSTRAINT_PREPARE_BLOCK_PARALLEL / warpSize) * warpSize];
 	//volatile __shared__ PxMat33 inertias[PxgKernelBlockDim::CONSTRAINT_PREPARE_BLOCK_PARALLEL / warpSize][warpSize];
 
@@ -336,7 +336,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 		PxMat33 invInertia0;
 		PxMat33 invInertia1;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 		// Avoid reusing LDS between the A and B tensors. On HCU __syncwarp is a
 		// memory fence, so each active lane loads the two tensors it consumes.
 		if (threadIndexInWarp < descStride)
@@ -461,7 +461,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 
 			//PxU32 frictionIndex = unit.mFrictionIndex[threadIndexInWarp];
 			PxU32 edgeIndex = unit.mEdgeIndex[threadIndexInWarp];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			const PxU64 frictionIndex = PxU64(edgeIndex) + PxU64(totalCurrentEdges) * PxU64(unit.mPatchIndex[threadIndexInWarp]);
 			if(edgeIndex < totalCurrentEdges && frictionIndex < currentFrictionIndexCount)
 			{
@@ -508,7 +508,7 @@ extern "C" __global__ void contactConstraintBlockPrepareParallelLaunch(
 			}*/
 
 			PxU32 offset = unit.mWriteback[threadIndexInWarp];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 			// New edges have no row in the previous frame's friction tables.
 			const PxU32 previousEdgeIndex = edgeIndex < totalPreviousEdges ? edgeIndex : 0xFFFFFFFFu;
 #else

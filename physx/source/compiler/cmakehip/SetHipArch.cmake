@@ -52,6 +52,6 @@ macro(GENERATE_HIP_ARCH_LIST)
 endmacro()
 
 # Default HCU architectures (mirrors CUDA sm_70..sm_120 range)
-if(NOT DEFINED DCU_ARCHITECTURES)
-    set(DCU_ARCHITECTURES "gfx936,gfx938" CACHE STRING "HCU device architectures to target")
+if(NOT DEFINED HCU_ARCHITECTURES)
+    set(HCU_ARCHITECTURES "gfx936,gfx938" CACHE STRING "HCU device architectures to target")
 endif()

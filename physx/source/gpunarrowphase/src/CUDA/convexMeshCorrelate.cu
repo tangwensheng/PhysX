@@ -46,8 +46,8 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels3() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuCorrelateStageVersion[] = "PX_DCU_CORE_STAGE_V25_FINITE_SERIAL_CORRELATE";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuCorrelateStageVersion[] = "PX_HCU_CORE_STAGE_V25_FINITE_SERIAL_CORRELATE";
 #endif
 
 #include "manifold.cuh"
@@ -98,45 +98,45 @@ struct Scratch
 	int pairIndex;
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-struct DcuCorrelateContact
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+struct HcuCorrelateContact
 {
 	float4 pointSeparation;
 	PxU32 triangleIndex;
 };
 
-__device__ PX_FORCE_INLINE bool isValidDcuCorrelateNormal(const PxVec3& normal)
+__device__ PX_FORCE_INLINE bool isValidHcuCorrelateNormal(const PxVec3& normal)
 {
 	const PxReal magnitudeSquared = normal.magnitudeSquared();
 	return normal.isFinite() && PxIsFinite(magnitudeSquared) && magnitudeSquared >= PX_NORMALIZATION_EPSILON;
 }
 
-__device__ PX_FORCE_INLINE bool isValidDcuCorrelateContact(const float4& pointSeparation)
+__device__ PX_FORCE_INLINE bool isValidHcuCorrelateContact(const float4& pointSeparation)
 {
 	return PxIsFinite(pointSeparation.x) && PxIsFinite(pointSeparation.y) &&
 		PxIsFinite(pointSeparation.z) && PxIsFinite(pointSeparation.w);
 }
 
-__device__ PX_FORCE_INLINE PxVec3 projectDcuCorrelatePoint(const DcuCorrelateContact& contact, const PxVec3& normal)
+__device__ PX_FORCE_INLINE PxVec3 projectHcuCorrelatePoint(const HcuCorrelateContact& contact, const PxVec3& normal)
 {
 	const PxVec3 point(contact.pointSeparation.x, contact.pointSeparation.y, contact.pointSeparation.z);
 	return point - normal * point.dot(normal);
 }
 
-__device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMax(
-	const DcuCorrelateContact* contacts, const PxU32 mask, const PxVec3& normal,
+__device__ PX_FORCE_INLINE PxU32 selectHcuCorrelateMax(
+	const HcuCorrelateContact* contacts, const PxU32 mask, const PxVec3& normal,
 	const PxU32 referenceIndex, const PxU32 metric)
 {
 	PxU32 selected = WARP_SIZE;
 	PxReal selectedValue = -PX_MAX_F32;
 	const PxVec3 referencePoint = referenceIndex < WARP_SIZE
-		? projectDcuCorrelatePoint(contacts[referenceIndex], normal) : PxVec3(0.f);
+		? projectHcuCorrelatePoint(contacts[referenceIndex], normal) : PxVec3(0.f);
 
 	for (PxU32 scanMask = mask; scanMask; scanMask = clearLowestSetBit(scanMask))
 	{
 		const PxU32 index = lowestSetIndex(scanMask);
 		const PxReal value = metric == 0 ? contacts[index].pointSeparation.w
-			: (projectDcuCorrelatePoint(contacts[index], normal) - referencePoint).magnitude();
+			: (projectHcuCorrelatePoint(contacts[index], normal) - referencePoint).magnitude();
 
 		if (selected == WARP_SIZE || value > selectedValue || (value == selectedValue && index < selected))
 		{
@@ -147,8 +147,8 @@ __device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMax(
 	return selected;
 }
 
-__device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMinSeparation(
-	const DcuCorrelateContact* contacts, const PxU32 mask, const PxU32 anchorMask, const PxReal clusterBias)
+__device__ PX_FORCE_INLINE PxU32 selectHcuCorrelateMinSeparation(
+	const HcuCorrelateContact* contacts, const PxU32 mask, const PxU32 anchorMask, const PxReal clusterBias)
 {
 	PxU32 selected = WARP_SIZE;
 	PxReal selectedValue = PX_MAX_F32;
@@ -165,19 +165,19 @@ __device__ PX_FORCE_INLINE PxU32 selectDcuCorrelateMinSeparation(
 	return selected;
 }
 
-__device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
-	DcuCorrelateContact* contacts, const PxU32 allMask, const PxVec3& normal, const PxReal clusterBias)
+__device__ PX_FORCE_INLINE PxU32 reduceHcuCorrelateContacts(
+	HcuCorrelateContact* contacts, const PxU32 allMask, const PxVec3& normal, const PxReal clusterBias)
 {
 	if (__popc(allMask) <= SUBMANIFOLD_MAX_CONTACTS)
 		return allMask;
 
-	const PxU32 i0 = selectDcuCorrelateMax(contacts, allMask, normal, WARP_SIZE, 0);
+	const PxU32 i0 = selectHcuCorrelateMax(contacts, allMask, normal, WARP_SIZE, 0);
 	PxU32 anchorMask = PxU32(1) << i0;
-	const PxU32 i1 = selectDcuCorrelateMax(contacts, allMask & ~anchorMask, normal, i0, 1);
+	const PxU32 i1 = selectHcuCorrelateMax(contacts, allMask & ~anchorMask, normal, i0, 1);
 	anchorMask |= PxU32(1) << i1;
 
-	const PxVec3 point0 = projectDcuCorrelatePoint(contacts[i0], normal);
-	const PxVec3 direction = normal.cross(projectDcuCorrelatePoint(contacts[i1], normal) - point0);
+	const PxVec3 point0 = projectHcuCorrelatePoint(contacts[i0], normal);
+	const PxVec3 direction = normal.cross(projectHcuCorrelatePoint(contacts[i1], normal) - point0);
 	PxU32 maxIndex = WARP_SIZE;
 	PxU32 minIndex = WARP_SIZE;
 	PxReal maxValue = -PX_MAX_F32;
@@ -185,7 +185,7 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 	for (PxU32 scanMask = allMask & ~anchorMask; scanMask; scanMask = clearLowestSetBit(scanMask))
 	{
 		const PxU32 index = lowestSetIndex(scanMask);
-		const PxReal value = direction.dot(projectDcuCorrelatePoint(contacts[index], normal) - point0);
+		const PxReal value = direction.dot(projectHcuCorrelatePoint(contacts[index], normal) - point0);
 		if (maxIndex == WARP_SIZE || value > maxValue || (value == maxValue && index < maxIndex))
 		{
 			maxIndex = index;
@@ -196,7 +196,7 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 	for (PxU32 scanMask = allMask & ~anchorMask; scanMask; scanMask = clearLowestSetBit(scanMask))
 	{
 		const PxU32 index = lowestSetIndex(scanMask);
-		const PxReal value = direction.dot(projectDcuCorrelatePoint(contacts[index], normal) - point0);
+		const PxReal value = direction.dot(projectHcuCorrelatePoint(contacts[index], normal) - point0);
 		if (minIndex == WARP_SIZE || value < minValue || (value == minValue && index < minIndex))
 		{
 			minIndex = index;
@@ -214,7 +214,7 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 		for (PxU32 scanMask = allMask; scanMask; scanMask = clearLowestSetBit(scanMask))
 		{
 			const PxU32 index = lowestSetIndex(scanMask);
-			const PxVec3 point = projectDcuCorrelatePoint(contacts[index], normal);
+			const PxVec3 point = projectHcuCorrelatePoint(contacts[index], normal);
 			PxReal closestDistance = PX_MAX_F32;
 			PxU32 closestCluster = 0;
 			PxU32 candidateAnchors = anchorMask;
@@ -222,7 +222,7 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 			while (candidateAnchors)
 			{
 				const PxU32 candidateAnchor = lowestSetIndex(candidateAnchors);
-				const PxReal distance = (point - projectDcuCorrelatePoint(contacts[candidateAnchor], normal)).magnitudeSquared();
+				const PxReal distance = (point - projectHcuCorrelatePoint(contacts[candidateAnchor], normal)).magnitudeSquared();
 				if (distance < closestDistance)
 				{
 					closestDistance = distance;
@@ -235,7 +235,7 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 				clusterMask |= PxU32(1) << index;
 		}
 		if (clusterMask)
-			selectedMask |= PxU32(1) << selectDcuCorrelateMinSeparation(contacts, clusterMask, anchorMask, clusterBias);
+			selectedMask |= PxU32(1) << selectHcuCorrelateMinSeparation(contacts, clusterMask, anchorMask, clusterBias);
 		remainingAnchors = clearLowestSetBit(remainingAnchors);
 		++clusterIndex;
 	}
@@ -245,12 +245,12 @@ __device__ PX_FORCE_INLINE PxU32 reduceDcuCorrelateContacts(
 		const PxU32 remainingMask = allMask & ~selectedMask;
 		if (!remainingMask)
 			break;
-		selectedMask |= PxU32(1) << selectDcuCorrelateMinSeparation(contacts, remainingMask, anchorMask, clusterBias);
+		selectedMask |= PxU32(1) << selectHcuCorrelateMinSeparation(contacts, remainingMask, anchorMask, clusterBias);
 	}
 	return selectedMask;
 }
 
-__device__ void correlateDcuSerial(
+__device__ void correlateHcuSerial(
 	const ConvexMeshPair& pair,
 	ConvexTriNormalAndIndex* PX_RESTRICT nicBuffer,
 	const ConvexTriContacts* PX_RESTRICT contactBuffer,
@@ -259,7 +259,7 @@ __device__ void correlateDcuSerial(
 	PxgPersistentContactMultiManifold* PX_RESTRICT outBuffer,
 	const PxReal clusterBias,
 	ConvexTriContact* PX_RESTRICT tempConvexTriContacts,
-	DcuCorrelateContact* candidates)
+	HcuCorrelateContact* candidates)
 {
 	const PxU32 start = PxU32(pair.startIndex);
 	const PxU32 count = PxU32(pair.count);
@@ -269,7 +269,7 @@ __device__ void correlateDcuSerial(
 		const PxReal depth = depthBuffer[start + index];
 		const ConvexTriNormalAndIndex nic = nicBuffer[start + index];
 		const PxU32 nbContacts = ConvexTriNormalAndIndex::getNbContacts(nic.index);
-		if (depth != FLT_MAX && PxIsFinite(depth) && nbContacts > 0 && isValidDcuCorrelateNormal(nic.normal))
+		if (depth != FLT_MAX && PxIsFinite(depth) && nbContacts > 0 && isValidHcuCorrelateNormal(nic.normal))
 		{
 			depthBuffer[start + nbTriangles] = depth;
 			tempCounts[start + nbTriangles] = (index << 4) | nbContacts;
@@ -335,7 +335,7 @@ __device__ void correlateDcuSerial(
 				for (PxU32 contact = 0; contact < nbContacts; ++contact)
 				{
 					const float4 pointSeparation = tempConvexTriContacts[contactStart + contact].contact_sepW;
-					if (!isValidDcuCorrelateContact(pointSeparation))
+					if (!isValidHcuCorrelateContact(pointSeparation))
 						continue;
 
 					const PxU32 freeMask = ~currentContactMask;
@@ -344,12 +344,12 @@ __device__ void correlateDcuSerial(
 					candidates[candidateIndex].triangleIndex = triangleIndex;
 					currentContactMask |= PxU32(1) << candidateIndex;
 					if (currentContactMask == FULL_MASK)
-						currentContactMask = reduceDcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
+						currentContactMask = reduceHcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
 				}
 				tempCounts[compactIndex] = 0;
 			}
 			if (__popc(currentContactMask) > SUBMANIFOLD_MAX_CONTACTS)
-				currentContactMask = reduceDcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
+				currentContactMask = reduceHcuCorrelateContacts(candidates, currentContactMask, bestNormal, clusterBias);
 		}
 
 		const PxU32 nbContacts = __popc(currentContactMask);
@@ -357,7 +357,7 @@ __device__ void correlateDcuSerial(
 		{
 			const PxTransform aToB = pair.aToB;
 			const PxVec3 normalInB = aToB.rotate(bestNormal);
-			if (!isValidDcuCorrelateNormal(normalInB))
+			if (!isValidHcuCorrelateNormal(normalInB))
 				continue;
 
 			PxU32 outputContact = 0;
@@ -413,8 +413,8 @@ void correlate(
 	__shared__ PxU32 triangleRunSums[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
 	__shared__ PxU32 startIndices[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
 	__shared__ PxU32 triIndices[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	__shared__ DcuCorrelateContact dcuCandidates[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	__shared__ HcuCorrelateContact hcuCandidates[CORRELATE_WARPS_PER_BLOCK][WARP_SIZE];
 #endif
 
 	PxU32* triRunSums = triangleRunSums[threadIdx.y];
@@ -426,18 +426,18 @@ void correlate(
 	if (pairIndex >= numPairs)
 		return;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const int dcuCount = meshPairBuffer[pairIndex].count;
-	if (dcuCount == CONVEX_TRIMESH_CACHED)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	const int hcuCount = meshPairBuffer[pairIndex].count;
+	if (hcuCount == CONVEX_TRIMESH_CACHED)
 		return;
-	if (dcuCount >= 0 && dcuCount <= WARP_SIZE * 4)
+	if (hcuCount >= 0 && hcuCount <= WARP_SIZE * 4)
 	{
 		if (threadIdx.x == 0)
 		{
 			const ConvexMeshPair pair = meshPairBuffer[pairIndex];
-			correlateDcuSerial(
+			correlateHcuSerial(
 				pair, *nicBufferPtr, *contactBufferPtr, *depthBufferPtr,
-				tempCounts, outBuffer, clusterBias, tempConvexTriContacts, dcuCandidates[threadIdx.y]);
+				tempCounts, outBuffer, clusterBias, tempConvexTriContacts, hcuCandidates[threadIdx.y]);
 		}
 		return;
 	}
@@ -686,12 +686,12 @@ void convexTrimeshCorrelate(
 {
 	const int warpIndex = threadIdx.y;
 	__shared__ char scratch[sizeof(Scratch) *  CORRELATE_WARPS_PER_BLOCK];
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (numPairs == 0)
 	{
 		if (blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0)
 		{
-			const volatile char* version = gPxgDcuCorrelateStageVersion;
+			const volatile char* version = gPxgHcuCorrelateStageVersion;
 			volatile char* markerScratch = scratch;
 			markerScratch[0] = version[0];
 		}

@@ -24,9 +24,21 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// DCU stub for <cuda_runtime.h>
+// HCU stub for <texture_types.h>
 #pragma once
 #if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #endif
-// Host-side g++: empty (PhysX uses CUDA Driver API, not Runtime API)
+// Host-side g++: minimal types
+#ifndef __HIPCC__
+struct textureReference;
+typedef unsigned int cudaTextureObject_t;
+struct cudaChannelFormatDesc {
+	int x, y, z, w;
+	enum cudaChannelFormatKind {
+		cudaChannelFormatKindSigned = 0,
+		cudaChannelFormatKindUnsigned = 1,
+		cudaChannelFormatKindFloat = 2
+	} f;
+};
+#endif

@@ -35,7 +35,7 @@
 #if PX_SUPPORT_GPU_PHYSX
 #ifndef CUDA_VERSION
 
-// HIP/DCU: use HIP runtime types
+// HIP/HCU: use HIP runtime types
 #if defined(__HIPCC__) || defined(__HIP_PLATFORM_AMD__)
 #include <hip/hip_runtime.h>
 typedef int CUdevice;

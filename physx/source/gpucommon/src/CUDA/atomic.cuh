@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -154,7 +154,7 @@ PX_FORCE_INLINE static __device__ void AtomicOr(physx::PxU64* address, const phy
 PX_FORCE_INLINE __device__ void PxRedAddGlobal(float* addr, const float val)
 {
 #if defined(__HIPCC__)
-	// DCU/HIP: L2-level global atomic red is not available via PTX asm.
+	// HCU/HIP: L2-level global atomic red is not available via PTX asm.
 	// Degrade to regular atomicAdd (functionally correct, ~20% slower).
 	atomicAdd(addr, val);
 #elif __CUDA_ARCH__ >= 350

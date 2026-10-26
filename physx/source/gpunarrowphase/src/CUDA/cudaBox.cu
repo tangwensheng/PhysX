@@ -65,18 +65,18 @@
 #include "contactPatchUtils.cuh"
 
 using namespace physx;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CUDABOX_O3_P42) && PX_DCU_RIGID_CUDABOX_O3_P42
-extern "C" __device__ __constant__ char gPxgDcuRigidCudaBoxO3P42Version[] = "PX_DCU_RIGID_CUDABOX_O3_P42_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_CUDABOX_O3_P42) && PX_HCU_RIGID_CUDABOX_O3_P42
+extern "C" __device__ __constant__ char gPxgHcuRigidCudaBoxO3P42Version[] = "PX_HCU_RIGID_CUDABOX_O3_P42_GFX936_DEVICE_V1";
 #endif
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_CUDABOX_O3_P47) && PX_DCU_RIGID_CUDABOX_O3_P47
-extern "C" __device__ __constant__ char gPxgDcuRigidCudaBoxO3P47Version[] = "PX_DCU_RIGID_CUDABOX_O3_P47_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_CUDABOX_O3_P47) && PX_HCU_RIGID_CUDABOX_O3_P47
+extern "C" __device__ __constant__ char gPxgHcuRigidCudaBoxO3P47Version[] = "PX_HCU_RIGID_CUDABOX_O3_P47_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __host__ void initNarrowphaseKernels23() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuBoxBoxStageVersion[] = "PX_DCU_NARROWPHASE_STAGE_V34_SERIAL_BOXBOX_GROUP";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuBoxBoxStageVersion[] = "PX_HCU_NARROWPHASE_STAGE_V34_SERIAL_BOXBOX_GROUP";
 #endif
 
 __device__ PxVec3 getIncidentPolygon4(PxVec3& faceNormal, const PxVec3& axis, const PxMat34& transf1To0,
@@ -443,8 +443,8 @@ struct TempBoxBoxBuffer
 	PxVec4 tempBuff[NumWarps * 64 * 3]; // HCU: WARP_SIZE=64, 2x buffer for 128-thread block
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-static __device__ bool dcuContains4(const PxVec4* verts, const PxVec3& p, const PxBounds3& bounds)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+static __device__ bool hcuContains4(const PxVec4* verts, const PxVec3& p, const PxBounds3& bounds)
 {
 	if (p.x < bounds.minimum.x || p.x > bounds.maximum.x || p.y < bounds.minimum.y || p.y > bounds.maximum.y)
 		return false;
@@ -482,7 +482,7 @@ static __device__ bool dcuContains4(const PxVec4* verts, const PxVec3& p, const 
 	return intersectionPoints > 0;
 }
 
-static __device__ PxU32 dcuCalculateContacts(const PxReal extentX_, const PxReal extentY_, const PxVec4* points,
+static __device__ PxU32 hcuCalculateContacts(const PxReal extentX_, const PxReal extentY_, const PxVec4* points,
 	const PxVec3& incidentFaceNormalInNew, const PxReal contactDist, PxVec4* contacts, PxU32* counts)
 {
 	const PxReal extentX = 1.00001f * extentX_;
@@ -520,7 +520,7 @@ static __device__ PxU32 dcuCalculateContacts(const PxReal extentX_, const PxReal
 	{
 		const PxVec3 q0((lane == 0 || lane == 3) ? -extentX : extentX,
 			(lane & 2) ? -extentY : extentY, 0.f);
-		if (dcuContains4(points, q0, bounds))
+		if (hcuContains4(points, q0, bounds))
 		{
 			const PxReal t = incidentFaceNormalInNew.dot(points[0].getXYZ() - q0) / denom;
 			if (contactDist > -t)
@@ -571,7 +571,7 @@ static __device__ PxU32 dcuCalculateContacts(const PxReal extentX_, const PxReal
 }
 
 template<PxU32 NumWarps>
-static __device__ PxU32 doBoxBoxGenerateContactsDcu(const PxVec3& box0Extent, const PxVec3& box1Extent,
+static __device__ PxU32 doBoxBoxGenerateContactsHcu(const PxVec3& box0Extent, const PxVec3& box1Extent,
 	const PxMat34& transform0, const PxMat34& transform1, const PxReal contactDist,
 	TempBoxBoxBuffer<NumWarps>& tempBuffer, PxVec3& normal)
 {
@@ -807,7 +807,7 @@ static __device__ PxU32 doBoxBoxGenerateContactsDcu(const PxVec3& box0Extent, co
 	}
 
 	PxU32 counts[4];
-	PxU32 totalContacts = dcuCalculateContacts(e0, e1, points, incidentFaceNormalInNew, contactDist, localContacts, counts);
+	PxU32 totalContacts = hcuCalculateContacts(e0, e1, points, incidentFaceNormalInNew, contactDist, localContacts, counts);
 	if (totalContacts <= PXG_MAX_NUM_POINTS_PER_CONTACT_PATCH)
 	{
 		PxU32 outputIndex = 0;
@@ -1454,10 +1454,10 @@ extern "C" __global__ void boxBoxNphase_Kernel(
 
 	__shared__ __align__(16) char sContacts[sizeof(TempBoxBoxBuffer<NumWarps>)];
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (blockIdx.x == 0 && threadIdx.x == 0)
 	{
-		const volatile char* version = gPxgDcuBoxBoxStageVersion;
+		const volatile char* version = gPxgHcuBoxBoxStageVersion;
 		volatile char marker = version[0];
 		PX_UNUSED(marker);
 	}
@@ -1473,11 +1473,11 @@ extern "C" __global__ void boxBoxNphase_Kernel(
 	const PxU32 threadGroupStartIndex = threadIdx.x&(~3);
 
 	PxVec3 normal;
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	if (threadIndexInGroup != 0)
 		return;
 
-	const PxU32 nbContacts = doBoxBoxGenerateContactsDcu<NumWarps>(box0Extent, box1Extent,
+	const PxU32 nbContacts = doBoxBoxGenerateContactsHcu<NumWarps>(box0Extent, box1Extent,
 		transform0, transform1, cDistance, tempBuff, normal);
 	const PxU32 contactByteOffset = setContactPointAndForcePointers(cmOutputs, patchAndContactCounters,
 		startContactPoints, startContactForces, contactBytesLimit, forceBytesLimit, workIndex, nbContacts);

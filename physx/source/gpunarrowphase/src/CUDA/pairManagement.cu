@@ -36,8 +36,8 @@
 #include "PxgContactManager.h"
 #include "PxgNpKernelIndices.h"
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49) && PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49
-extern "C" __device__ __constant__ char gPxgDcuRigidPairManagementO3P49Version[] = "PX_DCU_RIGID_PAIR_MANAGEMENT_O3_P49_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_RIGID_PAIR_MANAGEMENT_O3_P49) && PX_HCU_RIGID_PAIR_MANAGEMENT_O3_P49
+extern "C" __device__ __constant__ char gPxgHcuRigidPairManagementO3P49Version[] = "PX_HCU_RIGID_PAIR_MANAGEMENT_O3_P49_GFX936_DEVICE_V1";
 #endif
 
 namespace physx
@@ -47,11 +47,11 @@ namespace physx
 	extern "C" __host__ void initNarrowphaseKernels7() {}
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuPairRemoveStageVersion[] = "PX_DCU_PAIR_REMOVE_STAGE_V55_SERIAL_COMPACT";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuPairRemoveStageVersion[] = "PX_HCU_PAIR_REMOVE_STAGE_V55_SERIAL_COMPACT";
 
 template<typename Manifold>
-static __device__ void copyContactManagerSlotDcu(const PxgPairManagementData* PX_RESTRICT pairData,
+static __device__ void copyContactManagerSlotHcu(const PxgPairManagementData* PX_RESTRICT pairData,
 	const PxU32 dstIndex, const PxU32 srcIndex, const bool copyManifold)
 {
 	pairData->mContactManagerInputData[dstIndex] = pairData->mContactManagerInputData[srcIndex];
@@ -72,7 +72,7 @@ static __device__ void copyContactManagerSlotDcu(const PxgPairManagementData* PX
 }
 
 template<typename Manifold>
-static __device__ void removeContactManagersSerialDcu(const PxgPairManagementData* PX_RESTRICT pairData,
+static __device__ void removeContactManagersSerialHcu(const PxgPairManagementData* PX_RESTRICT pairData,
 	const bool copyManifold)
 {
 	if(blockIdx.x != 0 || blockIdx.y != 0 || blockIdx.z != 0 ||
@@ -110,7 +110,7 @@ static __device__ void removeContactManagersSerialDcu(const PxgPairManagementDat
 		if(srcIndex >= totalSize)
 			return;
 
-		copyContactManagerSlotDcu<Manifold>(pairData, removeIndices[i], srcIndex, copyManifold);
+		copyContactManagerSlotHcu<Manifold>(pairData, removeIndices[i], srcIndex, copyManifold);
 		++srcIndex;
 	}
 }
@@ -118,7 +118,7 @@ static __device__ void removeContactManagersSerialDcu(const PxgPairManagementDat
 
 extern "C" __global__ void removeContactManagers_Stage1(const PxgPairManagementData* PX_RESTRICT pairData)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	PX_UNUSED(pairData);
 	return;
 #else
@@ -128,7 +128,7 @@ extern "C" __global__ void removeContactManagers_Stage1(const PxgPairManagementD
 
 extern "C" __global__ void removeContactManagers_Stage2(const PxgPairManagementData* PX_RESTRICT pairData)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	PX_UNUSED(pairData);
 	return;
 #else
@@ -138,7 +138,7 @@ extern "C" __global__ void removeContactManagers_Stage2(const PxgPairManagementD
 
 extern "C" __global__ void removeContactManagers_Stage3(const PxgPairManagementData* PX_RESTRICT pairData)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	PX_UNUSED(pairData);
 	return;
 #else
@@ -149,7 +149,7 @@ extern "C" __global__ void removeContactManagers_Stage3(const PxgPairManagementD
 
 extern "C" __global__ void removeContactManagers_Stage4(const PxgPairManagementData* PX_RESTRICT pairData)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 	PX_UNUSED(pairData);
 	return;
 #else
@@ -159,8 +159,8 @@ extern "C" __global__ void removeContactManagers_Stage4(const PxgPairManagementD
 
 extern "C" __global__ void removeContactManagers_Stage5(const PxgPairManagementData* PX_RESTRICT pairData, const bool copyManifold)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	removeContactManagersSerialDcu<PxgPersistentContactManifold>(pairData, copyManifold);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	removeContactManagersSerialHcu<PxgPersistentContactManifold>(pairData, copyManifold);
 #else
 	const PxU32* PX_RESTRICT globalRunSumBuffer = pairData->mTempAccumulator;
 	const PxU32 totalSize = pairData->mNbPairs;
@@ -205,8 +205,8 @@ extern "C" __global__ void removeContactManagers_Stage5(const PxgPairManagementD
 
 extern "C" __global__ void removeContactManagers_Stage5_CvxTri(const PxgPairManagementData* PX_RESTRICT pairData, const bool copyManifold)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	removeContactManagersSerialDcu<PxgPersistentContactMultiManifold>(pairData, copyManifold);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	removeContactManagersSerialHcu<PxgPersistentContactMultiManifold>(pairData, copyManifold);
 #else
 	const PxU32* PX_RESTRICT globalRunSumBuffer = pairData->mTempAccumulator;
 	const PxU32 totalSize = pairData->mNbPairs;

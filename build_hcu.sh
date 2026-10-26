@@ -28,14 +28,14 @@
 # PhysX HCU Build Script
 set -e
 
-DCU_ARCH="${1:-gfx936}"
+HCU_ARCH="${1:-gfx936}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BUILD_DIR="$SCRIPT_DIR/build_dcu"
+BUILD_DIR="$SCRIPT_DIR/build_hcu"
 CMAKE_DIR="$SCRIPT_DIR/physx/source/compiler/cmakehip"
 
 echo "========================================"
 echo " PhysX HCU Build"
-echo " Architecture: $DCU_ARCH"
+echo " Architecture: $HCU_ARCH"
 echo "========================================"
 
 # Find DTK Clang
@@ -52,7 +52,7 @@ if [ ! -f "$BUILD_DIR/CMakeCache.txt" ]; then
     cmake "$CMAKE_DIR" \
         -DCMAKE_HIP_COMPILER="$HIP_CLANG" \
         -DCMAKE_CXX_COMPILER="$(which g++)" \
-        -DDCU_ARCH="$DCU_ARCH" \
+        -DHCU_ARCH="$HCU_ARCH" \
         -DPHYSX_ROOT_DIR="$SCRIPT_DIR/physx"
 else
     cd "$BUILD_DIR"
@@ -64,4 +64,4 @@ cmake --build . -j1 2>&1 | tee build.log
 
 echo ""
 echo "Build complete."
-echo "Run: ./build_dcu/test_functional"
+echo "Run: ./build_hcu/test_functional"

@@ -89,10 +89,10 @@ static PX_FORCE_INLINE PxgCudaBroadPhaseSap& getGPUBroadPhase(BroadPhase& bp)
 	return static_cast<PxgCudaBroadPhaseSap&>(bp);
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-static bool dcuBroadPhaseDiagnosticsEnabled()
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+static bool hcuBroadPhaseDiagnosticsEnabled()
 {
-	const char* value = std::getenv("PX_DCU_BROADPHASE_DIAG");
+	const char* value = std::getenv("PX_HCU_BROADPHASE_DIAG");
 	return value && value[0] != '\0' && !(value[0] == '0' && value[1] == '\0');
 }
 #endif
@@ -892,8 +892,8 @@ void PxgAABBManager::processFoundPairs()
 		PxU32 nbCreatePairs;
 		const BroadPhasePair* createdPairs = mBroadPhase.getCreatedPairs(nbCreatePairs);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		if (dcuBroadPhaseDiagnosticsEnabled())
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		if (hcuBroadPhaseDiagnosticsEnabled())
 		{
 			const PxU32 volumeDataSize = mVolumeData.size();
 			const PxU32 diagnosticPairCount = PxMin(nbCreatePairs, 16u);
@@ -917,7 +917,7 @@ void PxgAABBManager::processFoundPairs()
 					firstMalformedPair = i;
 			}
 			PxGetFoundation().error(PxErrorCode::eDEBUG_INFO, PX_FL,
-				"HCU device broadphase found-pair diagnostic [PX_DCU_BROADPHASE_DIAG_V1_OPT_IN]: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
+				"HCU device broadphase found-pair diagnostic [PX_HCU_BROADPHASE_DIAG_V1_OPT_IN]: count=%u volumeDataSize=%u showing=%u invalidHandlePairs=%u nullUserDataPairs=%u selfPairs=%u firstMalformedPair=%u\n",
 				nbCreatePairs, volumeDataSize, diagnosticPairCount, invalidHandlePairs,
 				nullUserDataPairs, selfPairs, firstMalformedPair);
 			for (PxU32 i = 0; i < diagnosticPairCount; ++i)

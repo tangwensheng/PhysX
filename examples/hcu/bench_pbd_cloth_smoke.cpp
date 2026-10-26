@@ -43,7 +43,7 @@
 
 using namespace physx;
 
-static const char* const gClothDiagnosticMarker = "PX_DCU_PBD_CLOTH_VALIDATION_V61_SCALE_AWARE_TAIL";
+static const char* const gClothDiagnosticMarker = "PX_HCU_PBD_CLOTH_VALIDATION_V61_SCALE_AWARE_TAIL";
 
 class CountingErrorCallback : public PxErrorCallback
 {
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
                     std::chrono::steady_clock::now() - fetchStart).count();
         }
         const int measuredSteps = steps - timingWarmupSteps;
-        printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
+        printf("PERF marker=PX_HCU_BENCH_SIMULATION_TIMING_V1 warmup_steps=%d measured_steps=%d simulation_ms=%.3f ms_per_step=%.6f steps_per_second=%.3f\n",
                timingWarmupSteps, measuredSteps, simulationMs,
                measuredSteps > 0 ? simulationMs / double(measuredSteps) : 0.0,
                simulationMs > 0.0 ? double(measuredSteps) * 1000.0 / simulationMs : 0.0);

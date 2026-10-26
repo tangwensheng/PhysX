@@ -1,4 +1,4 @@
-﻿// Redistribution and use in source and binary forms, with or without
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
 // are met:
 //  * Redistributions of source code must retain the above copyright
@@ -49,9 +49,9 @@ using namespace physx;
 
 extern "C" __host__ void initNarrowphaseKernels17() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuFrictionPatchAbiVersion[] =
-	"PX_DCU_NARROWPHASE_STAGE_V56_FRICTION_ABI4_NULL_SAFE";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuFrictionPatchAbiVersion[] =
+	"PX_HCU_NARROWPHASE_STAGE_V56_FRICTION_ABI4_NULL_SAFE";
 #endif
 
 extern "C" __global__ void compressContactStage1(

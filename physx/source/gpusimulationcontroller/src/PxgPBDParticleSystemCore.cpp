@@ -52,7 +52,7 @@
 
 #include "cudamanager/PxCudaContext.h"
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
@@ -63,78 +63,78 @@
 
 #define PS_GPU_DEBUG 0
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 namespace physx
 {
-	void dcuPbdPipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
+	void hcuPbdPipelineCheckpoint(PxCudaContext* cudaContext, CUstream stream, const char* phase,
 		CUdeviceptr deviceCount, PxU32 hostValue);
 
-	bool dcuPbdUseChunkedSpatialRadix()
+	bool hcuPbdUseChunkedSpatialRadix()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_SPATIAL_RADIX_CHUNKED");
+			const char* value = std::getenv("PX_HCU_PBD_SPATIAL_RADIX_CHUNKED");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	bool dcuPbdSpatialSortDiagEnabled()
+	bool hcuPbdSpatialSortDiagEnabled()
 	{
 		static const bool enabled = []()
 		{
-			const char* value = std::getenv("PX_DCU_PBD_SPATIAL_RANK_DIAG");
+			const char* value = std::getenv("PX_HCU_PBD_SPATIAL_RANK_DIAG");
 			return value && std::strcmp(value, "1") == 0;
 		}();
 		return enabled;
 	}
 
-	void dcuPbdPrintSpatialRadixModeOnce(bool enabled, PxU32 nbActiveParticleSystems,
+	void hcuPbdPrintSpatialRadixModeOnce(bool enabled, PxU32 nbActiveParticleSystems,
 		PxU32 numSimParticles, bool hasDiffuse)
 	{
 		static std::atomic<bool> printed(false);
 		if(!printed.exchange(true, std::memory_order_relaxed))
 		{
-			const bool requested = dcuPbdUseChunkedSpatialRadix();
+			const bool requested = hcuPbdUseChunkedSpatialRadix();
 			const char* reason = enabled ? "activated" : !requested ? "opt_in_disabled" :
 				nbActiveParticleSystems != 1 ? "active_system_count" :
 				numSimParticles != 4096 ? "particle_count" : hasDiffuse ? "diffuse_enabled" : "unknown";
-			std::printf("[HCU PBD SPATIAL RADIX] host_marker=PX_DCU_PBD_SPATIAL_RADIX_HOST_V6_OPT_IN requested=%u mode=%s reason=%s active_systems=%u particles=%u has_diffuse=%u device_marker=%s launches_per_sort=%u launch_grid=%s launch_block=%s\n",
+			std::printf("[HCU PBD SPATIAL RADIX] host_marker=PX_HCU_PBD_SPATIAL_RADIX_HOST_V6_OPT_IN requested=%u mode=%s reason=%s active_systems=%u particles=%u has_diffuse=%u device_marker=%s launches_per_sort=%u launch_grid=%s launch_block=%s\n",
 				requested ? 1u : 0u, enabled ? "chunked_v6" : "legacy_16_launch", reason,
 				nbActiveParticleSystems, numSimParticles, hasDiffuse ? 1u : 0u,
-				enabled ? "PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32" : "legacy_multiblock_no_count",
+				enabled ? "PX_HCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32" : "legacy_multiblock_no_count",
 				enabled ? 1u : 16u, enabled ? "1x1x1" : "32x1x1", enabled ? "32x1x1" : "1024x1x1");
 			std::fflush(stdout);
 		}
 	}
 
-	struct DcuPbdSpatialSortItem
+	struct HcuPbdSpatialSortItem
 	{
 		PxU32 key;
 		PxU32 rank;
 	};
 
-	struct DcuPbdSpatialSortReference
+	struct HcuPbdSpatialSortReference
 	{
 		bool enabled;
 		PxU32 count;
-		std::vector<DcuPbdSpatialSortItem> items;
+		std::vector<HcuPbdSpatialSortItem> items;
 
-		DcuPbdSpatialSortReference() : enabled(false), count(0)
+		HcuPbdSpatialSortReference() : enabled(false), count(0)
 		{
 		}
 	};
 
-	struct DcuPbdSpatialRankStats
+	struct HcuPbdSpatialRankStats
 	{
 		PxU32 outOfRangeCount;
 		PxU32 duplicateCount;
 		PxU32 missingCount;
 	};
 
-	DcuPbdSpatialRankStats dcuPbdAnalyzeSpatialRanks(const std::vector<PxU32>& ranks)
+	HcuPbdSpatialRankStats hcuPbdAnalyzeSpatialRanks(const std::vector<PxU32>& ranks)
 	{
-		DcuPbdSpatialRankStats stats = { 0, 0, 0 };
+		HcuPbdSpatialRankStats stats = { 0, 0, 0 };
 		const PxU32 count = PxU32(ranks.size());
 		std::vector<PxU8> seen(count, PxU8(0));
 		for(PxU32 i = 0; i < count; ++i)
@@ -153,10 +153,10 @@ namespace physx
 		return stats;
 	}
 
-	bool dcuPbdCaptureSpatialSortReference(PxCudaContext* cudaContext, CUstream stream,
-		CUdeviceptr keys, CUdeviceptr ranks, PxU32 count, DcuPbdSpatialSortReference& reference)
+	bool hcuPbdCaptureSpatialSortReference(PxCudaContext* cudaContext, CUstream stream,
+		CUdeviceptr keys, CUdeviceptr ranks, PxU32 count, HcuPbdSpatialSortReference& reference)
 	{
-		if(!dcuPbdSpatialSortDiagEnabled())
+		if(!hcuPbdSpatialSortDiagEnabled())
 			return true;
 
 		reference.enabled = true;
@@ -174,7 +174,7 @@ namespace physx
 		}
 		if(syncResult != CUDA_SUCCESS || keyCopyResult != CUDA_SUCCESS || rankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_sort\n",
+			std::printf("[HCU PBD SPATIAL SORT] marker=PX_HCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_sort\n",
 				int(syncResult), int(keyCopyResult), int(rankCopyResult), count);
 			std::fflush(stdout);
 			return false;
@@ -187,17 +187,17 @@ namespace physx
 			reference.items[i].rank = inputRanks[i];
 		}
 		std::stable_sort(reference.items.begin(), reference.items.end(),
-			[](const DcuPbdSpatialSortItem& a, const DcuPbdSpatialSortItem& b)
+			[](const HcuPbdSpatialSortItem& a, const HcuPbdSpatialSortItem& b)
 			{
 				return a.key < b.key;
 			});
-		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n", count);
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_HCU_PBD_SPATIAL_SORT_DIAG_V6 phase=pre_sort verdict=REFERENCE_READY count=%u reference=host_stable_sort_key_rank\n", count);
 		std::fflush(stdout);
 		return true;
 	}
 
-	bool dcuPbdValidateSpatialSortOutput(PxCudaContext* cudaContext, CUstream stream,
-		CUdeviceptr keys, CUdeviceptr ranks, const DcuPbdSpatialSortReference& reference)
+	bool hcuPbdValidateSpatialSortOutput(PxCudaContext* cudaContext, CUstream stream,
+		CUdeviceptr keys, CUdeviceptr ranks, const HcuPbdSpatialSortReference& reference)
 	{
 		if(!reference.enabled)
 			return true;
@@ -215,7 +215,7 @@ namespace physx
 		}
 		if(syncResult != CUDA_SUCCESS || keyCopyResult != CUDA_SUCCESS || rankCopyResult != CUDA_SUCCESS)
 		{
-			std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_reorder\n",
+			std::printf("[HCU PBD SPATIAL SORT] marker=PX_HCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=READBACK_FAILED sync=%d key_copy=%d rank_copy=%d count=%u action=abort_before_reorder\n",
 				int(syncResult), int(keyCopyResult), int(rankCopyResult), reference.count);
 			std::fflush(stdout);
 			return false;
@@ -242,18 +242,18 @@ namespace physx
 				++orderViolations;
 		}
 
-		const DcuPbdSpatialRankStats rankStats = dcuPbdAnalyzeSpatialRanks(outputRanks);
+		const HcuPbdSpatialRankStats rankStats = hcuPbdAnalyzeSpatialRanks(outputRanks);
 		const bool valid = pairMismatches == 0 && orderViolations == 0 &&
 			rankStats.outOfRangeCount == 0 && rankStats.duplicateCount == 0 && rankStats.missingCount == 0;
 		const PxU32 expectedKey = firstMismatch == 0xffffffffu ? 0xffffffffu : reference.items[firstMismatch].key;
 		const PxU32 expectedRank = firstMismatch == 0xffffffffu ? 0xffffffffu : reference.items[firstMismatch].rank;
 		const PxU32 actualKey = firstMismatch == 0xffffffffu ? 0xffffffffu : outputKeys[firstMismatch];
 		const PxU32 actualRank = firstMismatch == 0xffffffffu ? 0xffffffffu : outputRanks[firstMismatch];
-		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort label=simulation count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_HCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort label=simulation count=%u key_mismatches=%u rank_mismatches=%u pair_mismatches=%u key_order_violations=%u rank_out_of_range=%u rank_duplicates=%u rank_missing=%u first_mismatch=%u expected_key=%u expected_rank=%u actual_key=%u actual_rank=%u verdict=%s\n",
 			reference.count, keyMismatches, rankMismatches, pairMismatches, orderViolations,
 			rankStats.outOfRangeCount, rankStats.duplicateCount, rankStats.missingCount, firstMismatch,
 			expectedKey, expectedRank, actualKey, actualRank, valid ? "VALID" : "INVALID");
-		std::printf("[HCU PBD SPATIAL SORT] marker=PX_DCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=chunked_v6 device_marker=PX_DCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32 launch_grid=1x1x1 launch_block=32x1x1\n",
+		std::printf("[HCU PBD SPATIAL SORT] marker=PX_HCU_PBD_SPATIAL_SORT_DIAG_V6 phase=post_sort verdict=%s count=%u reference=host_stable_sort_key_rank action=%s radix_mode=chunked_v6 device_marker=PX_HCU_PBD_SPATIAL_RADIX_V6_CHUNKED_COUNTING_32 launch_grid=1x1x1 launch_block=32x1x1\n",
 			valid ? "VALID" : "INVALID", reference.count, valid ? "continue_reorder" : "abort_before_reorder");
 		std::fflush(stdout);
 		return valid;
@@ -444,13 +444,13 @@ namespace physx
 
 				PxgCudaBuffer* radixSortDescBuf = mRadixSortDescBuf.begin();
 
-				#if defined(PX_DCU_PORT) && PX_DCU_PORT
-				const bool useChunkedSpatialRadix = dcuPbdUseChunkedSpatialRadix() &&
+				#if defined(PX_HCU_PORT) && PX_HCU_PORT
+				const bool useChunkedSpatialRadix = hcuPbdUseChunkedSpatialRadix() &&
 					nbActiveParticleSystems == 1 && numSimParticles == 4096 && !hasDiffuse;
-				dcuPbdPrintSpatialRadixModeOnce(useChunkedSpatialRadix, nbActiveParticleSystems,
+				hcuPbdPrintSpatialRadixModeOnce(useChunkedSpatialRadix, nbActiveParticleSystems,
 					numSimParticles, hasDiffuse);
-				DcuPbdSpatialSortReference spatialSortReference;
-				if(useChunkedSpatialRadix && !dcuPbdCaptureSpatialSortReference(mCudaContext, mStream,
+				HcuPbdSpatialSortReference spatialSortReference;
+				if(useChunkedSpatialRadix && !hcuPbdCaptureSpatialSortReference(mCudaContext, mStream,
 					reinterpret_cast<CUdeviceptr>(ps.mGridParticleHash),
 					reinterpret_cast<CUdeviceptr>(ps.mSortedToUnsortedMapping), numSimParticles,
 					spatialSortReference))
@@ -461,7 +461,7 @@ namespace physx
 				CUfunction calculateRanksFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(PxgKernelIds::RS_CALCULATERANKS_MULTIBLOCK_NO_COUNT);
 
 				{
-					#if defined(PX_DCU_PORT) && PX_DCU_PORT
+					#if defined(PX_HCU_PORT) && PX_HCU_PORT
 					if(useChunkedSpatialRadix)
 					{
 						CUdeviceptr rsDesc0 = radixSortDescBuf[0].getDevicePtr();
@@ -472,7 +472,7 @@ namespace physx
 							PX_CUDA_KERNEL_PARAM(rsDesc1)
 						};
 						const CUfunction chunkedSpatialRadixFunction = mGpuKernelWranglerManager->getKernelWrangler()->getCuFunction(
-							PxgKernelIds::RS_PBD_SPATIAL_CHUNKED_COUNTING_32_DCU_V6);
+							PxgKernelIds::RS_PBD_SPATIAL_CHUNKED_COUNTING_32_HCU_V6);
 						const CUresult resultR = mCudaContext->launchKernel(chunkedSpatialRadixFunction,
 							1, 1, 1, 32, 1, 1, 0, mStream, radixSortKernelParams,
 							sizeof(radixSortKernelParams), 0, PX_FL);
@@ -515,8 +515,8 @@ namespace physx
 						}
 					}
 
-					#if defined(PX_DCU_PORT) && PX_DCU_PORT
-					if(useChunkedSpatialRadix && !dcuPbdValidateSpatialSortOutput(mCudaContext, mStream,
+					#if defined(PX_HCU_PORT) && PX_HCU_PORT
+					if(useChunkedSpatialRadix && !hcuPbdValidateSpatialSortOutput(mCudaContext, mStream,
 						reinterpret_cast<CUdeviceptr>(ps.mGridParticleHash),
 						reinterpret_cast<CUdeviceptr>(ps.mSortedToUnsortedMapping), spatialSortReference))
 						std::abort();
@@ -538,8 +538,8 @@ namespace physx
 			reorderDataAndFindCellStart(particleSystems, particleSystemsd, index, numParticles);
 		}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "grid_update_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "grid_update_complete", 0, nbActiveParticleSystems);
 #endif
 	}
 
@@ -569,8 +569,8 @@ namespace physx
 			}
 		}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "self_collision_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "self_collision_complete", 0, nbActiveParticleSystems);
 #endif
 
 		//mStream does not yet need to sync with mSelfCollisionStream
@@ -636,8 +636,8 @@ namespace physx
 
 		solveDensities(particleSystemd, activeParticleSystemd, nbActiveParticleSystems, dt, coefficient);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "density_solve_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "density_solve_complete", 0, nbActiveParticleSystems);
 #endif
 
 		solveShapes(particleSystemd, activeParticleSystemd, nbActiveParticleSystems, dt, coefficient);
@@ -646,8 +646,8 @@ namespace physx
 		
 		applyDeltas(particleSystemd, activeParticleSystemd, nbActiveParticleSystems, dt, mStream);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "apply_deltas_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "apply_deltas_complete", 0, nbActiveParticleSystems);
 #endif
 
 		//updateSortedVelocity(particleSystemd, activeParticleSystemd, nbActiveParticleSystems, dt);
@@ -684,10 +684,10 @@ namespace physx
 		prepParticleConstraint(prePrepDescd, prepDescd, sharedDescd, isTGS, dt);
 		prepRigidAttachments(prePrepDescd, prepDescd, isTGS, dt, solverStream, nbActiveParticleSystems, activeParticleSystemsd, numSolverBodies);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "constraint_prepare_particle_stream_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "constraint_prepare_particle_stream_complete",
 			getParticleContactCount().getDevicePtr(), nbActiveParticleSystems);
-		dcuPbdPipelineCheckpoint(mCudaContext, solverStream, "constraint_prepare_solver_stream_complete",
+		hcuPbdPipelineCheckpoint(mCudaContext, solverStream, "constraint_prepare_solver_stream_complete",
 			getParticleContactCount().getDevicePtr(), numSolverBodies);
 #endif
 
@@ -700,8 +700,8 @@ namespace physx
 		updateSortedVelocity(getParticleSystemBuffer().getDevicePtr(),
 			getActiveParticleSystemBuffer().getDevicePtr(), mSimController->getBodySimManager().mActivePBDParticleSystems.size(), dt);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_update_complete", 0,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_update_complete", 0,
 			mSimController->getBodySimManager().mActivePBDParticleSystems.size());
 #endif
 	}
@@ -896,8 +896,8 @@ namespace physx
 
 		integrateSystem(particleSystemsd, activeParticleSystemsd, nbActiveParticleSystems, dt, epsilonSq);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mFinalizeStream, "integration_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mFinalizeStream, "integration_complete", 0, nbActiveParticleSystems);
 #endif
 
 		//copy unsortedPositions_InvMass and velocity to user buffer
@@ -912,8 +912,8 @@ namespace physx
 		//Wait for diffuse particles to complete
 		synchronizeStreams(mCudaContext, mStream, mFinalizeStream);
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-		dcuPbdPipelineCheckpoint(mCudaContext, mFinalizeStream, "finalize_complete", 0, nbActiveParticleSystems);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+		hcuPbdPipelineCheckpoint(mCudaContext, mFinalizeStream, "finalize_complete", 0, nbActiveParticleSystems);
 #endif
 
 		mCudaContextManager->releaseContext();
@@ -1396,8 +1396,8 @@ namespace physx
 			CUresult result = mCudaContext->launchKernel(prepPrimitiveCollisionKernelFunction, numBlocks, 1, 1, numThreadsPerBlock, 1, 1, 0, mStream, kernelParams, sizeof(kernelParams), 0, PX_FL);
 			PX_ASSERT(result == CUDA_SUCCESS);
 			PX_UNUSED(result);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-			dcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_constraint_prepare_complete",
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+			hcuPbdPipelineCheckpoint(mCudaContext, mStream, "particle_constraint_prepare_complete",
 				getParticleContactCount().getDevicePtr(), nbActiveParticles);
 #endif
 #if PS_GPU_DEBUG

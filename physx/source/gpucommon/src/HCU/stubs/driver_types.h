@@ -24,21 +24,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// DCU stub for <texture_types.h>
+// HCU stub for <driver_types.h>
 #pragma once
 #if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #endif
-// Host-side g++: minimal types
+// Host-side g++: minimal types only (cudaError_t etc.)
 #ifndef __HIPCC__
-struct textureReference;
-typedef unsigned int cudaTextureObject_t;
-struct cudaChannelFormatDesc {
-	int x, y, z, w;
-	enum cudaChannelFormatKind {
-		cudaChannelFormatKindSigned = 0,
-		cudaChannelFormatKindUnsigned = 1,
-		cudaChannelFormatKindFloat = 2
-	} f;
-};
+typedef enum cudaError_enum { cudaSuccess = 0 } cudaError_t;
+typedef struct CUstream_st* cudaStream_t;
 #endif

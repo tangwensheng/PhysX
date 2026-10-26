@@ -54,31 +54,31 @@
 
 using namespace physx;
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT && defined(PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41) && PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41
-extern "C" __device__ __constant__ char gPxgDcuSdfConvexMidphaseO3P41Version[] = "PX_DCU_SDF_CONVEX_MIDPHASE_O3_P41_GFX936_DEVICE_V1";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT && defined(PX_HCU_SDF_CONVEX_MIDPHASE_O3_P41) && PX_HCU_SDF_CONVEX_MIDPHASE_O3_P41
+extern "C" __device__ __constant__ char gPxgHcuSdfConvexMidphaseO3P41Version[] = "PX_HCU_SDF_CONVEX_MIDPHASE_O3_P41_GFX936_DEVICE_V1";
 #endif
 
 extern "C" __host__ void initNarrowphaseKernels4() {}
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionSdfInlineVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V1_SDF_INLINE";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionInverseCacheVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V2_INVERSE_CACHE";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionPack2SerialVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V3_PACK2_SERIAL";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionDefaultBodyVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V4_DEFAULT_BODY_RESTORED";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionOccupancy2Version[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V5_OCCUPANCY2";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionCreatePatchNoInlineVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V6_CREATE_PATCH_NOINLINE";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionContactPredicateVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V7_CONTACT_PREDICATE";
-extern "C" __device__ __constant__ char gPxgDcuTriTriCollisionNativeBlockCountVersion[] =
-	"PX_DCU_TRITRI_COLLISION_DEVICE_V8_NATIVE_BLOCK_COUNT";
-extern "C" __device__ __constant__ char gPxgDcuTriTriOverlapLaunchBounds64Version[] =
-	"PX_DCU_TRITRI_OVERLAP_DEVICE_V10_LAUNCH_BOUNDS64";
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionSdfInlineVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V1_SDF_INLINE";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionInverseCacheVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V2_INVERSE_CACHE";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionPack2SerialVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V3_PACK2_SERIAL";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionDefaultBodyVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V4_DEFAULT_BODY_RESTORED";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionOccupancy2Version[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V5_OCCUPANCY2";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionCreatePatchNoInlineVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V6_CREATE_PATCH_NOINLINE";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionContactPredicateVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V7_CONTACT_PREDICATE";
+extern "C" __device__ __constant__ char gPxgHcuTriTriCollisionNativeBlockCountVersion[] =
+	"PX_HCU_TRITRI_COLLISION_DEVICE_V8_NATIVE_BLOCK_COUNT";
+extern "C" __device__ __constant__ char gPxgHcuTriTriOverlapLaunchBounds64Version[] =
+	"PX_HCU_TRITRI_OVERLAP_DEVICE_V10_LAUNCH_BOUNDS64";
 #endif
 
 #include "manifold.cuh"
@@ -793,8 +793,8 @@ struct Contact
 	}
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-struct ContactPredicateDcuV7
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+struct ContactPredicateHcuV7
 {
 	PxVec3 pos;
 	PxReal separation;
@@ -808,21 +808,21 @@ struct ContactPredicateDcuV7
 };
 #endif
 
-template<bool ContactPredicateDcuV7Enabled>
+template<bool ContactPredicateHcuV7Enabled>
 struct ContactTypeSelector
 {
 	typedef Contact Type;
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 template<>
 struct ContactTypeSelector<true>
 {
-	typedef ContactPredicateDcuV7 Type;
+	typedef ContactPredicateHcuV7 Type;
 };
 #endif
 
-template<bool ContactPredicateDcuV7Enabled>
+template<bool ContactPredicateHcuV7Enabled>
 struct ContactPayloadSelector
 {
 	template<typename ContactType>
@@ -855,31 +855,31 @@ struct ContactPayloadSelector
 	}
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 template<>
 struct ContactPayloadSelector<true>
 {
-	static PX_FORCE_INLINE __device__ PxVec3 normal(const ContactPredicateDcuV7& contact)
+	static PX_FORCE_INLINE __device__ PxVec3 normal(const ContactPredicateHcuV7& contact)
 	{
 		return contact.candidateContact ? contact.normal : PxVec3(0.0f);
 	}
 
-	static PX_FORCE_INLINE __device__ PxVec3 pos(const ContactPredicateDcuV7& contact)
+	static PX_FORCE_INLINE __device__ PxVec3 pos(const ContactPredicateHcuV7& contact)
 	{
 		return contact.candidateContact ? contact.pos : PxVec3(0.0f);
 	}
 
-	static PX_FORCE_INLINE __device__ PxReal separation(const ContactPredicateDcuV7& contact)
+	static PX_FORCE_INLINE __device__ PxReal separation(const ContactPredicateHcuV7& contact)
 	{
 		return contact.candidateContact ? contact.separation : PX_MAX_F32;
 	}
 
-	static PX_FORCE_INLINE __device__ PxVec3& collisionPoint(ContactPredicateDcuV7&, PxVec3& candidatePoint)
+	static PX_FORCE_INLINE __device__ PxVec3& collisionPoint(ContactPredicateHcuV7&, PxVec3& candidatePoint)
 	{
 		return candidatePoint;
 	}
 
-	static PX_FORCE_INLINE __device__ void commitPoint(ContactPredicateDcuV7& contact, const PxVec3& candidatePoint)
+	static PX_FORCE_INLINE __device__ void commitPoint(ContactPredicateHcuV7& contact, const PxVec3& candidatePoint)
 	{
 		contact.pos = candidatePoint;
 	}
@@ -887,7 +887,7 @@ struct ContactPayloadSelector<true>
 #endif
 
 //Must be called by full warps
-template<bool ContactPredicateDcuV7Enabled, typename ContactType>
+template<bool ContactPredicateHcuV7Enabled, typename ContactType>
 PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patchesS, PxU32 p, ContactType& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxReal* shMinSepS, PxI32& remainingContacts, PxVec4* tempPointsS)
 {
@@ -898,15 +898,15 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 	Patch& patch = patchesS[p];
 
 	const bool candidateContact = contact.candidateContact;
-	const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::normal(contact);
-	const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::pos(contact);
-	const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::separation(contact);
+	const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::normal(contact);
+	const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::pos(contact);
+	const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::separation(contact);
 	PxReal proj = contactNormal.dot(patch.Normal);
 
 	//Normals are very close, this point is now a candidate for an existing patch...
 	bool accept2 = proj > PATCH_ACCEPTANCE_EPS2;
 	bool accept = proj > PATCH_ACCEPTANCE_EPS3;
-	if (ContactPredicateDcuV7Enabled)
+	if (ContactPredicateHcuV7Enabled)
 	{
 		accept2 = candidateContact && accept2;
 		accept = candidateContact && accept;
@@ -990,7 +990,7 @@ PX_FORCE_INLINE __device__ void tryToAssignContactToExistingPatch(Patch* patches
 }
 
 //Must be called by full warps
-template<bool ContactPredicateDcuV7Enabled, typename ContactType>
+template<bool ContactPredicateHcuV7Enabled, typename ContactType>
 PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, ContactType& contact, bool& anyKeepS, PxReal clusterBias,
 	PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS, PxU32& numPatchesToKeep)
 {
@@ -1009,9 +1009,9 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, ContactType& c
 
 		//Adds/removes a tiny bias based on projection onto average normal. 
 		const bool candidateContact = contact.candidateContact;
-		const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::separation(contact);
-		const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::normal(contact);
-		const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::pos(contact);
+		const PxReal contactSeparation = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::separation(contact);
+		const PxVec3 contactNormal = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::normal(contact);
+		const PxVec3 contactPos = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::pos(contact);
 		PxReal minSep = contactSeparation;
 
 		PxU32 candidateMask = __ballot_sync(FULL_MASK, candidateContact);
@@ -1105,8 +1105,8 @@ PX_FORCE_INLINE __device__ void createNewPatches(Patch* patchesS, ContactType& c
 	}
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-__device__ __attribute__((noinline)) static void createNewPatchesNoInlineDcuV6(Patch* patchesS, Contact& contact, bool& anyKeepS,
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+__device__ __attribute__((noinline)) static void createNewPatchesNoInlineHcuV6(Patch* patchesS, Contact& contact, bool& anyKeepS,
 	PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
 	PxU32& numPatchesToKeep)
 {
@@ -1115,7 +1115,7 @@ __device__ __attribute__((noinline)) static void createNewPatchesNoInlineDcuV6(P
 }
 #endif
 
-template<bool CreatePatchNoInlineDcuV6, bool ContactPredicateDcuV7Enabled>
+template<bool CreatePatchNoInlineHcuV6, bool ContactPredicateHcuV7Enabled>
 struct CreateNewPatchesSelector
 {
 	template<typename ContactType>
@@ -1123,12 +1123,12 @@ struct CreateNewPatchesSelector
 		PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
 		PxU32& numPatchesToKeep)
 	{
-		createNewPatches<ContactPredicateDcuV7Enabled>(patchesS, contact, anyKeepS, clusterBias,
+		createNewPatches<ContactPredicateHcuV7Enabled>(patchesS, contact, anyKeepS, clusterBias,
 			countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);
 	}
 };
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 template<>
 struct CreateNewPatchesSelector<true, false>
 {
@@ -1136,17 +1136,17 @@ struct CreateNewPatchesSelector<true, false>
 		PxReal clusterBias, PxU32* countersS, PxI32& remainingContacts, PxVec4* tempPointsS, PxReal* shMinSepS,
 		PxU32& numPatchesToKeep)
 	{
-		createNewPatchesNoInlineDcuV6(patchesS, contact, anyKeepS, clusterBias,
+		createNewPatchesNoInlineHcuV6(patchesS, contact, anyKeepS, clusterBias,
 			countersS, remainingContacts, tempPointsS, shMinSepS, numPatchesToKeep);
 	}
 };
 #endif
 
-template<bool NativeBlockCountDcuV8>
+template<bool NativeBlockCountHcuV8>
 static PX_FORCE_INLINE __device__ PxU32 countGeneratedContacts(bool candidateContact, PxU32* countersS)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	if (NativeBlockCountDcuV8)
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	if (NativeBlockCountHcuV8)
 		return PxU32(__syncthreads_count(candidateContact));
 #endif
 	const PxU32 count = threadBlockCountAndBroadcast(candidateContact, countersS);
@@ -1154,7 +1154,7 @@ static PX_FORCE_INLINE __device__ PxU32 countGeneratedContacts(bool candidateCon
 	return count;
 }
 
-template<bool CreatePatchNoInlineDcuV6, bool ContactPredicateDcuV7Enabled, bool NativeBlockCountDcuV8>
+template<bool CreatePatchNoInlineHcuV6, bool ContactPredicateHcuV7Enabled, bool NativeBlockCountHcuV8>
 __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0, const PxsCachedTransform& transform1,
 	const PxgTriangleMesh& mesh0, const PxgTriangleMesh& mesh1, const PxgShape& shape0, const PxgShape& shape1, const PxReal contactDistance, bool isFlipped,
 	PxU32 pairIndex,
@@ -1249,9 +1249,9 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 
 		for (PxU32 i = 0; (i < nbTriangles || numTrianglesToSubdivideS > 0);)
 		{
-			typename ContactTypeSelector<ContactPredicateDcuV7Enabled>::Type contact;
+			typename ContactTypeSelector<ContactPredicateHcuV7Enabled>::Type contact;
 			PxVec3 candidatePoint = PxVec3(0.0f);
-			PxVec3& contactPoint = ContactPayloadSelector<ContactPredicateDcuV7Enabled>::collisionPoint(contact, candidatePoint);
+			PxVec3& contactPoint = ContactPayloadSelector<ContactPredicateHcuV7Enabled>::collisionPoint(contact, candidatePoint);
 
 			PxU32 nbFoundTriangles = 0;
 
@@ -1335,7 +1335,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 
 							if (contact.candidateContact)
 							{
-								ContactPayloadSelector<ContactPredicateDcuV7Enabled>::commitPoint(contact, contactPoint);
+								ContactPayloadSelector<ContactPredicateHcuV7Enabled>::commitPoint(contact, contactPoint);
 								contact.separation = sep;
 								contact.normal = -dir; //PxVec3(0.0f, -1.0f, 0.0f); //
 							}
@@ -1376,7 +1376,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 
 						if (contact.candidateContact)
 						{
-							ContactPayloadSelector<ContactPredicateDcuV7Enabled>::commitPoint(contact, contactPoint);
+							ContactPayloadSelector<ContactPredicateHcuV7Enabled>::commitPoint(contact, contactPoint);
 							contact.separation = sep;
 							contact.normal = aToB.rotate(dir);
 						}
@@ -1388,7 +1388,7 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			if (threadIdx.x == 0)
 				numTrianglesToSubdivideS = newBufferCount;
 
-			PxU32 generatedThisIter = countGeneratedContacts<NativeBlockCountDcuV8>(contact.candidateContact, countersS);
+			PxU32 generatedThisIter = countGeneratedContacts<NativeBlockCountHcuV8>(contact.candidateContact, countersS);
 
 			totalGenerated += generatedThisIter;
 			PxI32 remainingContacts = generatedThisIter;
@@ -1399,11 +1399,11 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 			//First, iterate through existing patches to see if we have any interesting contacts for those patches...
 			for (PxU32 p = 0; (p < numPatchesToKeep) && (remainingContacts > 0); ++p)
 			{
-				tryToAssignContactToExistingPatch<ContactPredicateDcuV7Enabled>(patchesS, p, contact, anyKeepS, clusterBias,
+				tryToAssignContactToExistingPatch<ContactPredicateHcuV7Enabled>(patchesS, p, contact, anyKeepS, clusterBias,
 					countersS, shMinSepS, remainingContacts, tempPointsS);
 			}
 
-			CreateNewPatchesSelector<CreatePatchNoInlineDcuV6, ContactPredicateDcuV7Enabled>::run(
+			CreateNewPatchesSelector<CreatePatchNoInlineHcuV6, ContactPredicateHcuV7Enabled>::run(
 				patchesS, contact, anyKeepS, clusterBias, countersS, remainingContacts, tempPointsS, shMinSepS,
 				numPatchesToKeep);
 		}
@@ -1418,18 +1418,18 @@ __device__ void doTriangleTriangleCollision(const PxsCachedTransform& transform0
 		patchBytesLimit, contactBytesLimit, forceBytesLimit, numPatchesToKeep, patchesS);
 }
 
-template<bool InlineSdfDcuV1>
+template<bool InlineSdfHcuV1>
 static PX_FORCE_INLINE __device__ PxReal doTriangleSDFCollisionSelected(SparseSDFTexture& texture,
 	const PxVec3& v0, const PxVec3& v1, const PxVec3& v2, PxVec3& point, PxVec3& dir, PxReal tolerance)
 {
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	if (InlineSdfDcuV1)
-		return doTriangleSDFCollisionInlineDcuV1(texture, v0, v1, v2, point, dir, tolerance);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	if (InlineSdfHcuV1)
+		return doTriangleSDFCollisionInlineHcuV1(texture, v0, v1, v2, point, dir, tolerance);
 #endif
 	return doTriangleSDFCollision(texture, v0, v1, v2, point, dir, tolerance);
 }
 
-template<bool InlineSdfDcuV1, bool CacheInverseDcuV2>
+template<bool InlineSdfHcuV1, bool CacheInverseHcuV2>
 __device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& transform0, const PxsCachedTransform& transform1,
 	const PxgTriangleMesh& mesh0, const PxgTriangleMesh& mesh1, const PxgShape& shape0, const PxgShape& shape1, const PxReal contactDistance, bool isFlipped,
 	PxU32 pairIndex,
@@ -1481,8 +1481,8 @@ __device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& t
 	PxU32 numPatchesToKeep = 0;
 
 	const PxTransform aToB = transform1.transform.transformInv(transform0.transform);
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-	const PxTransform bToA = CacheInverseDcuV2 ? aToB.getInverse() : aToB;
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+	const PxTransform bToA = CacheInverseHcuV2 ? aToB.getInverse() : aToB;
 #endif
 
 	if (threadIdx.x == 0)
@@ -1539,8 +1539,8 @@ __device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& t
 			else
 			{
 				const PxTransform reverseTransform =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-					CacheInverseDcuV2 ? bToA : aToB.getInverse();
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+					CacheInverseHcuV2 ? bToA : aToB.getInverse();
 #else
 					aToB.getInverse();
 #endif
@@ -1564,7 +1564,7 @@ __device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& t
 					v2 = shape2Vertex(v2, shape1.scale.scale, shape1.scale.rotation);
 
 					PxVec3 dir;
-					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfDcuV1>(sdfTexture, v0, v1, v2,
+					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfHcuV1>(sdfTexture, v0, v1, v2,
 						contact.pos, dir, cullScale);
 
 					if (mesh0.mTexObject == NULL)
@@ -1631,26 +1631,26 @@ __device__ void doTriangleTriangleCollisionCandidate(const PxsCachedTransform& t
 					PxVec3 v2 = vertex2Shape(PxLoad3(mesh1.trimeshVerts[inds.z]), shape1.scale.scale, shape1.scale.rotation);
 
 					const PxVec3 reverseV0 =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-						CacheInverseDcuV2 ? bToA.transform(v0) : aToB.transformInv(v0);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+						CacheInverseHcuV2 ? bToA.transform(v0) : aToB.transformInv(v0);
 #else
 						aToB.transformInv(v0);
 #endif
 					const PxVec3 reverseV1 =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-						CacheInverseDcuV2 ? bToA.transform(v1) : aToB.transformInv(v1);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+						CacheInverseHcuV2 ? bToA.transform(v1) : aToB.transformInv(v1);
 #else
 						aToB.transformInv(v1);
 #endif
 					const PxVec3 reverseV2 =
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
-						CacheInverseDcuV2 ? bToA.transform(v2) : aToB.transformInv(v2);
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
+						CacheInverseHcuV2 ? bToA.transform(v2) : aToB.transformInv(v2);
 #else
 						aToB.transformInv(v2);
 #endif
 
 					PxVec3 dir;
-					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfDcuV1>(sdfTexture,
+					PxReal sep = doTriangleSDFCollisionSelected<InlineSdfHcuV1>(sdfTexture,
 						shape2Vertex(reverseV0, shape0.scale.scale, shape0.scale.rotation),
 						shape2Vertex(reverseV1, shape0.scale.scale, shape0.scale.rotation),
 						shape2Vertex(reverseV2, shape0.scale.scale, shape0.scale.rotation),
@@ -1776,7 +1776,7 @@ void evaluatePointDistancesSDFBatch(const PxgShape* PX_RESTRICT gpuShapes,
 }
 
 
-template<bool InlineSdfDcuV1, bool CacheInverseDcuV2, PxU32 ItemsPerBlock>
+template<bool InlineSdfHcuV1, bool CacheInverseHcuV2, PxU32 ItemsPerBlock>
 static PX_FORCE_INLINE __device__ void triangleTriangleCollisionImpl(PxU32 numWorkItems,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
 	const PxsCachedTransform* PX_RESTRICT transformCache,
@@ -1847,14 +1847,14 @@ static PX_FORCE_INLINE __device__ void triangleTriangleCollisionImpl(PxU32 numWo
 
 		if (doFirst)
 		{
-			doTriangleTriangleCollisionCandidate<InlineSdfDcuV1, CacheInverseDcuV2>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
+			doTriangleTriangleCollisionCandidate<InlineSdfHcuV1, CacheInverseHcuV2>(transform1, transform0, mesh1, mesh0, shape1, shape0, contactDistance, true, pairIdx,
 				cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
 				touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
 				patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
 		}
 		else
 		{
-			doTriangleTriangleCollisionCandidate<InlineSdfDcuV1, CacheInverseDcuV2>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
+			doTriangleTriangleCollisionCandidate<InlineSdfHcuV1, CacheInverseHcuV2>(transform0, transform1, mesh0, mesh1, shape0, shape1, contactDistance, false, pairIdx,
 				cmOutputs, materials, contactStream, patchStream, patchAndContactCounters,
 				touchChangeFlags, patchChangeFlags, startContactPatches, startContactPoints, startContactForces,
 				patchBytesLimit, contactBytesLimit, forceBytesLimit, clusterBias, overlaps[pairIdx]);
@@ -1956,31 +1956,31 @@ void triangleTriangleCollision(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 	}
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionSdfInlineDcuV1(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionSdfInlineHcuV1(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	triangleTriangleCollisionImpl<true, false, 1>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
 }
 
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionInverseCacheDcuV2(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionInverseCacheHcuV2(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	triangleTriangleCollisionImpl<false, true, 1>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
 }
 
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionPack2SerialDcuV3(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionPack2SerialHcuV3(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	triangleTriangleCollisionImpl<false, false, 2>(PX_TRIANGLE_TRIANGLE_COLLISION_ARGS);
 }
 
 extern "C" __global__
 __launch_bounds__(1024, 2)
-void triangleTriangleCollisionOccupancy2DcuV5(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionOccupancy2HcuV5(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	const PxU32 pairIdx = blockIdx.x;
 
@@ -2044,7 +2044,7 @@ void triangleTriangleCollisionOccupancy2DcuV5(PX_TRIANGLE_TRIANGLE_COLLISION_PAR
 
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionCreatePatchNoInlineDcuV6(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionCreatePatchNoInlineHcuV6(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	const PxU32 pairIdx = blockIdx.x;
 
@@ -2108,7 +2108,7 @@ void triangleTriangleCollisionCreatePatchNoInlineDcuV6(PX_TRIANGLE_TRIANGLE_COLL
 
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionContactPredicateDcuV7(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionContactPredicateHcuV7(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	const PxU32 pairIdx = blockIdx.x;
 
@@ -2172,7 +2172,7 @@ void triangleTriangleCollisionContactPredicateDcuV7(PX_TRIANGLE_TRIANGLE_COLLISI
 
 extern "C" __global__
 __launch_bounds__(1024, 1)
-void triangleTriangleCollisionNativeBlockCountDcuV8(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
+void triangleTriangleCollisionNativeBlockCountHcuV8(PX_TRIANGLE_TRIANGLE_COLLISION_PARAMS)
 {
 	const PxU32 pairIdx = blockIdx.x;
 
@@ -2389,10 +2389,10 @@ void triangleTriangleOverlaps(PxU32 numWorkItems,
 	}
 }
 
-#if defined(PX_DCU_PORT) && PX_DCU_PORT
+#if defined(PX_HCU_PORT) && PX_HCU_PORT
 extern "C" __global__
 __launch_bounds__(64, 1)
-void triangleTriangleOverlapsLaunchBounds64DcuV10(PxU32 numWorkItems,
+void triangleTriangleOverlapsLaunchBounds64HcuV10(PxU32 numWorkItems,
 	const PxgContactManagerInput* PX_RESTRICT cmInputs,
 	const PxsCachedTransform* PX_RESTRICT transformCache,
 	const PxReal* PX_RESTRICT contactDistances,

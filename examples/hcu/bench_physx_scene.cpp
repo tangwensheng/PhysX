@@ -274,8 +274,8 @@ int main(int argc, char** argv)
     if (opt.stage2IndexP54 >= 0) {
 #if defined(__linux__)
         const char* value = opt.stage2IndexP54 ? "ordinary-rigid/p54/1" : "ordinary-rigid/p54/0";
-        if (setenv("PX_DCU_RIGID_STAGE2_INDEX_P54", value, 1) != 0) return 2;
-        printf("p54_benchmark_marker=PX_DCU_RIGID_STAGE2_INDEX_P54_BENCH_V1 mode=%d scope=ordinary_rigid\n", opt.stage2IndexP54);
+        if (setenv("PX_HCU_RIGID_STAGE2_INDEX_P54", value, 1) != 0) return 2;
+        printf("p54_benchmark_marker=PX_HCU_RIGID_STAGE2_INDEX_P54_BENCH_V1 mode=%d scope=ordinary_rigid\n", opt.stage2IndexP54);
 #else
         std::fprintf(stderr, "P54 requires the gfx936 HCU product\n");
         return 2;
@@ -286,7 +286,7 @@ int main(int argc, char** argv)
     ProfileContacts contacts;
     if (opt.profileControlProbe) {
         setvbuf(stdout, nullptr, _IOLBF, 0);
-        printf("profile_probe_marker=PX_DCU_RIGID_PROFILE_CONTROL_PROBE_P44_R2_V1\n");
+        printf("profile_probe_marker=PX_HCU_RIGID_PROFILE_CONTROL_PROBE_P44_R2_V1\n");
         if (!profile.resolve() || profile.stop() != 0) return 3;
         int devices = 0;
         if (profile.getCount(&devices) != 0 || profile.start() != 0) return 3;
@@ -299,7 +299,7 @@ int main(int argc, char** argv)
     }
     if (opt.profileContactFrame) {
         setvbuf(stdout, nullptr, _IOLBF, 0);
-        printf("profile_marker=PX_DCU_RIGID_MAIN_CONTACT_FRAME_P44_R2_V1\n");
+        printf("profile_marker=PX_HCU_RIGID_MAIN_CONTACT_FRAME_P44_R2_V1\n");
         if (opt.traceContactFrame && !profile.resolve()) {
             fprintf(stderr, "ERROR: DTK trace control or single visible device unavailable; no physics launched\n");
             return 3;
@@ -548,12 +548,12 @@ int main(int argc, char** argv)
     // ---- Stats ----
     FrameSummary finalSummary = computeFrameSummary(opt.steps, bodies);
     if (opt.finalSummary) {
-        printf("final_summary_marker=PX_DCU_RIGID_FINAL_SUMMARY_P46_V1 timing=outside_simulation_loop\n");
+        printf("final_summary_marker=PX_HCU_RIGID_FINAL_SUMMARY_P46_V1 timing=outside_simulation_loop\n");
         printFrameSummary(finalSummary);
     }
 
     printf("\n=== Results ===\n");
-    printf("PERF marker=PX_DCU_BENCH_SIMULATION_TIMING_V1 simulation_ms=%.6f ms_per_step=%.6f steps_per_second=%.6f\n", elapsed * 1000.0, avgMs, 1000.0 / avgMs);
+    printf("PERF marker=PX_HCU_BENCH_SIMULATION_TIMING_V1 simulation_ms=%.6f ms_per_step=%.6f steps_per_second=%.6f\n", elapsed * 1000.0, avgMs, 1000.0 / avgMs);
     printf("Avg frame time: %.2f ms (%.0f FPS)\n", avgMs, 1000.0f/avgMs);
     printf("Above ground:   %d / %d\n", finalSummary.above05, nTotal);
     printf("Height range:   [%.1f, %.1f]\n", finalSummary.minY, finalSummary.maxY);
