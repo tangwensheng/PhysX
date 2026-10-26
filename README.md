@@ -33,22 +33,13 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+</details>
+
+Please also see license files in the root folder and in the respective subfolders.
+
 ## Hygon HCU / HIP Port
 
 PhysX GPU modules have been ported to **Hygon HCU** (gfx936/gfx938) with HIP.
-
-### Quick Start
-
-```bash
-# Build GPU libraries
-./build_dcu.sh gfx936
-
-# Build CPU libraries (Foundation, PhysXSDK, etc.)
-./build_cpu.sh
-
-# Build and run examples
-cd examples/dcu && ./build.sh
-```
 
 ### Build Requirements (HCU)
 
@@ -57,6 +48,53 @@ cd examples/dcu && ./build.sh
 | DTK (HCU Toolkit) | 2604 |
 | CMake | >= 3.21 |
 | g++ | >= 8.0 |
+
+### Quick Start
+
+The HCU port is built in three stages, in this order. The examples link
+against the CPU libraries and load the GPU library at runtime, so both library
+builds must complete before the examples are built.
+
+```bash
+# 1) GPU (HIP) libraries -> build_dcu/libPhysXGpuDCU.so, build_dcu/kernels/*.hsaco
+./build_dcu.sh gfx936
+
+# 2) CPU (host) libraries -> build_cpu/ (Foundation, PhysXSDK, ...)
+./build_cpu.sh
+
+# 3) One example target -> examples/dcu/build/<target>
+cd examples/dcu && ./build.sh
+```
+
+### Running the Examples
+
+`./build.sh` builds a single target and defaults to `bench_physx_scene`. Pass
+another example target name to build a different one:
+
+```bash
+cd examples/dcu
+./build.sh bench_compare
+```
+
+Binaries are written to `examples/dcu/build/`. Run them from there so the
+runtime can locate the GPU library and kernel files:
+
+```bash
+cd examples/dcu
+./build/bench_physx_scene
+```
+
+### Correctness and Smoke Runners
+
+| Runner | Purpose |
+|--------|---------|
+| `examples/dcu/run_dcu_correctness.sh` | table-driven, fingerprinted correctness cases (`--list` prints case names) |
+| `examples/dcu/run_gpu_broadphase_smoke.sh` | fail-fast GPU broadphase smoke test with a fingerprint baseline |
+| `build_cpu/test_cpu` | unit probe produced by `build_cpu.sh` |
+| `build_dcu/test_functional` | functional probe produced by `build_dcu.sh` |
+
+Runners read overrides from the environment, for example
+`EXPECTED_HCU_COUNT=8 REPEAT=3 ./run_dcu_correctness.sh all`.
 
 ### Port Summary
 
@@ -89,10 +127,6 @@ cd examples/dcu && ./build.sh
 - **New**: `physx/source/compiler/cmakehip/` — HIP CMake build
 - **New**: `physx/source/compiler/cmakecpu/` — CPU library CMake build
 - **Modified**: ~55 .cu/.cuh files — `cuda.h` → conditional, intrinsic macros, PTX asm
-
-</details>
-
-Please also see license files in the root folder and in the respective subfolders.
 
 This repo contains:
 
