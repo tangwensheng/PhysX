@@ -116,6 +116,17 @@ fi
 # Build changed files only
 cmake --build . -j1 2>&1 | tee build.log
 
+python3 "$CMAKE_DIR/extract_hsaco.py" \
+    "$BUILD_DIR/CMakeFiles/PhysXGpuHCU.dir" \
+    "$BUILD_DIR/kernels"
+
+KERNEL_COUNT="$(find "$BUILD_DIR/kernels" -maxdepth 1 -type f -name '*.hsaco' | wc -l)"
+if [ "$KERNEL_COUNT" -eq 0 ]; then
+    echo "ERROR: No HCU .hsaco modules were generated."
+    exit 1
+fi
+echo "HCU kernel modules: $KERNEL_COUNT"
+
 echo ""
 echo "Build complete."
 echo "Run: ./build_hcu/test_functional"
