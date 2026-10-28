@@ -62,8 +62,9 @@ builds must complete before the examples are built.
 # 2) CPU (host) libraries -> build_cpu/ (Foundation, PhysXSDK, ...)
 ./build_cpu.sh
 
-# 3) One example target -> examples/hcu/build/<target>
+# 3) One example (default) or all examples -> examples/hcu/build/
 cd examples/hcu && ./build.sh
+# ./build.sh all
 ```
 
 ### Build Configuration
@@ -87,6 +88,13 @@ another example target name to build a different one:
 ```bash
 cd examples/hcu
 ./build.sh bench_compare
+```
+
+Pass `all` to build every executable registered by `examples/hcu/CMakeLists.txt`:
+
+```bash
+cd examples/hcu
+./build.sh all
 ```
 
 Binaries are written to `examples/hcu/build/`. Run them from there so the

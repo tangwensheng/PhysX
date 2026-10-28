@@ -120,6 +120,12 @@ cmake "$SCRIPT_DIR" \
     -DPHYSX_BUILD_DIR="$PHYSX_BUILD_DIR"
 
 TARGET="${1:-bench_physx_scene}"
+if [[ "$TARGET" == "all" ]]; then
+    cmake --build . -j1 --target all
+    printf 'Built all example targets in %s\n' "$BUILD_DIR"
+    exit 0
+fi
+
 cmake --build . -j1 --target "$TARGET"
 
 if [[ ! -x "$TARGET" ]]; then
