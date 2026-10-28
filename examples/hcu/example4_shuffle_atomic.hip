@@ -33,7 +33,7 @@
 #include <hip/hip_runtime.h>
 #include <cstdio>
 #include <cmath>
-
+using namespace physx;
 // ---- Test 1: Warp shuffle sum reduction ----
 extern "C" __global__ void warp_sum_test(const float* in, float* out, int n)
 {
