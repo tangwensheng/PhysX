@@ -66,6 +66,19 @@ builds must complete before the examples are built.
 cd examples/hcu && ./build.sh
 ```
 
+### Build Configuration
+
+`build_hcu.sh` and `examples/hcu/build.sh` default to `CMAKE_BUILD_TYPE=Release`
+and pass it into CMake explicitly. The HCU CMake project also adds `-O3` to the
+HIP compilation flags for Release builds. Use `CMAKE_BUILD_TYPE=Debug` only
+when debugging; it is not representative for performance measurements.
+
+The scripts detect and replace build trees configured with a different build
+type, HCU architecture, compiler, PhysX source path, or CPU library path.
+`build_hcu.sh` also removes stale `.hsaco` files before extracting the code
+objects from the current build. Configuration options previously named
+`PX_DCU_*` must now be passed as the matching `PX_HCU_*` option.
+
 ### Running the Examples
 
 `./build.sh` builds a single target and defaults to `bench_physx_scene`. Pass
@@ -83,6 +96,18 @@ runtime can locate the GPU library and kernel files:
 cd examples/hcu
 ./build/bench_physx_scene
 ```
+
+For performance runs, start from a Release build and make sure the diagnostic
+runtime switches are not enabled:
+
+```bash
+unset PX_HCU_SYNC_KERNELS PX_HCU_TRACE_KERNELS
+./build/bench_physx_scene
+```
+
+`PX_HCU_SYNC_KERNELS` synchronizes after every kernel launch, and
+`PX_HCU_TRACE_KERNELS` logs every launch; either switch can dominate runtime and
+produce misleading FPS results.
 
 ### Correctness and Smoke Runners
 
