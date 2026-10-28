@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <dlfcn.h>
+#include <unistd.h>
 #include "foundation/PxPreprocessor.h"
 #include "foundation/PxErrorCallback.h"
 #include "foundation/PxThread.h"
@@ -47,13 +48,39 @@ static bool gLoaded = false;
 
 #include <dirent.h>
 
+static bool getExecutableDirectory(char* path, size_t capacity) {
+    ssize_t length = readlink("/proc/self/exe", path, capacity - 1);
+    if(length <= 0 || static_cast<size_t>(length) >= capacity - 1) return false;
+    path[length] = '\0';
+
+    char* slash = strrchr(path, '/');
+    if(!slash) return false;
+    *slash = '\0';
+    return true;
+}
+
 static void loadGpuLibrary() {
     if(gLoaded) return;
     gLoaded = true;
 
-    const char* dirs[] = {
-        "./kernels", "../build_hcu/kernels", "../../build_hcu/kernels",
-        "../../../build_hcu/kernels", nullptr};
+    char executableDir[4096] = {};
+    char executableKernels[4096];
+    char executableLibrary[4096];
+    const char* dirs[8];
+    int dirCount = 0;
+
+    const char* envDir = std::getenv("PX_HCU_KERNEL_DIR");
+    if(envDir && *envDir) dirs[dirCount++] = envDir;
+    if(getExecutableDirectory(executableDir, sizeof(executableDir))) {
+        snprintf(executableKernels, sizeof(executableKernels), "%s/kernels", executableDir);
+        dirs[dirCount++] = executableKernels;
+    }
+    dirs[dirCount++] = "./kernels";
+    dirs[dirCount++] = "./build_hcu/kernels";
+    dirs[dirCount++] = "../build_hcu/kernels";
+    dirs[dirCount++] = "../../build_hcu/kernels";
+    dirs[dirCount++] = "../../../build_hcu/kernels";
+    dirs[dirCount] = nullptr;
 
     for(int d = 0; dirs[d]; d++) {
         DIR* dp = opendir(dirs[d]);
@@ -93,10 +120,22 @@ static void loadGpuLibrary() {
 
     // Fallback: hipModuleLoad .so
     fprintf(stderr, "[HCU device] No hsaco dir, trying .so...\n");
-    const char* paths[] = {
-        "./libPhysXGpuHCU.so", "../build_hcu/libPhysXGpuHCU.so",
-        "../../build_hcu/libPhysXGpuHCU.so",
-        "../../../build_hcu/libPhysXGpuHCU.so", nullptr};
+    const char* paths[8];
+    int pathCount = 0;
+
+    const char* envLibrary = std::getenv("PX_HCU_GPU_LIBRARY");
+    if(envLibrary && *envLibrary) paths[pathCount++] = envLibrary;
+    if(executableDir[0]) {
+        snprintf(executableLibrary, sizeof(executableLibrary), "%s/libPhysXGpuHCU.so", executableDir);
+        paths[pathCount++] = executableLibrary;
+    }
+    paths[pathCount++] = "./libPhysXGpuHCU.so";
+    paths[pathCount++] = "./build_hcu/libPhysXGpuHCU.so";
+    paths[pathCount++] = "../build_hcu/libPhysXGpuHCU.so";
+    paths[pathCount++] = "../../build_hcu/libPhysXGpuHCU.so";
+    paths[pathCount++] = "../../../build_hcu/libPhysXGpuHCU.so";
+    paths[pathCount] = nullptr;
+
     for(int i=0; paths[i]; i++) {
         FILE* fp = fopen(paths[i], "r");
         if(!fp) continue; fclose(fp);

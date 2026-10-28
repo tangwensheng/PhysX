@@ -59,8 +59,15 @@ KernelWrangler::KernelWrangler(
 
 	CUmodule* cuModules = cudaContextManager.getCuModules();
 	PxU32 nbModules = g_HCU_ModuleCount;
-	if(nbModules == 0) nbModules = 1;
 	mCuFunctions.resize(numFuncs, NULL);
+
+	if(nbModules == 0)
+	{
+		mErrorCallback.reportError(PxErrorCode::eINTERNAL_ERROR,
+			"No GPU modules were loaded. Check PX_HCU_KERNEL_DIR or build_hcu/kernels.", PX_FL);
+		mError = true;
+		return;
+	}
 
 	if(mCudaContextManager.tryAcquireContext())
 	{
